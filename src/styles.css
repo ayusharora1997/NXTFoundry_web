@@ -44,3 +44,21 @@
 .form-success p{color:var(--muted);line-height:1.6;margin:0 0 20px}
 .form-success .text-link{background:none;border:0;color:#f3f3ed;cursor:pointer;padding:0;font:inherit;font-size:14px}
 @media(max-width:800px){.founder{grid-template-columns:1fr;gap:20px;margin:65px 0 50px}.form-success{padding:24px}}
+
+/* Display numerals — large lime numbers across numbered blocks */
+.num,.method-grid>div>span,.principle>span,.solution-index>span,.focus-row>span,.approach-row>span{display:block;color:var(--lime);font-size:64px;font-weight:300;line-height:.9;letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.focus-row>span{font-size:44px}
+.focus-row{grid-template-columns:110px 1fr 30px}
+.solution-row{grid-template-columns:120px 1fr}
+.approach-row{grid-template-columns:120px 1fr 1fr}
+.approach-row>span{font-size:72px}
+.cap h3,.stage h3{margin-top:36px}
+.method-grid h3,.principle h3{margin-top:28px}
+@media(max-width:800px){
+.num,.method-grid>div>span,.principle>span{font-size:48px}
+.solution-index>span,.approach-row>span{font-size:36px}
+.focus-row>span{font-size:30px}
+.focus-row{grid-template-columns:60px 1fr 25px}
+.solution-row,.approach-row{grid-template-columns:64px 1fr}
+.cap h3,.stage h3,.method-grid h3,.principle h3{margin-top:22px}
+}
