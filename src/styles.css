@@ -62,3 +62,72 @@
 .solution-row,.approach-row{grid-template-columns:64px 1fr}
 .cap h3,.stage h3,.method-grid h3,.principle h3{margin-top:22px}
 }
+
+/* Readability pass — larger text, higher contrast, less compressed headings */
+:root{--muted:#bfc7c1}
+.section h2,.page h1{letter-spacing:-.035em;line-height:1.05}
+.hero h1{letter-spacing:-.04em}
+.header nav a{font-size:14px;color:#d3dad5}
+.talk{font-size:14px}
+.eyebrow{font-size:12px;color:#d3dad5}
+.hero p{font-size:18px;color:#c7d0c9}
+.page-lede{font-size:21px;color:#c7d0c9}
+.split{grid-template-columns:1fr;gap:0}
+.intro-copy{max-width:680px;margin-top:28px;font-size:19px;line-height:1.6;color:#c7d0c9}
+.intro-copy .large{font-size:inherit;color:inherit}
+.cap p,.stage p,.method-grid p,.principle p,.engagement-band p,.help-grid p,.fit-list li,.approach-row p,.product-copy p,.product-details li,.statement p{font-size:16px;line-height:1.65;color:#c7d0c9}
+.cap h3,.stage h3{font-size:24px}
+.method-grid h3{font-size:19px}
+.principle h3{font-size:20px}
+.solution-items span,.solution-chip{font-size:15px;color:#c7d0c9}
+.arrow-link,.text-link{font-size:15px}
+.contact-grid label{font-size:13px}
+.contact-grid input,.contact-grid select,.contact-grid textarea{font-size:17px}
+.footer-copy,.footer-col{font-size:15px}
+.footer-label{font-size:12px}
+.footer-bottom{font-size:12px}
+.engagement-formats span{font-size:12px}
+.hero-caption{font-size:11px}
+@media(max-width:800px){.intro-copy{font-size:17px}.page-lede{font-size:18px}.hero p{font-size:16px}.cap p,.stage p,.method-grid p,.principle p,.engagement-band p,.help-grid p,.fit-list li{font-size:15px}}
+/* Section heads read top-down: label, then heading, left-aligned */
+.process-head{display:block}
+.process-head h2{max-width:900px}
+/* Buttons respond to hover, focus, and press */
+.button,.talk,.arrow-link,.text-link{transition:background .2s,color .2s,border-color .2s,transform .15s,box-shadow .2s}
+.button svg,.talk svg,.arrow-link svg,.text-link svg{transition:transform .2s}
+.button:hover,.button:focus-visible{background:#0a100d;color:var(--lime);box-shadow:0 0 0 1px var(--lime),0 8px 24px rgba(215,255,50,.18)}
+.cta .button{padding:18px 24px;font-size:14px}
+.cta .button:hover,.cta .button:focus-visible{background:#0a100d;color:var(--lime);border-color:#0a100d;box-shadow:0 10px 30px rgba(10,16,13,.35)}
+.talk:hover,.talk:focus-visible{background:var(--lime);color:#0a100d}
+.button:hover svg,.talk:hover svg,.arrow-link:hover svg,.text-link:hover svg{transform:translate(3px,-3px)}
+.button:active,.talk:active{transform:scale(.97)}
+.button:focus-visible,.talk:focus-visible,.arrow-link:focus-visible,.text-link:focus-visible,.focus-row:focus-visible{outline:2px solid var(--lime);outline-offset:3px}
+.cta .button:focus-visible{outline-color:#0a100d}
+/* Engagement formats — three full cards */
+.engagement-band{display:block;padding:60px 0}
+.engagement-head{max-width:760px}
+.engagement-head h2{font-size:clamp(34px,4.2vw,58px)}
+.engagement-head p{font-size:19px;line-height:1.6;color:#c7d0c9;margin:22px 0 0}
+.engagement-formats{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-top:50px}
+.engagement-card{background:var(--bg);padding:34px 30px;display:flex;flex-direction:column;transition:background .2s}
+.engagement-card:hover{background:#0e1613}
+.engagement-card h3{font-size:28px;margin:26px 0 14px;letter-spacing:-.02em}
+.engagement-meta{display:flex;flex-wrap:wrap;gap:8px}
+.engagement-meta span{border:1px solid var(--lime);color:var(--lime);font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:6px 10px}
+.engagement-band .engagement-lede{font-size:19px;line-height:1.45;color:#f3f3ed;margin:24px 0 26px}
+.engagement-label{display:block;font-size:11px!important;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)!important;margin-bottom:10px}
+.engagement-card ul{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.engagement-card li{border-bottom:1px solid var(--line);padding:12px 0 12px 20px;position:relative;font-size:15px;line-height:1.5;color:#c7d0c9}
+.engagement-card li:before{content:"";position:absolute;left:0;top:20px;width:6px;height:6px;border-radius:50%;background:var(--lime)}
+.engagement-fit{margin:26px 0 28px;padding:18px;background:var(--forest);border-left:2px solid var(--lime)}
+.engagement-band .engagement-fit p{margin:0;font-size:15px;line-height:1.55;color:#e4e9e5}
+.engagement-card .arrow-link{margin-top:auto;color:var(--lime)}
+.help-grid h2{font-size:clamp(34px,4.2vw,58px)}
+@media(max-width:1000px){.engagement-formats{grid-template-columns:1fr}}
+@media(max-width:800px){.engagement-band{padding:40px 0}.engagement-card{padding:26px 22px}.engagement-head p{font-size:17px}}
+.engagement-head{max-width:920px}
+.engagement-formats .engagement-card>.num{font-size:64px;letter-spacing:-.05em;text-transform:none;color:var(--lime)}
+@media(max-width:800px){.engagement-formats .engagement-card>.num{font-size:48px}}
+.engagement-fit{margin-top:auto}
+.engagement-card ul{margin-bottom:26px}
+.engagement-card .arrow-link{margin-top:28px}
