@@ -388,3 +388,44 @@ footer{padding-top:52px}
 .prog-foot{align-self:end;display:flex;flex-direction:column;align-items:flex-start;gap:16px;padding-top:4px}
 .prog-cta{margin:0}
 @media(max-width:1000px){.prog-list-wrap{grid-template-columns:1fr}}
+
+/* Products: Vendor Payable Reconciliation preview */
+.pv{align-items:stretch}
+.pv-live{display:inline-flex;align-items:center;gap:8px;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--lime)}
+.pv-live i{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 0 rgba(215,255,50,.6);animation:pv-pulse 2s infinite}
+@keyframes pv-pulse{70%{box-shadow:0 0 0 8px rgba(215,255,50,0)}100%{box-shadow:0 0 0 0 rgba(215,255,50,0)}}
+.pv .product-copy h2{margin-top:22px}
+.pv-points{list-style:none;margin:6px 0 28px;padding:0;display:grid;gap:8px}
+.pv-points li{position:relative;padding-left:22px;color:#c7d0c9;font-size:15px;line-height:1.5}
+.pv-points li:before{content:'✓';position:absolute;left:0;color:var(--lime);font-weight:800}
+.pv-cta{font-size:15px;padding:16px 22px}
+.pv-note{display:block;margin-top:12px;color:var(--muted);font-size:13px}
+.pv-visual{display:grid;place-items:center;padding:34px;background:radial-gradient(120% 90% at 70% 10%,#22301f 0%,#17231e 55%,#121b17 100%);cursor:pointer;min-height:460px}
+.pv-win{width:100%;max-width:520px;background:#f3f4ef;color:#0b100e;border-radius:10px;overflow:hidden;box-shadow:0 30px 60px -24px rgba(0,0,0,.7),0 0 0 1px rgba(215,255,50,.15);transition:transform .35s ease,box-shadow .35s ease;transform:perspective(1200px) rotateY(-6deg) rotateX(2deg)}
+.pv-visual:hover .pv-win,.pv-visual:focus-visible .pv-win{transform:perspective(1200px) rotateY(0) rotateX(0) translateY(-4px);box-shadow:0 40px 70px -24px rgba(0,0,0,.8),0 0 0 2px var(--lime)}
+.pv-visual:focus-visible{outline:2px solid var(--lime);outline-offset:-6px}
+.pv-bar{display:flex;align-items:center;gap:6px;background:#080d0c;padding:9px 12px}
+.pv-bar i{width:9px;height:9px;border-radius:50%;background:#3a4741}.pv-bar i:first-child{background:var(--lime)}
+.pv-bar span{margin-left:8px;color:#9aa59f;font-size:11.5px;letter-spacing:.02em}
+.pv-body{padding:14px;display:grid;gap:12px}
+.pv-stages{display:flex;flex-wrap:wrap;gap:5px}
+.pv-stages span{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;background:#fff;border:1px solid #e1e4dc;border-radius:20px;padding:3px 9px 3px 4px;opacity:.35;animation:pv-on .5s forwards}
+.pv-stages b{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:#080d0c;color:var(--lime);font-size:9px}
+@keyframes pv-on{to{opacity:1}}
+.pv-bridge{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:#e1e4dc;border:1px solid #e1e4dc;border-radius:7px;overflow:hidden}
+.pv-bridge div{background:#fff;padding:8px 10px;display:flex;flex-direction:column}
+.pv-bridge small{font-size:10.5px;color:#69736d}.pv-bridge b{font-size:15px;font-variant-numeric:tabular-nums}
+.pv-bridge .k{background:#080d0c}.pv-bridge .k small{color:#9aa59f}.pv-bridge .k b{color:var(--lime)}
+.pv-bars{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;align-items:end;height:92px;padding:0 18px;border-bottom:1px solid #c9cec4}
+.pv-bars i{display:block;background:#080d0c;border-radius:3px 3px 0 0;transform-origin:bottom;animation:pv-grow .9s ease-out both}
+.pv-bars i.up{background:#b6d92a;align-self:start;margin-top:8px;animation-delay:.2s}.pv-bars i.dn{background:#e58a78;align-self:start;margin-top:14px;animation-delay:.35s}.pv-bars i.end{background:#7b857f;animation-delay:.5s}
+@keyframes pv-grow{from{transform:scaleY(0)}}
+.pv-annex{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.pv-annex small{flex-basis:100%;font-size:10.5px;color:#69736d}
+.pv-annex span{font-family:ui-monospace,Consolas,monospace;font-size:11px;font-weight:700;background:#fbf1dc;color:#7a4c00;border-radius:5px;padding:3px 7px}
+.pv-annex span.cur{background:#080d0c;color:var(--lime)}
+.pv-annex em{margin-left:auto;font-style:normal;font-size:11.5px;font-weight:700;color:#2c7a31}
+.pv-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;background:#fff;border-top:1px solid #e1e4dc;font-size:11.5px;color:#69736d}
+.pv-foot b{color:#0b100e;background:var(--lime);border-radius:5px;padding:4px 9px;font-size:11.5px}
+@media(max-width:800px){.pv-visual{min-height:0;padding:22px}.pv-win{transform:none}}
+@media(prefers-reduced-motion:reduce){.pv-stages span,.pv-bars i,.pv-live i{animation:none;opacity:1}}

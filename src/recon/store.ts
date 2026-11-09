@@ -65,7 +65,8 @@ export function drive(st0: RelState, ws: Pick<Workspace, 'files' | 'truth' | 'se
   return must(closePeriod(st, tag, nextDef(rel, tag), S, appr, t(14, '17:00'), true), 'close');
 }
 
-const TARGET: Record<string, Parameters<typeof drive>[3]> = { R1: 'imported-buyer', R2: 'imported', R3: 'matched', R4: 'shared', R5: 'gate', R6: 'signed', R7: 'disputed', R8: 'imported' };
+// R1 waits for the vendor's ledger; R2 and R8 stop at the opening check; the rest have reconciled automatically.
+const TARGET: Record<string, Parameters<typeof drive>[3]> = { R1: 'imported-buyer', R2: 'imported', R3: 'matched', R4: 'shared', R5: 'matched', R6: 'signed', R7: 'disputed', R8: 'imported' };
 // Investigation notes left on long-running items in earlier periods (they travel with the item).
 const NOTES: Record<string, string[]> = {
   R3: ['Vendor says a rate revision was approved in May; asked procurement for the revised PO.', 'Procurement confirms no revision was approved. Vendor asked for a credit note.', 'Vendor escalated to their sales head; awaiting response.'],
@@ -101,4 +102,24 @@ function finishFrom(st: RelState, ws: Pick<Workspace, 'files' | 'truth' | 'setti
   st = must(vendorResponse(st, tag, true, VENDORS.find(v => v.id === st.rel.vendorId)!.contact.name, 'Agreed. Open items noted for follow-up.', 'Priya Nair', t(12, '11:00')), 'accept');
   st = must(finalSignoff(st, tag, 'Arjun Mehta', t(13, '10:30'), true), 'sign');
   return must(closePeriod(st, tag, nextDef(st.rel, tag), S, 'Arjun Mehta', t(14, '17:00'), true), 'close');
+}
+
+/**
+ * Automation after a vendor uploads: fetch the buyer's ERP extract (and onboarding history) for the period if it is
+ * not in yet, then, if both openings validate, run every matching stage. Stops at the opening check if it fails:
+ * that needs a person. Nothing is signed or shared automatically.
+ */
+export function autoReconcile(st0: RelState, ws: Pick<Workspace, 'files' | 'settings'>, tag: string, at: string): RelState {
+  let st = st0; const p = () => st.periods.find(x => x.tag === tag)!;
+  if (p().phase !== 'working') return st;
+  const fs = ws.files.filter(f => f.relId === st.rel.id && f.periodTag === tag);
+  const take = (f: LedgerFile | undefined, by: string) => { if (f && p().imports[f.side] !== f.id && !p().extraFiles.includes(f.id) && !(f.kind === 'period' && p().imports[f.side])) { const r = importFile(st, f, tag, by, at); if (r.ok) st = r.state; } };
+  take(fs.find(f => f.side === 'B' && f.kind === 'period'), 'ERP connector');
+  fs.filter(f => f.kind === 'historical').forEach(f => take(f, 'Onboarding import'));
+  if (!p().imports.B || !p().imports.V || !gate(st, tag).passed) return st;
+  for (const s of STAGES.filter(x => !x.optional || ws.settings.stages[x.optional])) {
+    if (p().stages[s.id]) continue;
+    const r = runStage(st, tag, s.id, ws.settings, 'Auto-reconciliation', at); if (!r.ok) break; st = r.state;
+  }
+  return st;
 }
