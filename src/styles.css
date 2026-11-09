@@ -301,3 +301,57 @@ footer .logo img{height:34px}
 /* Products: demo + interest links */
 .product-links{display:flex;flex-wrap:wrap;gap:24px;margin-top:auto}
 .product-links .arrow-link{margin-top:0}
+
+/* ===== Spacing scale (overrides earlier vertical spacing; one place to tune rhythm) =====
+   Section padding 88 · band gap 64 · heading-to-content 32–48 · cards size to content */
+.section{padding-top:88px;padding-bottom:88px}
+.page{padding-top:56px;padding-bottom:80px}
+#approach-page{padding-top:40px;padding-bottom:80px}
+.hero{min-height:min(calc(100vh - 82px),760px);padding-top:5vw;padding-bottom:5vw}
+.page h1{margin:24px 0}
+/* heading → content */
+.cap-grid,.approach-list,.product-feature,.principles{margin-top:56px}
+.focus-list,.stage-grid,.solution-list,.contact-grid,.product-details{margin-top:48px}
+.engagement-formats,.ap-terms-grid,.ap-outcomes-grid,.scope-band .solution-list,.ap-process .approach-list,.method-grid{margin-top:32px}
+.prog-path{margin-top:28px}
+.prog-list-wrap{margin-top:36px}
+.page-figure{margin-top:40px}
+#approach-page .page-figure{margin-top:36px}
+/* gaps between bands within a page */
+.prog-path-band,.scope-band,.terms-band,.faq-band,.lead-band,
+.ap-problem,.ap-signs,.ap-process,.ap-terms,.ap-notfor,.ap-outcomes,.ap-quote,#approach-page .lead-band,
+.method-band,.engagement-band,.note-band,.statement,.placeholder-band{margin-top:64px}
+.prog-path-band,.scope-band,.terms-band,.faq-band,.ap-problem,.ap-process,.ap-terms,.ap-notfor,.ap-outcomes{padding-top:32px}
+.founder{margin:64px 0 48px;padding-top:32px}
+/* cards and rows size to their content */
+.cap,.stage,.ap-outcomes-grid>div,.principle,.method-grid>div{min-height:0}
+.cap,.stage{padding:28px}
+.cap h3,.stage h3,.method-grid h3,.principle h3{margin-top:20px}
+.ap-outcomes-grid h3{margin-top:18px}
+.featured-article,.article-card{min-height:240px}
+.solution-row{padding:26px 0}
+.approach-row{padding:24px 0}
+.focus-row{padding:20px 0}
+.faq-q{padding:20px 0}
+.lead-band{padding:40px}
+.ap-quote{padding:52px 48px}
+.side-img{margin-top:28px}
+footer{padding-top:52px}
+.footer-bottom{margin-top:48px}
+@media(max-width:800px){
+  .section{padding-top:60px;padding-bottom:60px}
+  .page{padding-top:40px;padding-bottom:60px}
+  #approach-page{padding-top:36px;padding-bottom:60px}
+  .hero{min-height:620px;padding-top:64px;padding-bottom:48px}
+  .cap-grid,.approach-list,.product-feature,.principles,.focus-list,.stage-grid,.solution-list,.contact-grid,.product-details{margin-top:36px}
+  .prog-path-band,.scope-band,.terms-band,.faq-band,.lead-band,
+  .ap-problem,.ap-signs,.ap-process,.ap-terms,.ap-notfor,.ap-outcomes,.ap-quote,#approach-page .lead-band,
+  .method-band,.engagement-band,.note-band,.statement,.placeholder-band{margin-top:48px}
+  .founder{margin:48px 0 36px}
+  .page-figure,#approach-page .page-figure{margin-top:28px}
+  .cap,.stage{padding:24px 22px}
+  .lead-band{padding:32px 22px}
+  .ap-quote{padding:36px 22px}
+  .featured-article,.article-card{min-height:0}
+  .footer-bottom{margin-top:36px}
+}
