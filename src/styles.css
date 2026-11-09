@@ -150,7 +150,7 @@
 .prog-card{scroll-margin-top:110px;display:grid;grid-template-columns:.85fr 1.15fr;gap:5vw;border:1px solid var(--line);padding:44px 40px;background:var(--bg)}
 .prog-card:first-child{border-color:var(--lime)}
 .prog-tag{display:inline-block;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--lime)}
-.prog-side h3{font-size:clamp(30px,3.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin:16px 0 14px}
+.prog-head h3{font-size:clamp(30px,3.2vw,44px);letter-spacing:-.03em;line-height:1.05;margin:16px 0 14px}
 .prog-line{font-size:19px;line-height:1.5;color:#f3f3ed;margin:0 0 30px}
 .prog-meta{margin:0;border-top:1px solid var(--line)}
 .prog-meta div{display:grid;grid-template-columns:100px 1fr;gap:16px;padding:12px 0;border-bottom:1px solid var(--line)}
@@ -193,10 +193,10 @@
 /* Programmes — two cards per row, content stacked inside each card */
 .prog-list-wrap{grid-template-columns:1fr 1fr;gap:24px;align-items:stretch}
 .prog-card{display:flex;flex-direction:column;gap:26px;padding:36px 32px}
-.prog-side h3{font-size:clamp(28px,2.6vw,38px)}
+.prog-head h3{font-size:clamp(28px,2.6vw,38px)}
 .prog-line{font-size:17px;margin-bottom:22px}
 .prog-meta div{grid-template-columns:90px 1fr;padding:10px 0}
-.prog-body{flex:1;display:flex;flex-direction:column}
+.prog-content{flex:1;display:flex;flex-direction:column}
 .prog-fit{font-size:16px}
 .prog-list li{font-size:15px;padding:10px 0 10px 22px}
 .prog-list li:before{top:19px}
@@ -205,7 +205,7 @@
 .prog-option h4{font-size:26px}
 .prog-cta{margin-top:auto;align-self:flex-start}
 .prog-note{margin-bottom:28px}
-.prog-body>.prog-list:last-of-type{margin-bottom:28px}
+.prog-content>.prog-list:last-of-type{margin-bottom:28px}
 @media(min-width:1200px){.prog-options{grid-template-columns:1fr 1fr}.prog-option{padding:18px}.prog-option .prog-list li{font-size:14px}}
 @media(max-width:1000px){.prog-list-wrap{grid-template-columns:1fr}}
 @media(max-width:800px){.prog-card{padding:28px 22px}}
@@ -285,7 +285,7 @@ footer .logo img{height:34px}
 .scope-band>h2,.faq-band h2,.terms-band h2,.lead-band h2,
 .ap-problem h2,.ap-process>h2,.ap-terms>h2,.ap-notfor h2,.ap-outcomes>h2{font-size:var(--fs-section);line-height:1.08}
 @media(min-width:801px){.process-head h2{font-size:min(var(--fs-section),5.2cqi)}}
-.prog-side h3,.prog-option h4,.solution-row h2,.statement h2,.featured-article h2,.engagement-band h2,.ap-quote p{font-size:var(--fs-card-lg);line-height:1.15}
+.prog-head h3,.prog-option h4,.solution-row h2,.statement h2,.featured-article h2,.engagement-band h2,.ap-quote p{font-size:var(--fs-card-lg);line-height:1.15}
 .approach-row h2,.ap-process .approach-row h2,.ap-signs h3,.focus-row h3,.insight-placeholder h3{font-size:var(--fs-card);line-height:1.2}
 .stage h3,.cap h3,.prog-path h3{font-size:var(--fs-card-sm)}
 .num,.method-grid>div>span,.principle>span,.engagement-formats .engagement-card>.num,.approach-row>span{font-size:var(--fs-num)}
@@ -358,7 +358,7 @@ footer{padding-top:52px}
 
 /* Programme cards — compact: details in one row, tighter lists, smaller option headings */
 .prog-card{gap:18px;padding:28px 28px 26px}
-.prog-side h3{margin:10px 0 8px}
+.prog-head h3{margin:10px 0 8px}
 .prog-line{font-size:16px;margin-bottom:16px}
 .prog-meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .prog-meta div{display:block;padding:10px 12px 10px 0;border:0}
@@ -366,13 +366,25 @@ footer{padding-top:52px}
 .prog-meta dt{font-size:10px;padding:0 0 4px}
 .prog-meta dd{font-size:15px;line-height:1.3}
 .prog-fit{font-size:15px;line-height:1.55;padding:12px 14px;margin-bottom:16px}
-.prog-body .engagement-label{margin-bottom:6px}
+.prog-content .engagement-label{margin-bottom:6px}
 .prog-list li,.prog-option .prog-list li{font-size:14.5px;line-height:1.4;padding:7px 0 7px 20px}
 .prog-list li:before{top:16px}
 .prog-option{padding:14px 16px}
 .prog-option h4{font-size:22px;margin:6px 0 2px}
 .prog-sub{font-size:13px;margin-bottom:10px}
-.prog-options,.prog-note,.prog-body>.prog-list:last-of-type{margin-bottom:18px}
+.prog-options,.prog-note,.prog-content>.prog-list:last-of-type{margin-bottom:18px}
 .prog-note{margin-top:14px;font-size:14px}
 .prog-cta{padding:12px 16px}
 @media(max-width:800px){.prog-card{padding:24px 20px}.prog-meta{grid-template-columns:1fr}.prog-meta div+div{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
+
+/* Programme cards — shared rows: each card spans five subgrid rows so head, meta, fit, content and foot line up across a row */
+.prog-list-wrap{grid-template-columns:1fr 1fr;column-gap:24px;row-gap:24px}
+.prog-card{display:grid;grid-template-columns:1fr;grid-row:span 5;grid-template-rows:subgrid;row-gap:16px}
+.prog-head .prog-line{margin-bottom:0}
+.prog-meta,.prog-fit,.prog-options,.prog-content>.prog-list:last-of-type,.prog-note{margin:0}
+.prog-meta div{align-self:stretch}
+.prog-fit{align-self:stretch}
+.prog-content{display:block}
+.prog-foot{align-self:end;display:flex;flex-direction:column;align-items:flex-start;gap:16px;padding-top:4px}
+.prog-cta{margin:0}
+@media(max-width:1000px){.prog-list-wrap{grid-template-columns:1fr}}
