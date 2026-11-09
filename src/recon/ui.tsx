@@ -67,6 +67,7 @@ interface TableProps<T> {
   onRowClick?: (r: T) => void; activeKey?: string;
   selectable?: boolean; selected?: string[]; onSelect?: (keys: string[]) => void;
   toolbar?: React.ReactNode; pageSize?: number; initialSort?: { key: string; dir: 1 | -1 };
+  expand?: (r: T) => React.ReactNode; // inline detail under a row, toggled by clicking it
 }
 /** Excel-like search: comma-separated terms, * and ? wildcards, any term may match any column. */
 function matcher(q: string) {
@@ -75,8 +76,9 @@ function matcher(q: string) {
   const res = terms.map(t => new RegExp(t.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*').replace(/\?/g, '.'), 'i'));
   return (cells: string[]) => res.some(re => cells.some(c => re.test(c)));
 }
-export function DataTable<T>({ rows, cols, rowKey, fileName, empty = 'Nothing to show.', onRowClick, activeKey, selectable, selected = [], onSelect, toolbar, pageSize = 10, initialSort }: TableProps<T>) {
+export function DataTable<T>({ rows, cols, rowKey, fileName, empty = 'Nothing to show.', onRowClick, activeKey, selectable, selected = [], onSelect, toolbar, pageSize = 10, initialSort, expand }: TableProps<T>) {
   const [q, setQ] = useState('');
+  const [openRow, setOpenRow] = useState<string | null>(null);
   const [sort, setSort] = useState(initialSort ?? null);
   const [hidden, setHidden] = useState<Set<string>>(() => new Set(cols.filter(c => c.hidden).map(c => c.key)));
   const [colsOpen, setColsOpen] = useState(false);
@@ -105,7 +107,7 @@ export function DataTable<T>({ rows, cols, rowKey, fileName, empty = 'Nothing to
   const hasTotals = visible.some(c => c.total);
   return <div className="rw-table-block">
     <div className="rw-table-tools">
-      <label className="rw-search"><Icon n="search" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search comma-separated values… (use * and ? like Excel)" aria-label="Search table" />{q && <button className="rw-iconbtn" onClick={() => setQ('')} aria-label="Clear search"><Icon n="x" s={14} /></button>}</label>
+      <label className="rw-search"><Icon n="search" /><input value={q} onChange={e => setQ(e.target.value)} placeholder="Search · separate terms with commas, * matches anything" aria-label="Search table" data-rw-search />{q && <button className="rw-iconbtn" onClick={() => setQ('')} aria-label="Clear search"><Icon n="x" s={14} /></button>}</label>
       {toolbar}
       <div className="rw-pop-anchor"><button className="rw-btn" onClick={() => setColsOpen(!colsOpen)} aria-expanded={colsOpen}><Icon n="cols" /> Columns</button>
         {colsOpen && <div className="rw-pop" onMouseLeave={() => setColsOpen(false)}>{cols.filter(c => !c.noToggle).map(c => <label key={c.key}><input type="checkbox" checked={!hidden.has(c.key)} onChange={() => { const h = new Set(hidden); if (h.has(c.key)) h.delete(c.key); else h.add(c.key); setHidden(h); }} />{c.group ? `${c.group} · ` : ''}{c.label}</label>)}</div>}</div>
@@ -118,13 +120,76 @@ export function DataTable<T>({ rows, cols, rowKey, fileName, empty = 'Nothing to
         <tr>{visible.filter(c => c.group).map(c => head(c))}</tr></>
         : <tr>{selectable && <th className="chk stick" style={{ left: 0 }}><input type="checkbox" checked={allSel} onChange={toggleAll} aria-label="Select all on this page" /></th>}{visible.map(c => head(c))}</tr>}</thead>
       <tbody>{shown.length === 0 ? <tr><td colSpan={visible.length + (selectable ? 1 : 0)} className="rw-empty">{q ? 'No rows match your search.' : empty}</td></tr>
-        : shown.map((r, i) => { const k = rowKey(r); return <tr key={k} className={(onRowClick ? 'click' : '') + (k === activeKey ? ' active' : '') + (selected.includes(k) ? ' sel' : '')} onClick={onRowClick ? () => onRowClick(r) : undefined}>
+        : shown.map((r, i) => { const k = rowKey(r); const isOpen = !!expand && openRow === k; const click = onRowClick ? () => onRowClick(r) : expand ? () => setOpenRow(isOpen ? null : k) : undefined;
+          return <React.Fragment key={k}><tr className={(click ? 'click' : '') + (k === activeKey || isOpen ? ' active' : '') + (selected.includes(k) ? ' sel' : '')} onClick={click} aria-expanded={expand ? isOpen : undefined}>
           {selectable && <td className="chk stick" style={{ left: 0 }} onClick={e => e.stopPropagation()}><input type="checkbox" checked={selected.includes(k)} onChange={() => toggle(k)} aria-label={`Select row ${p * size + i + 1}`} /></td>}
-          {visible.map(c => <td key={c.key} className={cls(c)} style={sty(c)}>{c.render ? c.render(r) : c.text(r)}</td>)}</tr>; })}</tbody>
+          {visible.map(c => <td key={c.key} className={cls(c)} style={sty(c)}>{c.render ? c.render(r) : c.text(r)}</td>)}</tr>
+          {isOpen && <tr className="rw-expand"><td colSpan={visible.length + (selectable ? 1 : 0)}>{expand!(r)}</td></tr>}</React.Fragment>; })}</tbody>
       {hasTotals && filtered.length > 0 && <tfoot><tr>{selectable && <td className="chk stick" style={{ left: 0 }} />}{visible.map((c, i) => <td key={c.key} className={cls(c)} style={sty(c)}>{c.total ? c.total(filtered) : i === 0 ? 'Total' : ''}</td>)}</tr></tfoot>}
     </table></div>
     <div className="rw-pager"><span>Showing {filtered.length ? p * size + 1 : 0} to {Math.min(filtered.length, p * size + size)} of {filtered.length}{selected.length > 0 && ` · ${selected.length} selected`}</span>
       <div><button disabled={p === 0} onClick={() => setPage(0)} aria-label="First page">«</button><button disabled={p === 0} onClick={() => setPage(p - 1)} aria-label="Previous page">‹</button><b>{p + 1}</b><span>of {pages}</span><button disabled={p >= pages - 1} onClick={() => setPage(p + 1)} aria-label="Next page">›</button><button disabled={p >= pages - 1} onClick={() => setPage(pages - 1)} aria-label="Last page">»</button>
         <select value={size} onChange={e => { setSize(Number(e.target.value)); setPage(0); }} aria-label="Rows per page">{[5, 10, 25, 50].map(n => <option key={n} value={n}>{n} per page</option>)}</select></div></div>
+  </div>;
+}
+
+// ---------- Charts and widgets ----------
+export function Ring({ value, size = 92, stroke = 9, label, sub, dark }: { value: number; size?: number; stroke?: number; label: string; sub?: string; dark?: boolean }) {
+  const r = (size - stroke) / 2, c = 2 * Math.PI * r, v = Math.max(0, Math.min(1, value));
+  return <div className={'rw-ring' + (dark ? ' dark' : '')}>
+    <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} role="img" aria-label={`${label}: ${Math.round(v * 100)}%`}>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="track" />
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={stroke} className="val" strokeDasharray={`${c * v} ${c}`} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
+      <text x="50%" y="50%" dominantBaseline="central" textAnchor="middle">{Math.round(v * 100)}%</text>
+    </svg><span><b>{label}</b>{sub && <small>{sub}</small>}</span></div>;
+}
+
+export interface WStep { key: string; label: string; value: number; note?: string }
+/** Waterfall from one balance to another: each step moves the running total down by its value (end = start − Σ steps). */
+export function Waterfall({ start, steps, end, active, onPick, height = 170, fmt = short }: { start: { label: string; value: number }; steps: WStep[]; end: { label: string; value: number }; active?: string; onPick?: (k: string) => void; height?: number; fmt?: (n: number) => string }) {
+  let run = start.value;
+  const bars: { key: string; label: string; from: number; to: number; kind: string; value: number; note: string }[] = [{ key: '__s', label: start.label, from: 0, to: start.value, kind: 'total', value: start.value, note: '' }];
+  steps.forEach(s => { bars.push({ key: s.key, label: s.label, from: run, to: run - s.value, kind: s.value >= 0 ? 'down' : 'up', value: -s.value, note: s.note ?? '' }); run -= s.value; });
+  bars.push({ key: '__e', label: end.label, from: 0, to: end.value, kind: 'total end', value: end.value, note: '' });
+  // When the steps are small next to the balances (lakhs against crores), zoom onto the range the steps move through
+  // and draw the two balances from a broken axis, so every step stays visible.
+  const runs = bars.filter(b => !b.kind.startsWith('total')).flatMap(b => [b.from, b.to]).concat(start.value, end.value);
+  const rlo = Math.min(...runs), rhi = Math.max(...runs), big = Math.max(Math.abs(start.value), Math.abs(end.value));
+  const zoom = rlo > 0 && rhi - rlo < big * 0.25;
+  const vals = bars.flatMap(b => [b.from, b.to]);
+  const lo = zoom ? rlo - (rhi - rlo || 1) * 0.6 : Math.min(0, ...vals), hi = zoom ? rhi + (rhi - rlo || 1) * 0.15 : Math.max(0, ...vals); const span = hi - lo || 1;
+  const y = (v: number) => Math.max(0, Math.min(100, ((hi - v) / span) * 100));
+  if (zoom) bars.forEach(b => { if (b.kind.startsWith('total')) { b.from = lo; b.kind += ' broken'; } });
+  return <div className="rw-wf" role="group" aria-label={`Waterfall from ${start.label} to ${end.label}`}>
+    {bars.map(b => { const top = y(Math.max(b.from, b.to)), h = Math.max(0.8, Math.abs(y(b.from) - y(b.to))); const clickable = !!onPick && !b.kind.startsWith('total');
+      return <button key={b.key} className={`rw-wf-col ${b.kind}${active === b.key ? ' on' : ''}${active && active !== b.key && clickable ? ' dim' : ''}`} disabled={!clickable} onClick={() => clickable && onPick!(active === b.key ? '' : b.key)} title={b.note || undefined} aria-pressed={clickable ? active === b.key : undefined}>
+        <span className="rw-wf-val">{b.kind.startsWith('total') ? fmt(b.value) : (b.value > 0 ? '+' : '') + fmt(b.value)}</span>
+        <span className="rw-wf-track" style={{ height }}>{!zoom && <span className="rw-wf-zero" style={{ top: `${y(0)}%` }} />}<i style={{ top: `${top}%`, height: `${h}%` }} /></span>
+        <span className="rw-wf-lab">{b.label}</span></button>; })}
+  </div>;
+}
+
+export function Meter({ value, tone = '' }: { value: number; tone?: string }) { return <span className={'rw-meter ' + tone}><i style={{ width: `${Math.max(0, Math.min(1, value)) * 100}%` }} /></span>; }
+export const initials = (s: string) => s.replace(/\(.*?\)|·.*$/g, '').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+export const Avatar = ({ name }: { name: string }) => <span className="rw-avatar" title={name}>{initials(name)}</span>;
+
+export interface Toast { id: number; msg: string; undo?: () => void; tone?: 'ok' | 'warn' }
+export function Toasts({ items, dismiss }: { items: Toast[]; dismiss: (id: number) => void }) {
+  return <div className="rw-toasts" aria-live="polite">{items.map(t => <div key={t.id} className={'rw-toast ' + (t.tone ?? 'ok')}><Icon n="check" /><span>{t.msg}</span>
+    {t.undo && <button onClick={() => { t.undo!(); dismiss(t.id); }}>Undo</button>}<button className="x" onClick={() => dismiss(t.id)} aria-label="Dismiss"><Icon n="x" s={14} /></button></div>)}</div>;
+}
+
+/** Searchable vendor switcher. */
+export function Picker({ value, options, onChange, allLabel }: { value: string; options: { id: string; label: string; meta?: string; dot?: string }[]; onChange: (v: string) => void; allLabel: string }) {
+  const [open, setOpen] = useState(false); const [q, setQ] = useState(''); const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (!open) return; const f = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); }; document.addEventListener('mousedown', f); return () => document.removeEventListener('mousedown', f); }, [open]);
+  const cur = options.find(o => o.id === value);
+  const list = options.filter(o => !q || o.label.toLowerCase().includes(q.toLowerCase()));
+  const pick = (v: string) => { onChange(v); setOpen(false); setQ(''); };
+  return <div className="rw-picker" ref={ref}>
+    <button className="rw-picker-btn" onClick={() => setOpen(!open)} aria-haspopup="listbox" aria-expanded={open}><i>Vendor</i><b>{cur ? cur.label : allLabel}</b><span aria-hidden="true">▾</span></button>
+    {open && <div className="rw-picker-pop"><input autoFocus value={q} onChange={e => setQ(e.target.value)} placeholder="Find a vendor" aria-label="Find a vendor" onKeyDown={e => { if (e.key === 'Enter' && list[0]) pick(list[0].id); if (e.key === 'Escape') setOpen(false); }} />
+      <ul role="listbox"><li role="option" aria-selected={value === 'ALL'}><button className={value === 'ALL' ? 'on' : ''} onClick={() => pick('ALL')}><span className="rw-dot all" /><span>{allLabel}</span></button></li>
+        {list.map(o => <li key={o.id} role="option" aria-selected={value === o.id}><button className={value === o.id ? 'on' : ''} onClick={() => pick(o.id)}><span className={'rw-dot ' + (o.dot ?? '')} /><span>{o.label}</span>{o.meta && <small>{o.meta}</small>}</button></li>)}</ul></div>}
   </div>;
 }
