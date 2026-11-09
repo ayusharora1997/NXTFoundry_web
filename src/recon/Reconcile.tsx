@@ -5,9 +5,10 @@ import { tagLabel } from './ledger';
 import { parseCSV } from './csv';
 import { toCSV } from './engine';
 import { Card, DataTable, Drawer, Icon, Pill, money, signedMoney, download, type Col } from './ui';
-import { PageHead, type Ctx } from './App';
+import { PageHead, type Ctx, type Screen } from './App';
+import Dashboard from './Dashboard';
 
-export default function Reconcile({ ctx }: { ctx: Ctx }) {
+export default function Reconcile({ ctx, part }: { ctx: Ctx; part: 'upload' | 'matched' }) {
   const { st, tag, ws, settings, run, user, approver, at, go } = ctx;
   const idx = st.periods.findIndex(p => p.tag === tag); const p = st.periods[idx]; const prev = st.periods[idx - 1];
   const cur = st.rel.currency; const m = (n: number | null | undefined, dp = 2) => money(n, cur, dp);
@@ -22,17 +23,17 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
   const stages = STAGES.filter(s => !s.optional || settings.stages[s.optional]);
   const pending = st.candidates.filter(c => c.status === 'pending' && c.periodTag === tag);
   const ran = (ids: StageId[]) => ids.every(i => p.stages[i]);
-  const steps: { t: string; d: string; done: boolean; href: string }[] = [
-    { t: 'Period', d: `${p.tag} · ${p.type}`, done: true, href: 'rx-period' },
-    { t: 'Carry forward', d: prev ? `${p.carriedIn.length} items in` : 'First period', done: true, href: 'rx-period' },
-    { t: 'Buyer ledger', d: p.imports.B ? 'Imported' : 'Awaited', done: !!p.imports.B, href: 'rx-import' },
-    { t: 'Vendor ledger', d: p.imports.V ? 'Imported' : 'Awaited', done: !!p.imports.V, href: 'rx-import' },
-    { t: 'Opening check', d: g.passed ? 'Passed' : p.imports.B && p.imports.V ? 'Blocking' : 'Pending', done: g.passed && !!p.imports.V, href: 'rx-gate' },
-    { t: 'Contra', d: ran(['contraB', 'contraV']) ? 'Both ledgers' : 'To run', done: ran(['contraB', 'contraV']), href: 'rx-bench' },
-    { t: 'Matching', d: ran(stages.filter(s => !s.id.startsWith('contra') && s.id !== 'other').map(s => s.id)) ? 'Stages run' : 'To run', done: ran(stages.filter(s => !s.id.startsWith('contra') && s.id !== 'other').map(s => s.id)), href: 'rx-bench' },
-    { t: 'Review', d: p.stages.other ? `${pending.length} to decide` : 'To run', done: !!p.stages.other && !pending.length, href: 'rx-bench' },
-    { t: 'Statement', d: p.phase === 'working' ? 'Not prepared' : p.phase, done: p.phase !== 'working', href: '' },
-    { t: 'Close', d: p.phase === 'closed' ? 'Closed' : 'Open', done: p.phase === 'closed', href: '' },
+  const steps: { t: string; d: string; done: boolean; href: string; sub: Screen }[] = [
+    { t: 'Period', d: `${p.tag} · ${p.type}`, done: true, href: 'rx-period', sub: 'upload' },
+    { t: 'Carry forward', d: prev ? `${p.carriedIn.length} items in` : 'First period', done: true, href: 'rx-period', sub: 'upload' },
+    { t: 'Buyer ledger', d: p.imports.B ? 'Imported' : 'Awaited', done: !!p.imports.B, href: 'rx-import', sub: 'upload' },
+    { t: 'Vendor ledger', d: p.imports.V ? 'Imported' : 'Awaited', done: !!p.imports.V, href: 'rx-import', sub: 'upload' },
+    { t: 'Opening check', d: g.passed ? 'Passed' : p.imports.B && p.imports.V ? 'Blocking' : 'Pending', done: g.passed && !!p.imports.V, href: 'rx-gate', sub: 'upload' },
+    { t: 'Contra', d: ran(['contraB', 'contraV']) ? 'Both ledgers' : 'To run', done: ran(['contraB', 'contraV']), href: 'rx-bench', sub: 'matched' },
+    { t: 'Matching', d: ran(stages.filter(s => !s.id.startsWith('contra') && s.id !== 'other').map(s => s.id)) ? 'Stages run' : 'To run', done: ran(stages.filter(s => !s.id.startsWith('contra') && s.id !== 'other').map(s => s.id)), href: 'rx-bench', sub: 'matched' },
+    { t: 'Review', d: p.stages.other ? `${pending.length} to decide` : 'To run', done: !!p.stages.other && !pending.length, href: 'rx-bench', sub: 'matched' },
+    { t: 'Statement', d: p.phase === 'working' ? 'Not prepared' : p.phase, done: p.phase !== 'working', href: '', sub: 'statement' },
+    { t: 'Close', d: p.phase === 'closed' ? 'Closed' : 'Open', done: p.phase === 'closed', href: '', sub: 'statement' },
   ];
   const cur1 = steps.findIndex(s => !s.done);
   const doImport = (f: LedgerFile) => { if (run(s => importFile(s, f, tag, user.name, at()), `${f.fileName} imported`)) setPreview(null); };
@@ -59,13 +60,17 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
   const selTx = st.txns.filter(t => sel.includes(t.id));
 
   return <>
-    <PageHead title="Reconciliation workspace" actions={<><button className="rw-btn" onClick={() => go('credit')}><Icon n="file" /> Credit mapping</button><button className="rw-btn lime" onClick={() => go('balance')}>Statement and sign-off →</button></>}>
-      The cycle for {tagLabel(tag)}, in order. Matching cannot start until both openings are validated.
-    </PageHead>
-    {p.phase === 'closed' && <p className="rw-note">This period is closed. Figures here reflect the latest state of the relationship; the statement exactly as signed is on Balance reconciliation.</p>}
-    {lockedP && p.phase !== 'closed' && <p className="rw-note warn">The statement for this period is {p.phase}. Matching is locked; an approver can reopen it from Balance reconciliation, which creates version {p.version + 1}.</p>}
-    <ol className="rx-steps">{steps.map((s, i) => <li key={s.t} className={s.done ? 'done' : i === cur1 ? 'cur' : ''}><button onClick={() => s.href ? document.getElementById(s.href)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) : go('balance')}><span>{s.done ? '✓' : i + 1}</span><b>{s.t}</b><small>{s.d}</small></button></li>)}</ol>
+    {part === 'upload' ? <PageHead title="Vendor ledger upload" actions={<button className="rw-btn lime" onClick={() => go('matched')}>Reconciled transactions →</button>}>
+      Bring in both ledgers for {tagLabel(tag)}, carry forward what is still open, and validate both openings. Matching cannot start until they pass.
+    </PageHead> : <PageHead title="Reconciled transactions" actions={<><button className="rw-btn" onClick={() => go('open')}>Unreconciled transactions</button><button className="rw-btn lime" onClick={() => go('statement')}>Reconciliation statement →</button></>}>
+      Matching for {tagLabel(tag)}, stage by stage: what closed, by which rule, and what is waiting for a reviewer.
+    </PageHead>}
+    {p.phase === 'closed' && <p className="rw-note">This period is closed. Figures here reflect the latest state of the relationship; the statement exactly as signed is on the Reconciliation Statement tab.</p>}
+    {lockedP && p.phase !== 'closed' && <p className="rw-note warn">The statement for this period is {p.phase}. Matching is locked; an approver can reopen it from the Reconciliation Statement tab, which creates version {p.version + 1}.</p>}
+    <ol className="rx-steps">{steps.map((s, i) => <li key={s.t} className={s.done ? 'done' : i === cur1 ? 'cur' : ''}><button onClick={() => s.sub !== part ? go(s.sub) : document.getElementById(s.href)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}><span>{s.done ? '✓' : i + 1}</span><b>{s.t}</b><small>{s.d}</small></button></li>)}</ol>
 
+    {part === 'upload' && <>
+    <Dashboard ctx={ctx} embedded />
     <div className="rx-grid2" id="rx-period">
       <Card title="Previous period" tip="Pulled automatically from the last closed period. Its closing balances become this period’s expected openings.">
         {prev ? <><dl className="rw-dl"><div><dt>Period</dt><dd><span className="rx-tag">{prev.tag}</span> {prev.phase === 'closed' ? `closed ${prev.dates.closed?.split(' ')[0]}` : prev.phase}</dd></div><div><dt>Buyer closing</dt><dd>{m(prev.closing.B)}</dd></div><div><dt>Vendor closing</dt><dd>{m(prev.closing.V)}</dd></div><div><dt>Difference at close</dt><dd>{m(r2((prev.closing.B ?? 0) - (prev.closing.V ?? 0)))}</dd></div></dl>
@@ -73,8 +78,8 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
           : <p className="rw-note">First reconciliation for this relationship (new vendor). The opening position is established from the uploaded opening balances and any historical open items, and must be agreed or formally approved.</p>}
       </Card>
       <Card title="Carried forward into this period" tip="Unresolved items from the previous close. They keep their original period tag and investigation history.">
-        <div className="rx-carry"><button onClick={() => { setTab('prevB'); document.getElementById('rx-pop')?.scrollIntoView({ behavior: 'smooth' }); }}><b>{pop.prevB.length}</b><span>Buyer-side open items</span><small>{m(pop.prevB.reduce((s, t) => s + t.amount, 0), 0)}</small></button>
-          <button onClick={() => { setTab('prevV'); document.getElementById('rx-pop')?.scrollIntoView({ behavior: 'smooth' }); }}><b>{pop.prevV.length}</b><span>Vendor-side open items</span><small>{m(pop.prevV.reduce((s, t) => s + t.amount, 0), 0)}</small></button></div>
+        <div className="rx-carry"><button onClick={() => go('matched')} title="See them under Reconciled transactions"><b>{pop.prevB.length}</b><span>Buyer-side open items</span><small>{m(pop.prevB.reduce((s, t) => s + t.amount, 0), 0)}</small></button>
+          <button onClick={() => go('matched')} title="See them under Reconciled transactions"><b>{pop.prevV.length}</b><span>Vendor-side open items</span><small>{m(pop.prevV.reduce((s, t) => s + t.amount, 0), 0)}</small></button></div>
         {p.carriedIn.length > 0 && <p className="rx-muted">Originating periods: {[...new Set([...pop.prevB, ...pop.prevV].map(t => t.originTag))].sort().map(t => <span key={t} className="rx-tag old">{t}</span>)}</p>}
       </Card>
     </div>
@@ -111,7 +116,9 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
       </div>}
       <p className={'rx-gateline ' + (g.passed && p.imports.V ? 'ok' : 'bad')}>{g.passed && p.imports.V ? '✓ Opening balance validation passed. Matching is unlocked.' : !p.imports.B || !p.imports.V ? 'Import both ledgers to validate openings.' : '✕ Matching is blocked until every check above passes or is formally approved. There is no bypass.'}</p>
     </Card>
+    </>}
 
+    {part === 'matched' && <>
     <Card title="Reconciliation workbench" tip="Stages run in a fixed order: contra inside each ledger first, then invoices and debit notes, credit notes, payments, TDS, payment + TDS, and finally candidates for review. A group closes only when its signed amounts agree exactly. Candidates never close without a reviewer."
       actions={<button className="rw-btn lime" disabled={!stageAvailable(st, tag, stages.find(s => !p.stages[s.id])?.id ?? 'other', settings).ok || stages.every(s => p.stages[s.id])} onClick={runAll}>Run all remaining stages</button>}>
       <div id="rx-bench" className="rx-bench">
@@ -145,6 +152,7 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
         toolbar={sel.length > 0 && <span className="rw-bulk">{sel.length} selected · net {signedMoney(r2(selTx.filter(t => t.side === 'B').reduce((s, t) => s + t.amount, 0) - selTx.filter(t => t.side === 'V').reduce((s, t) => s + t.amount, 0)), cur)}<button className="rw-btn small lime" disabled={lockedP} onClick={() => setGrouping(true)}>Match selected</button><button className="rw-btn small ghost" onClick={() => setSel([])}>Clear</button></span>} empty="Nothing in this population." />
       <p className="rx-muted">Selections can span tabs (for example a carried buyer item and a current vendor item). Only open items can be selected.</p>
     </Card>
+    </>}
 
     {preview && <ImportDrawer ctx={ctx} file={preview} onClose={() => setPreview(null)} onImport={doImport} />}
     {approve && <ApproveDrawer ctx={ctx} side={approve.side} kind={approve.kind} amount={approve.kind === 'opening-position' ? g.position?.diff ?? 0 : g[approve.side].variance ?? 0} onClose={() => setApprove(null)} />}

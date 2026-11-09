@@ -4,7 +4,7 @@ import { tagLabel } from './ledger';
 import { Card, DataTable, Pill, money, signedMoney } from './ui';
 import { PageHead, STATUS_TONE, type Ctx } from './App';
 
-export default function History({ ctx }: { ctx: Ctx }) {
+export default function History({ ctx, embedded }: { ctx: Ctx; embedded?: boolean }) {
   const { st, go, tag } = ctx; const cur = st.rel.currency; const m = (n: number | null | undefined) => money(n, cur, 0);
   const [view, setView] = useState<'carry' | 'rev' | 'adj' | 'sign'>('carry');
   const byId = new Map(st.txns.map(t => [t.id, t]));
@@ -12,14 +12,15 @@ export default function History({ ctx }: { ctx: Ctx }) {
   const carry = st.carry.map(c => ({ ...c, t: byId.get(c.txnId)! })).filter(c => c.t);
   const resolvedLater = new Map<string, string>(); st.matches.filter(x => !x.reversed).forEach(x => [...x.buyerIds, ...x.vendorIds].forEach(i => resolvedLater.set(i, x.periodTag)));
   return <>
-    <PageHead title="Reconciliation history">Every period of this relationship, from the first reconciliation to now: what was matched, what stayed open, what was carried, reversed, adjusted and signed.</PageHead>
+    {embedded ? <h2 className="rx-section">Previous periods <small>Every period of this relationship: what was matched, carried, reversed, adjusted and signed.</small></h2>
+      : <PageHead title="Reconciliation history">Every period of this relationship, from the first reconciliation to now: what was matched, what stayed open, what was carried, reversed, adjusted and signed.</PageHead>}
     <div className="rx-hist">{periods.map(p => { const s = p.snapshot; const made = st.matches.filter(x => x.periodTag === p.tag && !x.reversed); const rev = st.matches.filter(x => x.reversed?.periodTag === p.tag); const adj = st.adjustments.filter(a => a.periodTag === p.tag && a.status === 'approved'); const wf = ctx.stat(st, p.tag);
       return <article key={p.tag} className={'rx-hcard' + (p.tag === tag ? ' on' : '')}>
         <header><span className="rx-tag">{p.tag}</span><b>{p.label}</b><Pill tone={STATUS_TONE[wf]}>{wf}</Pill>{p.version > 1 && <small>v{p.version}</small>}</header>
         <dl><div><dt>Buyer closing</dt><dd>{m(p.closing.B)}</dd></div><div><dt>Vendor closing</dt><dd>{m(p.closing.V)}</dd></div><div><dt>Difference</dt><dd>{p.closing.B !== null && p.closing.V !== null ? m(r2(p.closing.B - p.closing.V)) : '—'}</dd></div>
           <div><dt>Carried in</dt><dd>{p.carriedIn.length}</dd></div><div><dt>Matched here</dt><dd>{made.filter(x => x.kind === 'match').length} + {made.filter(x => x.kind === 'contra').length} contra</dd></div><div><dt>Open at close</dt><dd>{p.phase === 'closed' ? p.carriedOut.length : s ? s.countB + s.countV : '—'}</dd></div></dl>
         <p className="rx-muted">{[rev.length && `${rev.length} reversal(s)`, adj.length && `${adj.length} adjustment(s)`, p.signoffs.find(x => x.event === 'accepted') && `vendor accepted ${p.dates.vendorSignoff?.split(' ')[0]}`, p.signoffs.find(x => x.event === 'disputed') && 'vendor disputed', p.dates.closed && `closed ${p.dates.closed.split(' ')[0]}`].filter(Boolean).join(' · ') || 'In progress'}</p>
-        <footer><button className="rw-btn small" onClick={() => go('balance', st.rel.id, p.tag)}>{p.phase === 'closed' ? 'Statement as closed' : 'Statement'}</button><button className="rw-btn small ghost" onClick={() => go('reconcile', st.rel.id, p.tag)}>Workspace</button></footer>
+        <footer><button className="rw-btn small" onClick={() => go('statement', st.rel.id, p.tag)}>{p.phase === 'closed' ? 'Statement as closed' : 'Statement'}</button><button className="rw-btn small ghost" onClick={() => go('upload', st.rel.id, p.tag)}>Workspace</button></footer>
       </article>; })}</div>
     <Card actions={<div className="rw-seg">{([['carry', 'Carry-forward movements'], ['rev', 'Match reversals'], ['adj', 'Adjustments'], ['sign', 'Sign-off and closure']] as const).map(([k, l]) => <button key={k} className={view === k ? 'on' : ''} onClick={() => setView(k)}>{l}</button>)}</div>}>
       {view === 'carry' && <DataTable rows={carry} rowKey={c => c.txnId + c.from} fileName={`${st.rel.id}_carry-forward.csv`} empty="Nothing has been carried forward yet." initialSort={{ key: 'from', dir: -1 }} cols={[

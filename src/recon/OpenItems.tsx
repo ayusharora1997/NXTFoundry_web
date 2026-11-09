@@ -12,7 +12,7 @@ const exTone = (s: ExStatus) => s === 'Open' ? 'amber' : s.startsWith('Awaiting'
 
 export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
   const { ws, settings, run, user, at, label, go } = ctx;
-  const [f, setF] = useState({ rel: '', entity: '', bu: '', origin: '', type: '', cat: '', side: '', min: '', age: '', owner: '', status: '' });
+  const [f, setF] = useState({ rel: ctx.relId, entity: '', bu: '', origin: '', type: '', cat: '', side: '', min: '', age: '', owner: '', status: '' });
   const [sel, setSel] = useState<string[]>([]); const [detail, setDetail] = useState<string | null>(null);
   const all: Row[] = useMemo(() => Object.values(ws.states).flatMap(st => { const tag = currentPeriod(st).tag; return openItems(st, tag, settings).map(it => ({ st, tag, it })); }), [ws, settings]);
   const rows = all.filter(r => (!f.rel || r.st.rel.id === f.rel) && (!f.entity || r.st.rel.entityId === f.entity) && (!f.bu || r.st.rel.bu === f.bu) && (!f.origin || r.it.txn.originTag === f.origin) && (!f.type || TYPE_LABEL[r.it.txn.type] === f.type)
@@ -36,7 +36,7 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
   const pendingAdj = Object.values(ws.states).flatMap(st => st.adjustments.filter(a => a.status === 'pending').map(a => ({ st, a })));
   const totals = (side: 'B' | 'V') => rows.filter(r => r.it.txn.side === side).length;
   return <>
-    <PageHead title="Open item management">Every item still open in the current period of each relationship, with its original period, how long it has been carried, and who is working on it.</PageHead>
+    <PageHead title="Unreconciled transactions">Everything still open in each relationship’s current period, with its original period, how long it has been carried, and who is working on it. Showing {f.rel ? label(ws.states[f.rel]) : 'all relationships'}; change it with the filters below.</PageHead>
     <div className="rx-tiles four">
       <div className="rx-tile"><span>Open items shown</span><b>{rows.length}</b><small>{totals('B')} buyer-side · {totals('V')} vendor-side</small></div>
       <div className="rx-tile amber"><span>Carried from earlier periods</span><b>{rows.filter(r => r.it.txn.originTag !== r.tag).length}</b><small>Oldest {rows.length ? rows.map(r => r.it.txn.originTag).sort((a, b) => tagKey(a) - tagKey(b))[0] : '—'}</small></div>
@@ -67,7 +67,7 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
           <select value="" onChange={e => e.target.value && bulk({ owner: e.target.value })} aria-label="Assign owner"><option value="">Assign owner…</option>{OWNERS.map(o => <option key={o}>{o}</option>)}</select>
           <select value="" onChange={e => e.target.value && bulk({ status: e.target.value as ExStatus })} aria-label="Set status"><option value="">Set status…</option>{MANUAL_STATUSES.map(o => <option key={o}>{o}</option>)}</select></span>} empty="No open items match these filters." />
     </Card>
-    {cur && <ItemDrawer ctx={ctx} r={cur} onClose={() => setDetail(null)} onWorkbench={() => go('reconcile', cur.st.rel.id)} />}
+    {cur && <ItemDrawer ctx={ctx} r={cur} onClose={() => setDetail(null)} onWorkbench={() => go('matched', cur.st.rel.id)} />}
   </>;
 }
 

@@ -17,7 +17,7 @@ export default function SettingsScreen({ ctx }: { ctx: Ctx }) {
   const editable = approver;
   const num = (label: string, help: string, value: number, set: (n: number) => void, unit = '') => <label className="rw-setting"><span><b>{label}</b><small>{help}</small></span><span><input type="number" min={0} value={value} disabled={!editable} onChange={e => set(Math.max(0, Number(e.target.value) || 0))} />{unit}</span></label>;
   return <>
-    <PageHead title="Settings and administration">Reconciliation policy, matching order, sign convention, import profiles, roles and master data.</PageHead>
+    <PageHead title="Admin settings">Reconciliation policy, matching order, sign convention, import profiles, roles and master data.</PageHead>
     <div className="rw-tabs" role="tablist">{([['policy', 'Reconciliation policy'], ['stages', 'Matching stages'], ['signs', 'Sign convention'], ['import', 'Import profiles'], ['users', 'Users and roles'], ['master', 'Master data']] as const).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
     {!editable && (tab === 'policy' || tab === 'stages') && <p className="rw-note warn">Signed in as {user.name} ({user.role}). Policy is read-only; switch to an approver or admin to change it.</p>}
     {tab === 'policy' && <div className="rx-grid2">

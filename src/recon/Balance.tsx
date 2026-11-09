@@ -5,6 +5,7 @@ import { tagLabel } from './ledger';
 import { xlsx, saveBlob } from './xlsx';
 import { Card, Icon, Pill, Waterfall, money, signedMoney } from './ui';
 import { PageHead, vendorOf, entityOf, STATUS_TONE, type Ctx } from './App';
+import History from './History';
 
 export default function Balance({ ctx }: { ctx: Ctx }) {
   const { st, tag, settings, run, user, at, approver, go, ws } = ctx;
@@ -29,7 +30,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
   };
   const steps = s.adjustments.map(a => ({ key: a.id, label: a.kind === 'rounding' ? 'Rounding' : a.kind.startsWith('opening') ? 'Opening adj.' : 'Adjustment', value: a.effect }));
   return <>
-    <PageHead title="Balance reconciliation" actions={<><button className="rw-btn" onClick={exportXlsx}><Icon n="download" /> Excel</button><button className="rw-btn" onClick={() => window.print()}><Icon n="file" /> PDF</button></>}>
+    <PageHead title="Reconciliation statement" actions={<><button className="rw-btn" onClick={exportXlsx}><Icon n="download" /> Excel</button><button className="rw-btn" onClick={() => window.print()}><Icon n="file" /> PDF</button></>}>
       Buyer closing − vendor closing must equal the open buyer items − open vendor items, plus approved adjustments. Anything left over is unexplained, and is shown, never absorbed.
     </PageHead>
     {frozen && <p className="rw-note">Showing version {s.version} exactly as {p.phase === 'closed' ? 'closed' : 'prepared'} on {s.generatedAt}. {p.phase !== 'closed' && 'Changes need the period reopened, which creates a new version.'}</p>}
@@ -74,7 +75,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
               <input value={round} onChange={e => setRound(e.target.value)} placeholder="Reason (required)" aria-label="Rounding reason" /><button className="rw-btn small" disabled={!approver || !round.trim()} title={approver ? '' : 'Approver only'} onClick={() => run(x => approveRounding(x, tag, round, user.name, at(), settings, approver), 'Rounding adjustment recorded')}>Record rounding</button></div>}
             {!s.balanced && !s.withinTolerance && s.unexplained !== null && <p className="rw-note warn">Unexplained difference above tolerance. Investigate the ledgers (import integrity, missing lines) before preparing.</p>}
             <button className="rw-btn lime full" disabled={wf !== 'In review' || !s.balanced} title={wf !== 'In review' ? 'Finish every matching stage first' : ''} onClick={() => run(x => prepare(x, tag, settings, user.name, at()), `Statement v${p.version} prepared`)}>Prepare statement (buyer review)</button>
-            {wf !== 'In review' && <p className="rx-muted">Available once all matching stages have run. <button className="rw-link" onClick={() => go('reconcile')}>Go to workbench</button></p>}
+            {wf !== 'In review' && <p className="rx-muted">Available once all matching stages have run. <button className="rw-link" onClick={() => go('matched')}>Go to reconciled transactions</button></p>}
             {s.pendingCandidates > 0 && <p className="rx-muted">{s.pendingCandidates} suggestion(s) are still waiting; they will appear as open items if not decided.</p>}</>}
           {p.phase === 'prepared' && <button className="rw-btn lime full" onClick={() => run(x => share(x, tag, user.name, at()), 'Statement shared with vendor')}>Share with vendor</button>}
           {p.phase === 'shared' && <div className="rx-resp"><label className="rw-field"><span>Vendor representative</span><input value={rep} onChange={e => setRep(e.target.value)} /></label>
@@ -83,7 +84,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
           {p.phase === 'accepted' && <button className="rw-btn lime full" disabled={!approver} title={approver ? '' : 'Approver only'} onClick={() => run(x => finalSignoff(x, tag, user.name, at(), approver), 'Final sign-off captured')}>Capture final sign-off</button>}
           {p.phase === 'signed' && <><button className="rw-btn lime full" disabled={!approver} title={approver ? '' : 'Approver only'} onClick={() => run(x => closePeriod(x, tag, next, settings, user.name, at(), approver), `${tag} closed; ${s.countB + s.countV} item(s) carried to ${next?.tag ?? 'the next period'}`)}>Close period and carry forward</button>
             <p className="rx-muted">{s.countB + s.countV} unresolved item(s) will carry into {next ? `${next.tag} (${next.label})` : 'the next period'} with their original tags. Matches, contras and settled items stay closed.</p></>}
-          {p.phase === 'closed' && <>{next && st.periods.some(x => x.tag === next.tag) && <button className="rw-btn lime full" onClick={() => go('reconcile', st.rel.id, next.tag)}>Open {next.tag}{nextReady ? '' : ' (files not in yet)'} →</button>}<p className="rx-muted">Closed {p.dates.closed}. {p.carriedOut.length} item(s) carried forward.</p></>}
+          {p.phase === 'closed' && <>{next && st.periods.some(x => x.tag === next.tag) && <button className="rw-btn lime full" onClick={() => go('upload', st.rel.id, next.tag)}>Open {next.tag}{nextReady ? '' : ' (files not in yet)'} →</button>}<p className="rx-muted">Closed {p.dates.closed}. {p.carriedOut.length} item(s) carried forward.</p></>}
           {['prepared', 'shared', 'accepted', 'disputed', 'signed'].includes(p.phase) && <div className="rx-reopen"><input value={reason} onChange={e => setReason(e.target.value)} placeholder={p.phase === 'disputed' ? 'What will be amended (required)' : 'Reason to reopen (required)'} aria-label="Reopen reason" />
             <button className="rw-btn small" disabled={!approver || !reason.trim()} title={approver ? '' : 'Approver only'} onClick={() => run(x => reopen(x, tag, reason, user.name, at(), approver), `Reopened as version ${p.version + 1}`)}>Reopen as v{p.version + 1}</button></div>}
           <h4 className="rw-h4">Record</h4>
@@ -91,5 +92,6 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
         </Card>
       </aside>
     </div>
+    <History ctx={ctx} embedded />
   </>;
 }
