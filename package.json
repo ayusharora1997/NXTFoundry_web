@@ -1,6 +1,6 @@
 {
   "name": "nxt-foundry-site",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "NXT Foundry website, bundled to run offline.",
   "type": "module",
   "bin": {
