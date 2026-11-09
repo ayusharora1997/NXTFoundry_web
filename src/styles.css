@@ -275,3 +275,25 @@
 .logo img{display:block;height:30px;width:auto}
 footer .logo img{height:34px}
 @media(max-width:800px){.logo img{height:24px}footer .logo img{height:28px}}
+
+/* ===== Type scale (overrides earlier sizes; one place to tune headings) =====
+   Desktop at 1440px: hero 64 · page title 58 · section 44 · card 20–30 · body 16–18 */
+:root{--fs-hero:clamp(40px,4.5vw,64px);--fs-page:clamp(38px,4vw,58px);--fs-section:clamp(30px,3.05vw,44px);--fs-card-lg:clamp(24px,2.1vw,30px);--fs-card:22px;--fs-card-sm:20px;--fs-num:44px}
+.hero h1{font-size:var(--fs-hero);line-height:1.02}
+.page h1,#approach-page h1,#solutions-page h1,#about h1{font-size:var(--fs-page);line-height:1.04}
+.section h2,.cta h2,.product-copy h2,.founder h2,.engagement-head h2,.help-grid h2,
+.scope-band>h2,.faq-band h2,.terms-band h2,.lead-band h2,
+.ap-problem h2,.ap-process>h2,.ap-terms>h2,.ap-notfor h2,.ap-outcomes>h2{font-size:var(--fs-section);line-height:1.08}
+@media(min-width:801px){.process-head h2{font-size:min(var(--fs-section),5.2cqi)}}
+.prog-side h3,.prog-option h4,.solution-row h2,.statement h2,.featured-article h2,.engagement-band h2,.ap-quote p{font-size:var(--fs-card-lg);line-height:1.15}
+.approach-row h2,.ap-process .approach-row h2,.ap-signs h3,.focus-row h3,.insight-placeholder h3{font-size:var(--fs-card);line-height:1.2}
+.stage h3,.cap h3,.prog-path h3{font-size:var(--fs-card-sm)}
+.num,.method-grid>div>span,.principle>span,.engagement-formats .engagement-card>.num,.approach-row>span{font-size:var(--fs-num)}
+.focus-row>span,.solution-index>span{font-size:32px}
+.page-lede{font-size:18px}
+@media(max-width:800px){
+  :root{--fs-hero:38px;--fs-page:36px;--fs-section:30px;--fs-card-lg:24px;--fs-card:20px;--fs-card-sm:19px;--fs-num:34px}
+  .hero h1,.page h1,#approach-page h1{max-width:none}
+  .focus-row>span,.solution-index>span{font-size:26px}
+  .page-lede{font-size:16px}
+}
