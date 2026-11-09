@@ -355,3 +355,24 @@ footer{padding-top:52px}
   .featured-article,.article-card{min-height:0}
   .footer-bottom{margin-top:36px}
 }
+
+/* Programme cards — compact: details in one row, tighter lists, smaller option headings */
+.prog-card{gap:18px;padding:28px 28px 26px}
+.prog-side h3{margin:10px 0 8px}
+.prog-line{font-size:16px;margin-bottom:16px}
+.prog-meta{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.prog-meta div{display:block;padding:10px 12px 10px 0;border:0}
+.prog-meta div+div{padding-left:14px;border-left:1px solid var(--line)}
+.prog-meta dt{font-size:10px;padding:0 0 4px}
+.prog-meta dd{font-size:15px;line-height:1.3}
+.prog-fit{font-size:15px;line-height:1.55;padding:12px 14px;margin-bottom:16px}
+.prog-body .engagement-label{margin-bottom:6px}
+.prog-list li,.prog-option .prog-list li{font-size:14.5px;line-height:1.4;padding:7px 0 7px 20px}
+.prog-list li:before{top:16px}
+.prog-option{padding:14px 16px}
+.prog-option h4{font-size:22px;margin:6px 0 2px}
+.prog-sub{font-size:13px;margin-bottom:10px}
+.prog-options,.prog-note,.prog-body>.prog-list:last-of-type{margin-bottom:18px}
+.prog-note{margin-top:14px;font-size:14px}
+.prog-cta{padding:12px 16px}
+@media(max-width:800px){.prog-card{padding:24px 20px}.prog-meta{grid-template-columns:1fr}.prog-meta div+div{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
