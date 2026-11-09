@@ -193,3 +193,7 @@ export function Picker({ value, options, onChange, allLabel }: { value: string; 
         {list.map(o => <li key={o.id} role="option" aria-selected={value === o.id}><button className={value === o.id ? 'on' : ''} onClick={() => pick(o.id)}><span className={'rw-dot ' + (o.dot ?? '')} /><span>{o.label}</span>{o.meta && <small>{o.meta}</small>}</button></li>)}</ul></div>}
   </div>;
 }
+
+/** Currency-aware amount: ₹ with Indian grouping, $ with Western grouping. */
+export const money = (n: number | null | undefined, cur = 'INR', dp = 2) => n === null || n === undefined ? '—' : (n < -0.004 ? '−' : '') + (cur === 'USD' ? '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '₹' + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp }));
+export const signedMoney = (n: number, cur = 'INR', dp = 2) => (n > 0.004 ? '+' : '') + money(n, cur, dp);
