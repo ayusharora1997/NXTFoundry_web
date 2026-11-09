@@ -152,8 +152,9 @@ function normalize(data: LabData): Normalized {
 // ---------- Matching ----------
 export type Confidence = 'Exact match' | 'Strong match' | 'Probable match' | 'Manual match';
 export interface Match { key: string; level: 1 | 2 | 3 | 0; confidence: Confidence; rule: string; buyer: Rec; supplier: Rec; diff: number; status: 'auto' | 'pending' | 'confirmed'; timestamp: string }
-export interface Decisions { probable: Record<string, 'confirmed' | 'rejected'>; manual: { buyerId: string; supplierId: string }[]; edits: Record<string, ExceptionEdit> }
-export const EMPTY_DECISIONS: Decisions = { probable: {}, manual: [], edits: {} };
+// reopened: automatic match keys a reviewer has sent back to the unreconciled list.
+export interface Decisions { probable: Record<string, 'confirmed' | 'rejected'>; manual: { buyerId: string; supplierId: string }[]; edits: Record<string, ExceptionEdit>; reopened: string[] }
+export const EMPTY_DECISIONS: Decisions = { probable: {}, manual: [], edits: {}, reopened: [] };
 
 // ---------- Exceptions ----------
 export const CATEGORIES = [
@@ -203,7 +204,7 @@ const ADVICE: Record<Category, string> = {
   'Unclassified exception': 'Review the records manually.',
 };
 
-export interface BridgeItem { id: string; vendorId: string; bucket: Bucket; description: string; effect: string; amount: number; refs: string[]; exceptionKey: string; nature: string }
+export interface BridgeItem { id: string; vendorId: string; bucket: Bucket; description: string; effect: string; amount: number; refs: string[]; exceptionKey: string; nature: string; origin: 'matched' | 'buyer' | 'supplier'; docClass: DocClass }
 export const BUCKETS = ['Buyer-only transactions', 'Supplier-only transactions', 'Amount variances', 'Unallocated payments', 'Credit note differences', 'Debit note differences', 'Probable matches pending confirmation', 'Timing differences', 'Confirmed adjustments'] as const;
 export type Bucket = typeof BUCKETS[number];
 
@@ -224,6 +225,7 @@ export function reconcile(data: LabData, settings: Settings = DEFAULT_SETTINGS, 
   const usedB = new Set<string>(), usedS = new Set<string>();
   const matches: Match[] = [], pending: Match[] = [];
   const add = (b: Rec, s: Rec, level: Match['level'], confidence: Confidence, rule: string, status: Match['status'] = 'auto') => {
+    if (status === 'auto' && level > 0 && decisions.reopened.includes(`${b.id}~${s.id}`)) return;
     const m: Match = { key: `${b.id}~${s.id}`, level, confidence, rule, buyer: b, supplier: s, diff: r2(b.amount - s.amount), status, timestamp: runAt };
     if (status === 'pending') pending.push(m); else { matches.push(m); usedB.add(b.id); usedS.add(s.id); }
   };
@@ -376,19 +378,19 @@ export function reconcile(data: LabData, settings: Settings = DEFAULT_SETTINGS, 
     if (e?.nature === 'Timing difference' || e?.resolution === 'Timing difference — clears next period') return 'Timing differences';
     return base;
   };
-  const item = (vendorId: string, base: Bucket, description: string, effect: string, amount: number, refs: string[], e?: Exception) => {
+  const item = (vendorId: string, base: Bucket, description: string, effect: string, amount: number, refs: string[], origin: BridgeItem['origin'], docClass: DocClass, e?: Exception) => {
     if (Math.abs(amount) < 0.005) return;
-    bridge.push({ id: `BR-${String(bi++).padStart(3, '0')}`, vendorId, bucket: bucketFor(e, base), description, effect, amount: r2(amount), refs, exceptionKey: e?.key ?? '', nature: e ? (e.resolution ? `Resolved — ${e.resolution}` : e.nature === 'Timing difference' ? 'Timing difference' : 'Requires investigation') : 'Requires investigation' });
+    bridge.push({ id: `BR-${String(bi++).padStart(3, '0')}`, vendorId, bucket: bucketFor(e, base), description, effect, amount: r2(amount), refs, exceptionKey: e?.key ?? '', nature: e ? (e.resolution ? `Resolved — ${e.resolution}` : e.nature === 'Timing difference' ? 'Timing difference' : 'Requires investigation') : 'Requires investigation', origin, docClass });
   };
   matches.forEach(m => {
     const e = exceptions.find(x => LEDGER_CATS.has(x.category) && x.records.some(r => r.id === m.buyer.id) && x.records.some(r => r.id === m.supplier.id));
     const base: Bucket = m.buyer.docClass === 'CN' ? 'Credit note differences' : m.buyer.docClass === 'DN' ? 'Debit note differences' : 'Amount variances';
-    item(m.buyer.vendorId, base, `${DOC_LABEL[m.buyer.docClass]} ${m.buyer.rawRef}: buyer ${m.buyer.amount.toFixed(2)} vs supplier ${m.supplier.amount.toFixed(2)}`, m.diff > 0 ? 'Buyer side records more than supplier' : 'Buyer side records less than supplier', m.diff, [m.buyer.id, m.supplier.id], e);
+    item(m.buyer.vendorId, base, `${DOC_LABEL[m.buyer.docClass]} ${m.buyer.rawRef}: buyer ${m.buyer.amount.toFixed(2)} vs supplier ${m.supplier.amount.toFixed(2)}`, m.diff > 0 ? 'Buyer side records more than supplier' : 'Buyer side records less than supplier', m.diff, [m.buyer.id, m.supplier.id], 'matched', m.buyer.docClass, e);
   });
   const baseOf = (r: Rec): Bucket => pendingIds.has(r.id) ? 'Probable matches pending confirmation' : r.docClass === 'CN' ? 'Credit note differences' : r.docClass === 'DN' ? 'Debit note differences' : r.docClass === 'PAY' && r.onAccount ? 'Unallocated payments' : r.side === 'buyer' ? 'Buyer-only transactions' : 'Supplier-only transactions';
   const unmatchedBuyer = N.buyer.filter(b => !usedB.has(b.id)), unmatchedSupplier = N.supplier.filter(s => !usedS.has(s.id));
-  unmatchedBuyer.forEach(b => item(b.vendorId, baseOf(b), `${DOC_LABEL[b.docClass]} ${b.rawRef || b.id} in buyer ledger only`, b.amount > 0 ? 'Increases buyer-side balance' : 'Decreases buyer-side balance', b.amount, [b.id], exByRec.get(b.id)));
-  unmatchedSupplier.forEach(s => item(s.vendorId, baseOf(s), `${DOC_LABEL[s.docClass]} ${s.rawRef || s.id} on supplier statement only`, s.amount > 0 ? 'Increases supplier-side balance' : 'Decreases supplier-side balance', -s.amount, [s.id], exByRec.get(s.id)));
+  unmatchedBuyer.forEach(b => item(b.vendorId, baseOf(b), `${DOC_LABEL[b.docClass]} ${b.rawRef || b.id} in buyer ledger only`, b.amount > 0 ? 'Increases buyer-side balance' : 'Decreases buyer-side balance', b.amount, [b.id], 'buyer', b.docClass, exByRec.get(b.id)));
+  unmatchedSupplier.forEach(s => item(s.vendorId, baseOf(s), `${DOC_LABEL[s.docClass]} ${s.rawRef || s.id} on supplier statement only`, s.amount > 0 ? 'Increases supplier-side balance' : 'Decreases supplier-side balance', -s.amount, [s.id], 'supplier', s.docClass, exByRec.get(s.id)));
 
   const buyerBalance = r2(N.buyer.reduce((s, r) => s + r.amount, 0));
   const supplierBalance = r2(N.supplier.reduce((s, r) => s + r.amount, 0));

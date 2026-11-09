@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import './styles.css';
-import ReconciliationLab from './recon/Lab';
+import ReconciliationLab from './recon/App';
 
 const Icon=({type}:{type:'up'|'right'|'menu'|'x'})=>{const paths={up:<><path d="M5 19 19 5"/><path d="M9 5h10v10"/></>,right:<><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,menu:<><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></>,x:<><path d="M6 6l12 12"/><path d="M18 6 6 18"/></>};return <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[type]}</svg>};
 const ArrowUpRight=({size=17}:{size?:number})=><span style={{display:'inline-flex',transform:`scale(${size/17})`}}><Icon type="up"/></span>;

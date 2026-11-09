@@ -3,6 +3,7 @@
 // and never crosses vendors, that results are reproducible, and that every seeded issue is detected.
 import { generate } from '../src/recon/data';
 import { reconcile, DEFAULT_SETTINGS, EMPTY_DECISIONS } from '../src/recon/engine';
+import { annexByVendor, initialWorkspace, activeData, applyUpload, sampleRows } from '../src/recon/model';
 
 let failed = 0;
 const check = (name: string, ok: boolean, detail = '') => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`); if (!ok) failed++; };
@@ -51,6 +52,19 @@ r.exceptions.forEach(e => { e.refs.forEach(x => refs.add(x.toUpperCase())); e.re
 r.normalized.rejections.forEach(j => refs.add(j.recordId.toUpperCase()));
 const missed = data.seeded.filter(s => !s.refs.some(x => refs.has(x.toUpperCase())));
 check('Every seeded issue is detected', missed.length === 0, missed.map(m => `${m.category}: ${m.refs.join(',')}`).join(' | '));
+
+// Recon Desk: annexures must add up to each vendor's difference, and uploading a held-back ledger must reconcile it.
+const annex = annexByVendor(r);
+check('Annexures sum to the difference for every vendor', r.vendors.every(v => Math.abs(Object.values(annex.get(v.vendorId)?.annex ?? {}).reduce((s, x) => s + x, 0) - v.variance) < 0.01));
+const ws = initialWorkspace();
+const before = reconcile(activeData(ws), DEFAULT_SETTINGS, EMPTY_DECISIONS);
+check('Held-back vendor is not reconciled before upload', !before.vendors.some(v => v.vendorId === 'V010') && before.bridgeCheck);
+const after = reconcile(activeData(applyUpload(ws, 'V010', sampleRows(ws, 'V010'), { fileName: 't.csv', from: 'Apr-26', to: 'Jun-26', comments: '' })), DEFAULT_SETTINGS, EMPTY_DECISIONS);
+const full = r.vendors.find(v => v.vendorId === 'V010')!, up = after.vendors.find(v => v.vendorId === 'V010');
+check('Uploading the sample ledger reconciles that vendor like the full run', !!up && Math.abs(up.variance - full.variance) < 0.01 && after.bridgeCheck);
+const reopenKey = r.matches.find(m => m.level === 1)!.key;
+const reo = reconcile(data, DEFAULT_SETTINGS, { ...EMPTY_DECISIONS, reopened: [reopenKey] });
+check('Reopening a match removes it and keeps the bridge exact', !reo.matches.some(m => m.key === reopenKey) && reo.bridgeCheck);
 
 console.log(failed ? `\n${failed} check(s) failed` : '\nAll checks passed');
 process.exit(failed ? 1 : 0);
