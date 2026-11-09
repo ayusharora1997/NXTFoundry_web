@@ -63,7 +63,7 @@ const capabilities = [
 ];
 const stages = [['01','Understand','Get close to the real operating model, constraints, and opportunity.'],['02','Design','Find the root cause and shape a practical response.'],['03','Execute','Put better processes, controls, and tools into motion.'],['04','Scale','Make what works repeatable, measurable, and ready to grow.']];
 
-function Logo(){return <a className="logo" href="#top" aria-label="NXT Foundry home"><span className="logo-mark">NXT</span><span>FOUNDRY</span></a>}
+function Logo(){return <a className="logo" href="#top" aria-label="NXT Foundry home"><img src="/images/nxt-foundry-logo.png" alt="NXT Foundry" width={1454} height={292}/></a>}
 function Header(){const [open,setOpen]=useState(false); return <header className="header"><Logo/><nav className={open?'open':''}>{nav.map(([label,id])=><a href={'#'+id} key={id} onClick={()=>setOpen(false)}>{label}</a>)}</nav><a className="talk desktop" href="#contact">Let’s Talk <ArrowUpRight size={16}/></a><button className="menu" aria-label="Toggle menu" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></header>}
 function Label({children}:{children:React.ReactNode}){return <div className="eyebrow"><span className="dot"/>{children}</div>}
 

@@ -270,3 +270,8 @@
 #approach-page .page-figure{width:100%;margin-left:0;margin-top:50px;height:clamp(300px,38vw,560px);mask-image:linear-gradient(90deg,transparent 0%,#000 2%,#000 98%,transparent 100%)}
 #approach-page .page-figure img{opacity:.86;filter:saturate(.62) contrast(1.08) brightness(.78)}
 @media(max-width:800px){#approach-page{padding:45px 22px 80px}#approach-page h1{font-size:clamp(48px,12vw,74px)}#approach-page .page-figure{width:calc(100% + 44px);margin-left:-22px;margin-top:40px;height:300px}}
+
+/* Brand logo image */
+.logo img{display:block;height:30px;width:auto}
+footer .logo img{height:34px}
+@media(max-width:800px){.logo img{height:24px}footer .logo img{height:28px}}
