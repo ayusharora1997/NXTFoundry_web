@@ -1,22 +1,30 @@
 {
   "name": "nxt-foundry-site",
-  "private": true,
   "version": "0.1.0",
+  "description": "NXT Foundry website, bundled to run offline.",
   "type": "module",
+  "bin": {
+    "nxt-foundry-site": "scripts/serve.mjs"
+  },
+  "files": [
+    "offline",
+    "scripts/serve.mjs"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:offline": "vite build --base ./ --outDir offline --emptyOutDir && node scripts/make-offline.mjs offline",
+    "serve:offline": "vite preview --outDir offline --port 4173",
+    "prepublishOnly": "npm run build:offline"
   },
-  "dependencies": {
+  "devDependencies": {
     "@vitejs/plugin-react": "latest",
     "lucide-react": "latest",
     "react": "latest",
     "react-dom": "latest",
     "typescript": "latest",
-    "vite": "latest"
-  },
-  "devDependencies": {
+    "vite": "latest",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0"
   }
