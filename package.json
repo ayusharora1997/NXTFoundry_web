@@ -16,7 +16,8 @@
     "preview": "vite preview",
     "build:offline": "vite build --base ./ --outDir offline --emptyOutDir && node scripts/make-offline.mjs offline",
     "serve:offline": "vite preview --outDir offline --port 4173",
-    "prepublishOnly": "npm run build:offline"
+    "prepublishOnly": "npm run build:offline",
+    "test:recon": "vite build --ssr scripts/recon-check.ts --outDir node_modules/.tmp/recon-check --emptyOutDir --logLevel warn && node node_modules/.tmp/recon-check/recon-check.js"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "latest",
