@@ -742,3 +742,8 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .px-early-btn{display:inline-flex;align-items:center;gap:10px;font-size:15px;padding:15px 22px;width:auto}
 @media(max-width:1100px){.px-rules{grid-template-columns:repeat(3,minmax(0,1fr))}.px-rules-h{grid-column:1/-1}.px-early{grid-template-columns:1fr;gap:22px}}
 @media(max-width:700px){.px-rules{grid-template-columns:1fr}.px-early{padding:22px}.px-early-copy h2{font-size:26px}}
+
+/* Menu items: status / engagement type as a small tag at the bottom left */
+.nav-menu-item .nav-menu-tag{align-self:flex-start;margin-top:4px;font-size:9.5px;letter-spacing:.1em;padding:3px 8px;border-radius:20px;border:1px solid currentColor;line-height:1.2;opacity:.9}
+.nav-menu-item .nav-menu-tag i{width:6px;height:6px}
+.nav-menu-item{gap:3px}
