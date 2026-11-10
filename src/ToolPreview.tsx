@@ -113,3 +113,24 @@ export function GstrPreview() {
     <div className="tp-foot"><span><b>{ok}</b> of {GST_ROWS.length} matched · <b>{Math.max(0, shown) - ok}</b> to chase</span><ol><li className="on">GSTR-2B</li><li>GSTR-1</li></ol></div>
   </div>;
 }
+
+// Invoice reading: a scan line passes over an invoice, fields are lifted out, then checked against PO, GRN and the ledger.
+const INV_FIELDS: [string, string][] = [['Supplier GSTIN', '29SYNTH1001K1Z'], ['Invoice no.', 'KAV/26-27/0485'], ['Invoice date', '18-Sep-2026'], ['Taxable value', '₹1,00,000'], ['GST @ 18%', '₹18,000'], ['Total', '₹1,18,000']];
+const INV_CHECKS: [string, string, boolean][] = [['Purchase order', 'PO-7731 · rate agrees', true], ['Goods receipt', 'GRN-2210 · qty agrees', true], ['Ledger', 'Booked · ₹1,18,000', true], ['GSTR-2B', 'Not filed yet', false]];
+const INV_LOOP = 10000;
+export function InvoicePreview() {
+  const ref = useRef<HTMLDivElement>(null);
+  const t = useLoop(ref, INV_LOOP, 8000);
+  const scan = clamp((t - 300) / 3000); const got = Math.min(INV_FIELDS.length, Math.floor(scan * INV_FIELDS.length + 0.001) + (t > 3300 ? 1 : 0));
+  const checks = Math.max(0, Math.min(INV_CHECKS.length, Math.floor((t - 4200) / 700) + 1));
+  return <div className="tp tp-inv" ref={ref} role="img" aria-label="Animated preview of invoice reading and reconciliation">
+    <div className="tp-bar"><i /><i /><i /><span>Invoice inbox · KAV-0485.pdf · Sep 2026</span></div>
+    <div className="tp-body inv-body">
+      <div className="inv-doc"><div className="inv-scan" style={{ top: `${scan * 92}%`, opacity: t < 3400 ? 1 : 0 }} /><b>TAX INVOICE</b><small>Kaveri Packaging Pvt Ltd</small>
+        {INV_FIELDS.map(([k, v], i) => <div key={k} className={'inv-line' + (i < got ? ' hit' : '')}><span>{k}</span><span>{v}</span></div>)}</div>
+      <div className="inv-out"><small>Read by AI · {got} of {INV_FIELDS.length} fields</small>
+        {INV_CHECKS.map(([k, v, ok], i) => <div key={k} className={'inv-chk' + (i < checks ? (ok ? ' on ok' : ' on warn') : '')}><b>{i < checks ? (ok ? '✓' : '!') : '·'}</b><span>{k}<small>{i < checks ? v : 'waiting…'}</small></span></div>)}</div>
+    </div>
+    <div className="tp-foot"><span><b>{got}</b> fields read · <b>{INV_CHECKS.slice(0, checks).filter(c => c[2]).length}</b> checks passed</span><ol><li className={t < 4200 ? 'on' : 'done'}>Read</li><li className={t >= 4200 ? 'on' : ''}>Reconcile</li></ol></div>
+  </div>;
+}
