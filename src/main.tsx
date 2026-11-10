@@ -89,53 +89,56 @@ function Solutions(){return <section className="page section" id="solutions-page
 <div className="terms-band"><div><Label>HOW THE MONEY WORKS</Label><h2>One scope. <em>One agreed fee.</em></h2><p>Every programme is fixed-fee, agreed in writing before we start. No hourly billing, no scope creep, no surprise invoice at the end.</p><p>If you stop after the Diagnostic, that’s the whole engagement — no further obligation, no upsell conversation.</p></div><div><Label>WHAT WE DON’T DO</Label><ul className="dont-list">{notDone.map(x=><li key={x}>{x}</li>)}</ul></div></div>
 <div className="faq-band"><div><Label>COMMON QUESTIONS</Label><h2>Fees and <em>duration.</em></h2></div><FAQ/></div>
 <div className="lead-band"><div><Label>START HERE</Label><h2>Start with <em>half a day.</em></h2><p>Most clients begin with the Diagnostic. If that’s all you need, that is perfectly fine too.</p></div><div className="lead-action"><a className="button" href="#contact-form">Schedule an introductory call <ArrowUpRight size={17}/></a><p>A first conversation, not the Diagnostic. We’ll hear the situation and tell you honestly whether we can help.</p></div></div></section>}
-// Products: one reconciliation suite. Vendor recon is live; customer recon (the mirror image) and GSTR recon (an add-on to both) are on the stove.
-const suite: [string, string, string, string, 'live' | 'cooking' | 'simmer' | 'prep' | 'menu', string][] = [
-  ['products-vendor', '01', 'Vendor Payable Reconciliation', 'For buyers. Your payables against every vendor’s own books.', 'live', 'Live · go break it'],
-  ['products-customer', '02', 'Customer Reconciliation', 'For sellers. Your receivables against every customer’s own books.', 'cooking', 'On the stove'],
-  ['products-gstr', '03', 'GSTR Reconciliation', 'An add-on to both. Your books against the GST returns.', 'simmer', 'Add-on · simmering'],
-  ['products-invoice', '04', 'Invoice Reading & Reconciliation', 'Reads any invoice, then checks it against PO, receipt and ledger.', 'prep', 'Prepping ingredients'],
-  ['products-bank', '05', 'Bank Reconciliation', 'Bank statement against your books, line by line, every day.', 'menu', 'On the menu · next'],
+// Products: one interactive showcase. Pick a product on the left; the stage shows its one-line pitch and its live animation.
+// Vendor recon is live; the others share its engine and are at different stages "in the kitchen".
+type Kind='live'|'cooking'|'simmer'|'prep'|'menu';
+const suite: [string, string, string, string, Kind, string][] = [
+  ['products-vendor', '01', 'Vendor Payable Reconciliation', 'Your payables, checked against every vendor’s own books.', 'live', 'Live · go break it'],
+  ['products-customer', '02', 'Customer Reconciliation', 'The same check from the seller’s chair: your receivables against each customer’s books.', 'cooking', 'On the stove'],
+  ['products-gstr', '03', 'GSTR Reconciliation', 'Your books against GSTR-1 and GSTR-2B, plugged into both reconciliations.', 'simmer', 'Add-on · simmering'],
+  ['products-invoice', '04', 'Invoice Reading & Reconciliation', 'Reads any invoice, then checks it against PO, goods receipt and ledger.', 'prep', 'Prepping ingredients'],
+  ['products-bank', '05', 'Bank Reconciliation', 'Your bank statement against your books, line by line.', 'menu', 'On the menu · next'],
   ['products-settlements', '06', 'Payment & Marketplace Settlements', 'Every payout broken back into orders, fees, refunds and taxes.', 'menu', 'On the menu · next'],
 ];
+const SHOW: Record<string,{short:string;points:string[];preview:React.ReactNode;cta:[string,string]}> = {
+  'products-vendor': {short:'Vendor recon',points:['Any ledger format','Opening balance checked first','Statement the vendor signs'],preview:<ToolPreview/>,cta:['Open the live tool','#reconciliation-lab']},
+  'products-customer': {short:'Customer recon',points:['Same engine, ledger flipped','Short payments surfaced','Customer signs off'],preview:<ToolPreview mode="customer"/>,cta:['Get first taste','#contact']},
+  'products-gstr': {short:'GSTR recon',points:['ITC at risk flagged','Late filers listed','Add-on to both recons'],preview:<GstrPreview/>,cta:['Tell us your GST headache','#contact']},
+  'products-invoice': {short:'Invoice reading',points:['PDF, scan or email','PO · receipt · invoice match','Feeds every recon'],preview:<InvoicePreview/>,cta:['Send us your messiest invoice','#contact']},
+  'products-bank': {short:'Bank recon',points:['UTR + amount matching','Bank charges proposed','Unknown credits flagged'],preview:<BankPreview/>,cta:['Tell us how many banks','#contact']},
+  'products-settlements': {short:'Settlements',points:['Payout = bank, proven','Fee rates checked','Claims for short pay'],preview:<SettlementPreview/>,cta:['Tell us where you sell','#contact']},
+};
 const Steam=()=> <span className="steam" aria-hidden="true"><i/><i/><i/></span>;
-const Status=({kind,children}:{kind:'live'|'cooking'|'simmer'|'prep'|'menu';children:React.ReactNode})=> <span className={'ps-status '+kind}>{kind==='live'?<i className="dot"/>:<Steam/>}{children}</span>;
-function Products(){return <section className="page section" id="products"><Label>PRODUCTS & PLATFORMS</Label><h1>One reconciliation suite, <em>both sides of every ledger.</em></h1><p className="page-lede">We build tools from the problem outward. The first one is live and open for testing; the rest share its engine and are at various stages in the kitchen.</p>
-<nav className="ps-lineup" aria-label="Products">{suite.map(([id,n,t,d,k,s])=><a key={id} href={'#'+id} className={'ps-card '+k}><span className="ps-n">{n}</span><Status kind={k}>{s}</Status><h3>{t}</h3><p>{d}</p><span className="ps-go">{k==='live'?'See it, then try it':'Peek into the kitchen'} <ArrowRight size={14}/></span></a>)}</nav>
-<div className="ps-mirror"><div className="ps-mirror-copy"><Label>TWO SIDES OF THE SAME LEDGER</Label><h2>Your payable is someone’s <em>receivable.</em></h2><p>Every invoice lives twice: once in the buyer’s books as money owed, once in the seller’s books as money due. Vendor reconciliation is the buyer checking its vendors. Customer reconciliation is the same check from the seller’s chair. Same engine, ledger flipped. GSTR reconciliation then checks both against what was actually filed with the tax portal.</p></div>
-<div className="ps-mirror-art" aria-hidden="true"><div className="ps-book b"><small>Buyer’s books</small><b>Payable</b><span>Vendor recon</span></div><div className="ps-swap"><i>⇄</i><em>same invoice,<br/>two ledgers</em></div><div className="ps-book s"><small>Seller’s books</small><b>Receivable</b><span>Customer recon</span></div><div className="ps-gst"><small>GST portal</small><b>GSTR-1 · GSTR-2B</b><span>GSTR recon, add-on to both</span></div></div></div>
-
-<div className="product-feature pv" id="products-vendor"><div className="product-copy"><Status kind="live">Live product</Status><h2>Vendor Payable<br/><em>Reconciliation</em></h2><p>Your payables against every vendor’s own ledger, period after period. A vendor uploads its ledger in any format; the platform checks both opening balances, matches contra entries, invoices, credit notes, payments and TDS, and drafts the reconciliation statement with numbered annexures.</p>
-<ul className="pv-points">{['Opening balance continuity checked before anything is matched','Every match explained, nothing closed on a guess','Open items carried forward with their original period','Vendor signs off, or raises concerns, on the same page'].map(x=><li key={x}>{x}</li>)}</ul>
-<a className="button pv-cta" href="#reconciliation-lab">Open the live tool <ArrowUpRight size={17}/></a><small className="pv-note">Synthetic data · no sign-up · runs in your browser</small></div>
-<a className="product-visual pv-visual" href="#reconciliation-lab" aria-label="Open the live Vendor Payable Reconciliation tool"><ToolPreview/></a></div>
-
-<div className="product-feature pv flip" id="products-customer"><div className="product-visual pv-visual ps-cooking-visual" aria-label="Preview of customer reconciliation, not live yet"><ToolPreview mode="customer"/><span className="ps-tape">Under construction · something’s cooking</span></div>
-<div className="product-copy"><Status kind="cooking">On the stove</Status><h2>Customer<br/><em>Reconciliation</em></h2><p>Vendor reconciliation, seen from the other chair. If you sell, every customer keeps its own payable ledger of you. Upload it, and the same engine checks openings, matches invoices, credit notes, receipts and TDS, and builds the statement your customer signs off.</p>
-<ul className="pv-points">{['Receivables against each customer’s payable ledger','Short payments, deductions and unapplied receipts surfaced, not buried','The same annexures and sign-off as vendor recon'].map(x=><li key={x}>{x}</li>)}</ul>
-<a className="button ghost-btn" href="#contact">Get first taste when it’s ready <ArrowUpRight size={17}/></a><small className="pv-note">Not live yet. Same engine as the vendor tool, so you can judge the recipe there today.</small></div></div>
-
-<div className="product-feature pv" id="products-gstr"><div className="product-copy"><Status kind="simmer">Add-on · simmering</Status><h2>GSTR<br/><em>Reconciliation</em></h2><p>Because the tax portal has opinions too. An add-on that plugs into both tools: your purchase register against GSTR-2B for vendor recon, and your sales register against GSTR-1 for customer recon. Missing invoices, value mismatches and late filers show up before your input tax credit does not.</p>
-<ul className="pv-points">{['Purchase register vs GSTR-2B, invoice by invoice','Sales register vs GSTR-1, with the customer’s view alongside','ITC at risk flagged, with the vendor to chase'].map(x=><li key={x}>{x}</li>)}</ul>
-<a className="button ghost-btn" href="#contact">Tell us your GST headache <ArrowUpRight size={17}/></a><small className="pv-note">Not live yet. Built as an add-on to Vendor Payable and Customer Reconciliation.</small></div>
-<div className="product-visual pv-visual ps-cooking-visual" aria-label="Preview of GSTR reconciliation, not live yet"><GstrPreview/><span className="ps-tape">Simmering · add-on</span></div></div>
-
-<div className="product-feature pv flip" id="products-invoice"><div className="product-visual pv-visual ps-cooking-visual" aria-label="Preview of invoice reading and reconciliation, not live yet"><InvoicePreview/><span className="ps-tape">In prep · knives out</span></div>
-<div className="product-copy"><Status kind="prep">Prepping ingredients</Status><h2>Invoice Reading &amp;<br/><em>Reconciliation</em></h2><p>Every reconciliation starts with an invoice someone had to type. This one reads it for you: PDFs, scans, photos and email attachments, in any layout. It lifts out the supplier, GSTIN, invoice number, dates, line items and tax, then checks the invoice against the purchase order, the goods receipt and the ledger before anyone books it.</p>
-<ul className="pv-points">{['Any invoice layout read by AI, with every field shown against the source','Three-way check: purchase order, goods receipt, invoice','Booked once, then fed straight into vendor and GSTR reconciliation'].map(x=><li key={x}>{x}</li>)}</ul>
-<a className="button ghost-btn" href="#contact">Send us your messiest invoice <ArrowUpRight size={17}/></a><small className="pv-note">Not live yet. The first ingredient for every other product on this page.</small></div></div>
-
-<div className="product-feature pv" id="products-bank"><div className="product-copy"><Status kind="menu">On the menu · next</Status><h2>Bank<br/><em>Reconciliation</em></h2><p>The reconciliation every business does, and nobody enjoys. Your bank statement against your books, matched line by line: payments to vendors, receipts from customers, charges and interest nobody booked, and credits nobody can explain. Same engine as vendor recon, with the bank as the other party.</p>
-<ul className="pv-points">{['Statement lines matched to payments and receipts by UTR, amount and date','Bank charges and interest proposed as entries, not left hanging','Unidentified credits flagged with who most likely paid'].map(x=><li key={x}>{x}</li>)}</ul>
-<a className="button ghost-btn" href="#contact">Tell us how many bank accounts you juggle <ArrowUpRight size={17}/></a><small className="pv-note">Not live yet. Next on the menu after the products above.</small></div>
-<div className="product-visual pv-visual ps-cooking-visual" aria-label="Preview of bank reconciliation, not live yet"><BankPreview/><span className="ps-tape">On the menu · next</span></div></div>
-
-<div className="product-feature pv flip" id="products-settlements"><div className="product-visual pv-visual ps-cooking-visual" aria-label="Preview of payment and marketplace settlement reconciliation, not live yet"><SettlementPreview/><span className="ps-tape">On the menu · next</span></div>
-<div className="product-copy"><Status kind="menu">On the menu · next</Status><h2>Payment &amp; Marketplace<br/><em>Settlements</em></h2><p>Payment gateways and marketplaces pay you a single number. This takes that number apart again: every order, commission, shipping charge, refund, chargeback, TCS and TDS, until it equals what reached your bank. Orders paid short, or not at all, come out as a claim list.</p>
-<ul className="pv-points">{['Gateway and marketplace payouts matched to orders and to the bank','Fees, refunds and taxes checked against the agreed rates','Short and missing settlements turned into a claim list'].map(x=><li key={x}>{x}</li>)}</ul>
-<a className="button ghost-btn" href="#contact">Tell us where you sell <ArrowUpRight size={17}/></a><small className="pv-note">Not live yet. Built for brands selling online and on marketplaces.</small></div></div>
-
-<div className="product-details"><div><Label>THE BUSINESS PROBLEM</Label><h3>Balances between businesses drift apart quietly: late postings, short payments, TDS, credit notes booked on one side only, invoices the supplier never filed. By year-end nobody can say which differences are old and which are new.</h3></div><div><Label>WHAT THE SUITE DOES</Label><ul>{['Ledger upload in any format, with the ERP side fetched automatically','Opening balance check for both parties before any matching','Contra, invoice, credit note, payment and TDS matching in order','Unreconciled items with owners, notes and evidence','A statement from one closing balance to the other, explained by annexures','Sign-off by the other party, period close and carry-forward'].map(x=><li key={x}>{x}</li>)}</ul></div></div></section>}
+const Status=({kind,children}:{kind:Kind;children:React.ReactNode})=> <span className={'ps-status '+kind}>{kind==='live'?<i className="dot"/>:<Steam/>}{children}</span>;
+const ROTATE_MS=9000; const durOf=(id:string)=>id==='products-vendor'||id==='products-customer'?14000:ROTATE_MS;
+function Products(){
+  const fromHash=()=>{const h=window.location.hash.slice(1);return suite.some(s=>s[0]===h)?h:'products-vendor'};
+  const [sel,setSel]=useState(fromHash); const [auto,setAuto]=useState(()=>window.location.hash==='#products'&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const [hover,setHover]=useState(false); const [tick,setTick]=useState(0);
+  React.useEffect(()=>{const f=()=>{if(window.location.hash.startsWith('#products-')){setSel(fromHash());setAuto(false);}};window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
+  // Auto-advance through the products until the visitor picks one; pauses while the pointer is over the showcase.
+  React.useEffect(()=>{if(!auto||hover)return;const start=Date.now()-tick;const id=setInterval(()=>{const e=Date.now()-start;if(e>=durOf(sel)){setTick(0);setSel(s=>suite[(suite.findIndex(x=>x[0]===s)+1)%suite.length][0]);}else setTick(e);},100);return()=>clearInterval(id)},[auto,hover,sel]);
+  const pick=(id:string)=>{setSel(id);setAuto(false);setTick(0)};
+  // On phones the product list scrolls sideways; keep the selected product in view without moving the page.
+  React.useEffect(()=>{const r=document.querySelector('.px-rail') as HTMLElement|null;const t=document.getElementById(sel);if(r&&t&&r.scrollWidth>r.clientWidth)r.scrollTo({left:t.offsetLeft-12,behavior:'smooth'})},[sel]);
+  const cur=suite.find(s=>s[0]===sel)!; const d=SHOW[sel]; const live=cur[4]==='live';
+  return <section className="page section px" id="products"><Label>PRODUCTS & PLATFORMS</Label><h1>Every number you share with someone else, <em>checked.</em></h1><p className="page-lede">Six tools, one engine. One is live today; the rest are in the kitchen.</p>
+  <div className="px-show" id="products-suite" onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}>
+    <div className="px-rail" role="tablist" aria-label="Products">{suite.map(([id,n,t,,k,st])=>{const on=id===sel;return <button key={id} role="tab" id={id} aria-selected={on} aria-controls="px-stage" className={'px-tab '+k+(on?' on':'')} onClick={()=>pick(id)}>
+      <span className="px-n">{n}</span><span className="px-t"><b>{t}</b><Status kind={k}>{st}</Status></span>{on&&auto&&<i className="px-prog" style={{width:`${(tick/durOf(id))*100}%`}}/>}</button>})}</div>
+    <div className="px-stage" id="px-stage" role="tabpanel" aria-labelledby={sel} key={sel}>
+      <div className="px-info"><Status kind={cur[4]}>{cur[5]}</Status><h2>{cur[2]}</h2><p>{cur[3]}</p>
+        <ul className="px-points">{d.points.map(x=><li key={x}>{x}</li>)}</ul>
+        <a className={'button '+(live?'':'ghost-btn')} href={d.cta[1]}>{d.cta[0]} <ArrowUpRight size={16}/></a>{live?<small className="pv-note">Synthetic data · no sign-up</small>:<small className="pv-note">Not live yet · shares the vendor engine</small>}</div>
+      {live?<a className="px-visual" href="#reconciliation-lab" aria-label="Open the live tool">{d.preview}</a>:<div className="px-visual soon">{d.preview}<span className="ps-tape">{cur[4]==='menu'?'Next on the menu':'Something’s cooking'}</span></div>}
+    </div>
+  </div>
+  <div className="px-flow" aria-label="How the products fit together"><span className="px-flow-l">How they fit</span>
+    {[[['products-invoice']],[['products-vendor'],['products-customer']],[['products-gstr'],['products-bank'],['products-settlements']]].map((grp,i)=><React.Fragment key={i}>{i>0&&<span className="px-arrow">→</span>}<span className="px-grp">{grp.map(([id])=><button key={id} className={'px-chip '+(suite.find(s=>s[0]===id)![4])+(id===sel?' on':'')} onClick={()=>{pick(id);document.getElementById('products-suite')?.scrollIntoView({behavior:'smooth',block:'start'})}}>{SHOW[id].short}</button>)}</span></React.Fragment>)}
+    <span className="px-arrow">→</span><span className="px-end">One statement, signed off</span></div>
+  <div className="px-values">{[['01','Opening balance first','Nothing is matched until both openings agree.'],['02','Nothing closed on a guess','Suggestions wait for a person to confirm.'],['03','Every difference explained','Annexures add up to the gap, to the rupee.']].map(([n,t,x])=><div key={n}><span>{n}</span><b>{t}</b><p>{x}</p></div>)}</div>
+  <div className="px-cta"><b>Want one of these sooner?</b><span>Tell us which, and what it would save you.</span><a className="button" href="#contact">Talk to us <ArrowUpRight size={16}/></a></div>
+  </section>}
 // Our Approach page. Written in "we"; no names and no fees anywhere.
 const gapSigns = ['Revenue is growing, but nobody can say with confidence what was earned versus what was actually received','Month-end takes longer every quarter, and the numbers still get argued over','Purchases, discounts, and credit notes get approved by whoever happens to be available','Stock on the system doesn’t match stock on the floor, and margin drifts without a clear reason','The same problem has been “fixed” twice already — and it’s back'];
 const processSteps = [
