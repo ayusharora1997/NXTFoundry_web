@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { openItems, decideCandidate, manualMatch, reverseMatch, STAGES, r2, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type MatchRec, type Txn, type RelState, type ExStatus } from './cycle';
+import { openItems, FAMILY, decideCandidate, manualMatch, reverseMatch, STAGES, r2, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type MatchRec, type Txn, type RelState, type ExStatus } from './cycle';
 import { ENTITIES, tagLabel } from './ledger';
 import { PairTable, kindOf, sumOf } from './PairTable';
 import { USERS } from './store';
@@ -34,11 +34,20 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
   const pendingAdj = st.adjustments.filter(a => a.status === 'pending');
   const detailRow = items.find(i => i.txn.id === detail);
 
-  const cue = (t: Tab, label: string, n: number, B: number, V: number, value: number, note: string) => <button key={t} type="button" className={'rx-cue' + (tab === t ? ' on' : '')} onClick={() => setTab(t)} aria-pressed={tab === t}>
-    <span>{label}</span><b>{n}</b><i>{note} · {money(value, cur, 0)}</i><span className="rx-cue-tip" role="tooltip">{label}: {n}<br />Buyer items {B} · Vendor items {V}<br />Value {money(value, cur, 0)}</span></button>;
+  const FAM: Record<string, string> = { INV: 'Invoices & debit notes', DN: 'Invoices & debit notes', CN: 'Credit notes', PAY: 'Payments', TDS: 'TDS' };
+  const FAMS = ['Invoices & debit notes', 'Credit notes', 'Payments', 'TDS'];
+  const famOf = (x: Txn[]) => FAM[FAMILY[x[0].type]];
+  const [fam, setFam] = useState('');
+  const inFam = (x: Txn[]) => !fam || famOf(x) === fam;
+  const units = tab === 'sugg' ? sugg.map(x => ({ B: x.B, V: x.V, value: val(x.B, x.V, x.c.kind === 'contra') })) : tab === 'partial' ? partial.map(x => ({ B: x.B, V: x.V, value: val(x.B, x.V, x.mm.kind === 'contra') }))
+    : items.map(i => ({ B: i.txn.side === 'B' ? [i.txn] : [], V: i.txn.side === 'V' ? [i.txn] : [], value: Math.abs(i.txn.amount) }));
+  const note = tab === 'sugg' ? 'to review' : tab === 'partial' ? 'with a difference' : 'open';
+  const cue = (label: string, key: string) => { const u = units.filter(x => x.B.length + x.V.length > 0 && (!key || famOf([...x.B, ...x.V]) === key)); const B = u.reduce((s, x) => s + x.B.length, 0), V = u.reduce((s, x) => s + x.V.length, 0), value = u.reduce((s, x) => s + x.value, 0);
+    return <button key={key || 'all'} type="button" className={'rx-cue' + (fam === key ? ' on' : '') + (!key ? ' total' : '') + (!u.length ? ' zero' : '')} onClick={() => setFam(fam === key ? '' : key)} aria-pressed={fam === key}>
+      <span>{label}</span><b>{u.length}</b><i>{note} · {money(value, cur, 0)}</i><span className="rx-cue-tip" role="tooltip">{label}: {u.length}<br />Buyer items {B} · Vendor items {V}<br />Value {money(value, cur, 0)}</span></button>; };
 
   const panel = (side: 'B' | 'V') => {
-    const list = side === 'B' ? openB : openV, sel = side === 'B' ? sB : sV, setSel = side === 'B' ? setSelB : setSelV; const all = list.length > 0 && sel.length === list.length;
+    const list = (side === 'B' ? openB : openV).filter(i => inFam([i.txn])), sel = side === 'B' ? sB : sV, setSel = side === 'B' ? setSelB : setSelV; const all = list.length > 0 && sel.length === list.length;
     return <section className="rx-mx" aria-label={side === 'B' ? 'Open buyer items' : 'Open vendor items'}>
       <header><h3>{side === 'B' ? 'Buyer items' : 'Vendor items'} <em>{list.length}</em></h3><span>{sel.length} selected · {signedMoney(sumOf(get(sel)), cur)}</span></header>
       <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th><input type="checkbox" aria-label="Select all" checked={all} onChange={() => setSel(all ? [] : list.map(i => i.txn.id))} /></th><th>Open period</th><th>Document no.</th><th>Type</th><th>Date</th><th className="ar">Amount</th><th>Reference</th><th>Age</th><th>Status</th></tr></thead>
@@ -56,20 +65,16 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
       Everything for {tagLabel(tag)} that is not yet reconciled: matches waiting for you, matches you may want to undo, and items still open on either side.
     </PageHead>
     {locked && <p className="rw-note warn">The statement for this period is {p.phase}. Matching is locked; an approver can reopen it from the Reconciliation Statement tab.</p>}
-    <div className="rx-cues">
-      {cue('sugg', 'Suggested matches', sugg.length, sugg.reduce((s, x) => s + x.B.length, 0), sugg.reduce((s, x) => s + x.V.length, 0), sugg.reduce((s, x) => s + val(x.B, x.V, x.c.kind === 'contra'), 0), 'to review')}
-      {cue('partial', 'Partially reconciled', partial.length, partial.reduce((s, x) => s + x.B.length, 0), partial.reduce((s, x) => s + x.V.length, 0), partial.reduce((s, x) => s + val(x.B, x.V, x.mm.kind === 'contra'), 0), 'with a difference')}
-      {cue('open', 'Open items', items.length, openB.length, openV.length, items.reduce((s, i) => s + Math.abs(i.txn.amount), 0), 'unmatched')}
-    </div>
-    <div className="rw-tabs" role="tablist">{([['sugg', 'Suggested match', sugg.length], ['partial', 'Partially reconciled', partial.length], ['open', 'Open items', items.length]] as const).map(([k, l, n]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}<em>{n}</em></button>)}</div>
+    <div className="rw-tabs" role="tablist">{([['sugg', 'Suggested match', sugg.length], ['partial', 'Partially reconciled', partial.length], ['open', 'Open items', items.length]] as const).map(([k, l, n]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => { setTab(k); setFam(''); }}>{l}<em>{n}</em></button>)}</div>
+    <div className="rx-cues" aria-label="By document type. Click to filter.">{cue(tab === 'sugg' ? 'All suggested' : tab === 'partial' ? 'All partially reconciled' : 'All open items', '')}{FAMS.map(f => cue(f, f))}</div>
 
     {tab === 'sugg' && <Card title="Suggested matches" tip="Probable pairings the platform will not close on its own. They stay unreconciled until you confirm; confirmed matches move to Reconciled transactions.">
-      <PairTable cur={cur} curTag={tag} status={<Pill tone="violet">Suggested</Pill>} empty="No suggested matches waiting for review." rows={sugg.map(({ c, B, V }) => ({ key: c.id, tag: oldest([...B, ...V]), B, V, type: c.kind === 'contra' ? 'Contra (suggested)' : kindOf(B, V) + ' (suggested)', sub: `Score ${c.score} · ${c.reasons.join(' · ')}`,
+      <PairTable cur={cur} curTag={tag} status={<Pill tone="violet">Suggested</Pill>} empty="No suggested matches waiting for review." rows={sugg.filter(x => inFam([...x.B, ...x.V])).map(({ c, B, V }) => ({ key: c.id, tag: oldest([...B, ...V]), B, V, type: c.kind === 'contra' ? 'Contra (suggested)' : kindOf(B, V) + ' (suggested)', sub: `Score ${c.score} · ${c.reasons.join(' · ')}`,
         actions: <><button className="rw-btn small lime" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, true, user.name, at()), 'Confirmed. The items moved to Reconciled transactions.')}>Match</button><button className="rw-btn small" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, false, user.name, at()), 'Rejected; the items stay open.')}>Reject</button></> }))} />
     </Card>}
 
     {tab === 'partial' && <Card title="Partially reconciled" tip="Matches that still carry a difference. Once the difference is zero a match is fully reconciled and moves to Reconciled transactions. Reverse one to send its items back to Open items.">
-      <PairTable cur={cur} curTag={tag} status={<Pill tone="amber">Matched</Pill>} empty="No matches carry a difference. Fully matched items are on Reconciled transactions." rows={partial.map(({ mm, B, V }) => ({ key: mm.id, tag: oldest([...B, ...V]), B, V, type: kindOf(B, V, mm.kind === 'contra'), sub: `${stageName(mm)} · ${mm.confidence}`,
+      <PairTable cur={cur} curTag={tag} status={<Pill tone="amber">Matched</Pill>} empty="No matches carry a difference. Fully matched items are on Reconciled transactions." rows={partial.filter(x => inFam([...x.B, ...x.V])).map(({ mm, B, V }) => ({ key: mm.id, tag: oldest([...B, ...V]), B, V, type: kindOf(B, V, mm.kind === 'contra'), sub: `${stageName(mm)} · ${mm.confidence}`,
         actions: <button className="rw-btn small" disabled={locked} onClick={() => { setRev(mm); setReason(''); }}>Reverse</button> }))} />
     </Card>}
 
@@ -97,13 +102,14 @@ function MatchDrawer({ ctx, B, V, onClose, onDone }: { ctx: Ctx; B: Txn[]; V: Tx
   const { st, tag, run, user, at } = ctx; const cur = st.rel.currency; const [remarks, setRemarks] = useState(''); const [files, setFiles] = useState<string[]>([]);
   const same = !B.length || !V.length; const net = same ? sumOf([...B, ...V]) : r2(sumOf(B) - sumOf(V)); const ok = Math.abs(net) < 0.005;
   const list = (title: string, x: Txn[]) => <div className="rx-mm"><h4 className="rw-h4">{title} · {x.length}</h4>{x.length ? <div className="rx-cand-tx">{x.map(t => <div key={t.id}><span className="side">{t.side === 'B' ? 'Buyer' : 'Vendor'}</span><b>{t.docNo || t.ref}</b><small>{TYPE_LABEL[t.type]} · {fmtDay(t.date)} · {tagLabel(t.originTag)}</small><b className="amt">{signedMoney(t.amount, cur)}</b></div>)}</div> : <p className="rx-muted">None selected.</p>}</div>;
-  return <Drawer wide title="Match selected items" sub={`${kindOf(B, V)} · ${B.length} buyer, ${V.length} vendor`} onClose={onClose}>
+  return <Drawer title="Match selected items" sub={`${kindOf(B, V)} · ${B.length} buyer, ${V.length} vendor`} onClose={onClose}>
     {list('Buyer entries', B)}{list('Vendor entries', V)}
     <dl className="rw-dl four"><div><dt>Buyer value</dt><dd>{signedMoney(sumOf(B), cur)}</dd></div><div><dt>Vendor value</dt><dd>{signedMoney(sumOf(V), cur)}</dd></div><div><dt>{same ? 'Net of selection' : 'Difference (buyer − vendor)'}</dt><dd className={ok ? 'rw-ok' : 'rw-neg'}>{ok ? '✓ 0.00' : signedMoney(net, cur)}</dd></div></dl>
     {!ok && <p className="rw-note warn">These do not net to zero, so they cannot be closed as a match. Change the selection, or open an item and propose an adjustment for the difference.</p>}
     <label className="rw-field"><span>Remarks</span><textarea rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="Why these belong together (e.g. vendor allocated one receipt across three invoices)" /></label>
-    <label className="rw-field"><span>Supporting files (optional)</span><input type="file" multiple onChange={e => setFiles([...(e.target.files ?? [])].map(f => f.name))} /></label>
-    {files.length > 0 && <p className="rx-muted">Attached: {files.join(', ')}</p>}
+    <div className="rw-field"><span>Supporting files (optional)</span>
+      <label className="rx-attach"><input type="file" multiple onChange={e => { const n = [...(e.target.files ?? [])].map(f => f.name); setFiles(f => [...new Set([...f, ...n])]); e.target.value = ''; }} /><Icon n="upload" s={18} /><span><b>Attach files</b><small>Emails, statements, images or sheets</small></span></label>
+      {files.length > 0 && <ul className="rx-chips">{files.map(n => <li key={n}><Icon n="file" s={14} /><span>{n}</span><button type="button" aria-label={`Remove ${n}`} onClick={() => setFiles(files.filter(x => x !== n))}>×</button></li>)}</ul>}</div>
     <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={onClose}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!ok || !remarks.trim() || !(B.length + V.length)} onClick={() => { if (run(s => manualMatch(s, tag, [...B, ...V].map(t => t.id), remarks.trim() + (files.length ? ` [Attachments: ${files.join(', ')}]` : ''), user.name, at()), 'Match recorded. The items moved to Reconciled transactions.')) onDone(); }}>Record match</button></div>
   </Drawer>;
 }
