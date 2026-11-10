@@ -928,3 +928,9 @@
 .rx-sub{display:block;color:var(--muted)}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .rx-q{border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;background:#fafbf7;font:inherit;min-width:200px}
+
+.rx-cue span:first-child{font-weight:700;font-size:12.5px}
+.rx-cue b{order:2}.rx-cue i{order:3}
+.rx-cue.total{background:var(--dark);color:#fff;border-color:var(--dark)}.rx-cue.total i{color:var(--lime)}
+.rx-cue.zero:not(.on){opacity:.55}
+.rx-act{display:flex;gap:6px;align-items:flex-start}
