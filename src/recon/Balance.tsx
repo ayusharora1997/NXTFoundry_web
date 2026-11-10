@@ -7,6 +7,7 @@ import { Card, Icon, Pill, Waterfall, money, signedMoney } from './ui';
 import { PageHead, vendorOf, entityOf, STATUS_TONE, type Ctx } from './App';
 import History from './History';
 import { kindOf } from './PairTable';
+import { SECT, type Info } from './annex';
 
 export default function Balance({ ctx }: { ctx: Ctx }) {
   const { st, tag, settings, run, user, at, approver, go, ws } = ctx;
@@ -20,30 +21,14 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
   const next = nextDef(st.rel, tag); const nextReady = next && filesFor(ws, st.rel.id, next.tag).some(f => f.kind === 'period');
   const v = vendorOf(st), e = entityOf(st);
   // ---- Statement model: closing balance per buyer → annexures → closing balance per vendor ----
-  type Info = { fam: string; side: 'B' | 'V'; held: boolean; timing: boolean };
   const held = heldTxnIds(st); const byId = new Map(st.txns.map(t => [t.id, t]));
   const info = (r: AnnexRow): Info => ({ fam: FAMILY[byId.get(r.txnId)!.type], side: r.buyerAmount !== null ? 'B' : 'V', held: held.has(r.txnId), timing: r.category.endsWith('(timing)') });
-  const INVF = ['INV', 'DN'];
-  const SECT: { n: number; sub?: string; title: string; fam: string[]; t: (i: Info) => boolean }[] = [
-    { n: 1, title: 'Invoices subsequently accounted by buyer', fam: INVF, t: i => i.side === 'V' && i.timing && !i.held },
-    { n: 2, title: 'Invoices not accounted by buyer', fam: INVF, t: i => i.side === 'V' && !i.timing && !i.held },
-    { n: 3, title: 'Invoices partially matched', fam: INVF, t: i => i.held },
-    { n: 4, title: 'Invoices not accounted by vendor', fam: INVF, t: i => i.side === 'B' && !i.held },
-    { n: 5, sub: 'a', title: 'Credit notes subsequently or not accounted by buyer', fam: ['CN'], t: i => i.side === 'V' && !i.held },
-    { n: 5, sub: 'b', title: 'Credit notes partially matched', fam: ['CN'], t: i => i.held },
-    { n: 5, sub: 'c', title: 'Credit notes subsequently or not accounted by vendor', fam: ['CN'], t: i => i.side === 'B' && !i.held },
-    { n: 6, title: 'Payments not accounted by buyer', fam: ['PAY'], t: i => i.side === 'V' && !i.held },
-    { n: 7, title: 'Payments partially matched', fam: ['PAY'], t: i => i.held },
-    { n: 8, title: 'Payments not accounted by vendor', fam: ['PAY'], t: i => i.side === 'B' && !i.held },
-    { n: 9, sub: 'a', title: 'TDS not accounted by buyer', fam: ['TDS'], t: i => i.side === 'V' && !i.held },
-    { n: 9, sub: 'b', title: 'TDS partially matched', fam: ['TDS'], t: i => i.held },
-    { n: 9, sub: 'c', title: 'TDS not accounted by vendor', fam: ['TDS'], t: i => i.side === 'B' && !i.held },
-  ];
   // Moving from the buyer's closing to the vendor's: remove what only the buyer has, add what only the vendor has.
   const eff = (r: AnnexRow) => r.buyerAmount !== null ? -r.buyerAmount : (r.vendorAmount ?? 0);
   const allRows = s.annexures.flatMap(a => a.rows);
   const secs = SECT.map(d => { const rows = allRows.filter(r => { const i = info(r); return d.fam.includes(i.fam) && d.t(i); }); return { ...d, rows, effect: r2(rows.reduce((x, r) => x + eff(r), 0)) }; });
   const ANN = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => { const ss = secs.filter(x => x.n === n); return { n, name: n === 5 ? 'Credit notes' : n === 9 ? 'TDS' : ss[0].title, secs: ss, count: ss.reduce((x, y) => x + y.rows.length, 0), effect: r2(ss.reduce((x, y) => x + y.effect, 0)) }; });
+  const SHOWN = ANN.filter(a => a.effect !== 0); // annexures with nothing to explain are left out
   const annTotal = r2(ANN.reduce((x, a) => x + a.effect, 0)); // equals vendor − buyer once adjustments and unexplained are nil
   const adjRows = s.adjustments.map(a => ({ id: a.id, label: a.kind === 'rounding' ? 'Rounding adjustment' : a.kind === 'opening-position' ? 'Approved opening position' : a.kind.startsWith('opening') ? `Approved ${a.side === 'B' ? 'buyer' : 'vendor'} opening difference` : 'Approved adjustment', effect: r2(-a.effect) }));
   const unexEff = s.unexplained === null ? 0 : r2(-s.unexplained);
@@ -53,8 +38,8 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
   const exportXlsx = () => {
     const files = filesFor(ws, st.rel.id, tag); const ledger = (side: Side) => { const f = files.find(x => x.side === side && x.kind === 'period');
       return { name: side === 'B' ? 'Buyer Ledger' : 'Vendor Ledger', widths: [16, 22, 14, 14, 14, 14, 14, 22, 22, 30, 12], rows: [[side === 'B' ? `Buyer ledger · ${e.name}` : `Vendor ledger · ${v.legalName}`], ['Opening balance', p.opening[side]], ['Closing balance', p.closing[side]], ['File', f?.fileName ?? 'Not received'], [], LEDGER_COLUMNS, ...(f?.rows ?? []).map(r => LEDGER_COLUMNS.map(c => r[c] ?? ''))] as (string | number | null)[][] }; };
-    const annSheet = (a: typeof ANN[number]) => { const rows: (string | number | null)[][] = [[`Annexure ${a.n} · ${a.name}`], []]; const head = ['Open period', 'Document no.', 'Type', 'Date', 'Buyer amount', 'Vendor amount', 'Reference', 'Status', 'Effect on bridge'];
-      a.secs.forEach(x => { if (a.secs.length > 1) rows.push([`${a.n}${x.sub} · ${x.title}`]); rows.push(head); x.rows.forEach(r => rows.push([tagLabel(r.originTag), r.docNo, r.type, fmtDay(r.date), r.buyerAmount, r.vendorAmount, r.reference, r.status, eff(r)])); if (!x.rows.length) rows.push(['Nil']); rows.push(['Total', '', '', '', '', '', '', '', x.effect], []); });
+    const annSheet = (a: typeof ANN[number]) => { const rows: (string | number | null)[][] = [[`Annexure ${a.n} · ${a.name}`], []]; const head = ['Annexure tag', 'Document no.', 'Type', 'Date', 'Buyer amount', 'Vendor amount', 'Reference', 'Status', 'Effect on bridge'];
+      a.secs.filter(x => x.effect !== 0).forEach(x => { if (a.secs.length > 1) rows.push([`${a.n}${x.sub} · ${x.title}`]); rows.push(head); x.rows.forEach(r => rows.push([r.originTag, r.docNo, r.type, fmtDay(r.date), r.buyerAmount, r.vendorAmount, r.reference, r.status, eff(r)])); if (!x.rows.length) rows.push(['Nil']); rows.push(['Total', '', '', '', '', '', '', '', x.effect], []); });
       if (a.secs.length > 1) rows.push([`Total annexure ${a.n}`, '', '', '', '', '', '', '', a.effect]); return { name: `Annexure ${a.n}`, widths: [16, 18, 18, 14, 16, 16, 24, 22, 16], rows }; };
     const pop = new Set(st.txns.filter(t => t.importedIn === tag || p.carriedIn.includes(t.id)).map(t => t.id)); const doc = (i: string) => byId.get(i)?.docNo || byId.get(i)?.ref || '';
     const rec = st.matches.filter(x => !x.reversed && !x.partial && x.kind !== 'adjustment' && [...x.buyerIds, ...x.vendorIds].some(i => pop.has(i)));
@@ -64,7 +49,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
     const bridge: (string | number | null)[][] = [['NXT Vendor Payable Reconciliation · Reconciliation statement'], [], ['Buyer entity', e.name], ['Business unit', st.rel.bu], ['Vendor', `${v.legalName} (${st.rel.vendorCode})`], ['Vendor GSTIN', v.gstin], ['Currency', cur], ['Period', tagLabel(tag)], ['Statement tag', tag], ['Version', s.version], ['Status', wf], ['Generated', s.generatedAt || at()], [],
       ['Closing balance as per buyer', s.buyerClosing], ...ANN.flatMap(a => [[`Annexure ${a.n} · ${a.name}`, a.effect, `${a.count} item(s)`], ...(a.secs.length > 1 ? a.secs.map(x => [`   ${a.n}${x.sub} · ${x.title}`, x.effect, `${x.rows.length} item(s)`]) : [])]),
       ...adjRows.map(a => [a.label, a.effect]), ...(unexEff ? [['Unexplained difference', unexEff]] : []), ['Closing balance as per vendor (computed)', endV], ['Closing balance per vendor ledger', s.vendorClosing], [], ['Difference in closing balances (buyer − vendor)', s.difference], ['Sum of annexures (buyer − vendor)', r2(-annTotal)]];
-    saveBlob(`${st.rel.vendorCode}_${st.rel.bu.replace(/\s/g, '')}_${tag}_reconciliation_v${s.version}.xlsx`, xlsx([{ name: 'Statement', widths: [48, 20, 20], rows: bridge }, ledger('B'), ledger('V'), ...ANN.map(annSheet), recSheet,
+    saveBlob(`${st.rel.vendorCode}_${st.rel.bu.replace(/\s/g, '')}_${tag}_reconciliation_v${s.version}.xlsx`, xlsx([{ name: 'Statement', widths: [48, 20, 20], rows: bridge }, ledger('B'), ledger('V'), ...SHOWN.map(annSheet), recSheet,
       { name: 'Sign-off', widths: [10, 12, 22, 22, 18, 50], rows: [['Version', 'Event', 'By', 'Vendor representative', 'At', 'Comments'], ...p.signoffs.map(x => [x.version, x.event, x.by, x.rep ?? '', x.at, x.comments])] }]));
   };
   return <>
@@ -80,9 +65,10 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
           <div className="rx-bridge">
             <div className="row tot"><span>Closing balance as per buyer</span><b>{m(s.buyerClosing)}</b></div>
             <p className="sub">Add / (less) to reach the vendor’s balance</p>
-            {ANN.map(a => <React.Fragment key={a.n}>
+            {!SHOWN.length && <div className="row"><span className="rx-muted">No unreconciled items. No annexures.</span><b>—</b></div>}
+            {SHOWN.map(a => <React.Fragment key={a.n}>
               <button type="button" className="row ann" onClick={() => { setOpen(open === a.n ? null : a.n); document.getElementById(`ann-${a.n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}><span>Annexure {a.n} · {a.name} <em>{a.count} item{a.count === 1 ? '' : 's'}</em></span><b>{a.effect ? signedMoney(a.effect, cur) : '—'}</b></button>
-              {a.secs.length > 1 && a.secs.map(x => <div key={x.sub} className="row subr"><span>{x.title} <em>{x.rows.length}</em></span><b>{x.effect ? signedMoney(x.effect, cur) : '—'}</b></div>)}
+              {a.secs.length > 1 && a.secs.filter(x => x.effect !== 0).map(x => <div key={x.sub} className="row subr"><span>{x.title} <em>{x.rows.length}</em></span><b>{x.effect ? signedMoney(x.effect, cur) : '—'}</b></div>)}
             </React.Fragment>)}
             {adjRows.map(a => <div key={a.id} className="row adj"><span>{a.label} <em>{a.id}</em></span><b>{signedMoney(a.effect, cur)}</b></div>)}
             {unexEff !== 0 && <div className="row bad"><span>Unexplained difference <em>{s.withinTolerance ? `within ${m(s.tolerance, 0)} tolerance · needs approval` : `above ${m(s.tolerance, 0)} tolerance`}</em></span><b>{signedMoney(unexEff, cur)}</b></div>}
@@ -93,12 +79,13 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
           <p className="rx-muted">Amounts are shown from the buyer’s payable view: items only the buyer has are taken out, items only the vendor has are added. {s.matched} matches and {s.contras} contra pairs are reconciled and not part of any annexure{s.pendingCandidates ? `; ${s.pendingCandidates} suggestion(s) await review and appear as open items` : ''}.</p>
         </Card>
         <Card title="Annexures" tip="Each annexure lists the unreconciled items behind its line in the statement, with the period each first appeared in. Items held in a partial match appear under ‘partially matched’.">
-          {ANN.map(a => <div key={a.n} id={`ann-${a.n}`} className={'rx-annex' + (open === null || a.n === open ? '' : ' collapsed')}>
+          {!SHOWN.length && <p className="rx-muted">No unreconciled items, so there are no annexures.</p>}
+          {SHOWN.map(a => <div key={a.n} id={`ann-${a.n}`} className={'rx-annex' + (open === null || a.n === open ? '' : ' collapsed')}>
             <h4>Annexure {a.n} — {a.name} <small>{a.count} item{a.count === 1 ? '' : 's'} · {signedMoney(a.effect, cur)}</small></h4>
-            {a.secs.map(x => <div key={x.sub ?? 'x'}>
+            {a.secs.filter(x => x.effect !== 0).map(x => <div key={x.sub ?? 'x'}>
               {a.secs.length > 1 && <h5 className="rx-annex-sub">{a.n}{x.sub}. {x.title}</h5>}
-              {x.rows.length === 0 ? <p className="rx-muted">Nil</p> : <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th>Open period</th><th>Document no.</th><th>Type</th><th>Date</th><th className="ar">Buyer amount</th><th className="ar">Vendor amount</th><th>Reference</th><th>Status</th><th className="ar">Effect</th></tr></thead>
-                <tbody>{x.rows.map(r => <tr key={r.txnId}><td><span className={'rx-tag' + (r.originTag !== tag ? ' old' : '')}>{tagLabel(r.originTag)}</span></td><td><b>{r.docNo}</b></td><td>{r.type}</td><td>{fmtDay(r.date)}</td><td className="ar">{r.buyerAmount === null ? '' : signedMoney(r.buyerAmount, cur)}</td><td className="ar">{r.vendorAmount === null ? '' : signedMoney(r.vendorAmount, cur)}</td><td>{r.reference}</td><td>{r.status}</td><td className="ar"><b>{signedMoney(eff(r), cur)}</b></td></tr>)}</tbody>
+              {x.rows.length === 0 ? <p className="rx-muted">Nil</p> : <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th>Annexure tag</th><th>Document no.</th><th>Type</th><th>Date</th><th className="ar">Buyer amount</th><th className="ar">Vendor amount</th><th>Reference</th><th>Status</th><th className="ar">Effect</th></tr></thead>
+                <tbody>{x.rows.map(r => <tr key={r.txnId}><td><span className={'rx-tag' + (r.originTag !== tag ? ' old' : '')}>{r.originTag}</span><small className="rx-sub">{tagLabel(r.originTag)}</small></td><td><b>{r.docNo}</b></td><td>{r.type}</td><td>{fmtDay(r.date)}</td><td className="ar">{r.buyerAmount === null ? '' : signedMoney(r.buyerAmount, cur)}</td><td className="ar">{r.vendorAmount === null ? '' : signedMoney(r.vendorAmount, cur)}</td><td>{r.reference}</td><td>{r.status}</td><td className="ar"><b>{signedMoney(eff(r), cur)}</b></td></tr>)}</tbody>
                 <tfoot><tr><td colSpan={8}>Total {a.secs.length > 1 ? `${a.n}${x.sub}` : `annexure ${a.n}`}</td><td className="ar">{signedMoney(x.effect, cur)}</td></tr></tfoot></table></div>}
             </div>)}
           </div>)}
@@ -106,7 +93,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
       </div>
       <aside className="rx-side">
         <Card title="Where the difference sits" tip="Each bar is one annexure: how far it moves the buyer’s closing balance towards the vendor’s. Hover or tap the statement lines to open an annexure.">
-          {ANN.some(a => a.effect) ? <ul className="rx-abars">{ANN.map(a => { const mx = Math.max(...ANN.map(x => Math.abs(x.effect)), 1); return <li key={a.n} className={a.effect < 0 ? 'neg' : a.effect > 0 ? 'pos' : ''}><span>Annexure {a.n}</span><i><b style={{ width: `${Math.abs(a.effect) / mx * 100}%` }} /></i><em>{a.effect ? signedMoney(a.effect, cur, 0) : '—'}</em></li>; })}</ul> : <p className="rx-muted">No unreconciled items. Nothing to explain.</p>}
+          {SHOWN.length ? <ul className="rx-abars">{SHOWN.map(a => { const mx = Math.max(...SHOWN.map(x => Math.abs(x.effect)), 1); return <li key={a.n} className={a.effect < 0 ? 'neg' : a.effect > 0 ? 'pos' : ''}><span>Annexure {a.n}</span><i><b style={{ width: `${Math.abs(a.effect) / mx * 100}%` }} /></i><em>{a.effect ? signedMoney(a.effect, cur, 0) : '—'}</em></li>; })}</ul> : <p className="rx-muted">No unreconciled items. Nothing to explain.</p>}
           <p className="rx-muted">Buyer closing {m(s.buyerClosing, 0)} → vendor closing {m(s.vendorClosing, 0)}.</p>
         </Card>
         <Card title="Review and sign-off" tip="Buyer prepares, shares, records the vendor’s response and signs; an approver closes. A signed statement cannot change silently: any change reopens it as a new version.">

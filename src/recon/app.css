@@ -973,3 +973,5 @@
 .rx-abars li.pos b{background:#8fb51c}.rx-abars li.neg b{background:#e58a78}
 .rx-abars em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
 @media(max-width:700px){.rx-sumchk{grid-template-columns:1fr}}
+
+.rx-annref{font-weight:700;white-space:nowrap;font-size:12.5px}

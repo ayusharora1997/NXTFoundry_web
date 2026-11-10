@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { openItems, heldTxnIds, FAMILY, decideCandidate, manualMatch, reverseMatch, STAGES, r2, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type MatchRec, type Txn, type RelState, type ExStatus } from './cycle';
 import { ENTITIES, tagLabel } from './ledger';
 import { PairTable, kindOf, sumOf } from './PairTable';
+import { annexOf } from './annex';
 import { USERS } from './store';
 import { Avatar, Card, DataTable, Drawer, Icon, Pill, money, signedMoney, type Col } from './ui';
 import { PageHead, vendorOf, entityOf, type Ctx } from './App';
@@ -18,7 +19,11 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
   const [tab, setTab] = useState<Tab>('sugg'); const [selB, setSelB] = useState<string[]>([]); const [selV, setSelV] = useState<string[]>([]);
   const [matching, setMatching] = useState(false); const [detail, setDetail] = useState<string | null>(null); const [rev, setRev] = useState<MatchRec | null>(null); const [reason, setReason] = useState('');
   const held = useMemo(() => heldTxnIds(st), [st]);
-  const items = useMemo(() => openItems(st, tag, settings).filter(i => !held.has(i.txn.id)), [st, tag, settings, held]);
+  const allOpen = useMemo(() => openItems(st, tag, settings), [st, tag, settings]);
+  const items = useMemo(() => allOpen.filter(i => !held.has(i.txn.id)), [allOpen, held]);
+  const timing = useMemo(() => new Map(allOpen.map(i => [i.txn.id, i.timing])), [allOpen]);
+  const annexOfTx = (t: Txn) => annexOf(t, held, timing.get(t.id) ?? false);
+  const annexes = (x: Txn[]) => [...new Set(x.map(annexOfTx))];
   const byId = useMemo(() => new Map(st.txns.map(t => [t.id, t])), [st]);
   const get = (ids: string[]) => ids.map(i => byId.get(i)!).filter(Boolean);
   const oldest = (x: Txn[]) => x.map(t => t.originTag).sort((a, b) => tagKey(a) - tagKey(b))[0] ?? tag;
@@ -51,31 +56,31 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
     const list = (side === 'B' ? openB : openV).filter(i => inFam([i.txn])), sel = side === 'B' ? sB : sV, setSel = side === 'B' ? setSelB : setSelV; const all = list.length > 0 && sel.length === list.length;
     return <section className="rx-mx" aria-label={side === 'B' ? 'Open buyer items' : 'Open vendor items'}>
       <header><h3>{side === 'B' ? 'Buyer items' : 'Vendor items'} <em>{list.length}</em></h3><span>{sel.length} selected · {signedMoney(sumOf(get(sel)), cur)}</span></header>
-      <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th><input type="checkbox" aria-label="Select all" checked={all} onChange={() => setSel(all ? [] : list.map(i => i.txn.id))} /></th><th>Open period</th><th>Document no.</th><th>Type</th><th>Date</th><th className="ar">Amount</th><th>Reference</th><th>Age</th><th>Status</th></tr></thead>
+      <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th><input type="checkbox" aria-label="Select all" checked={all} onChange={() => setSel(all ? [] : list.map(i => i.txn.id))} /></th><th>Annexure</th><th>Open period</th><th>Document no.</th><th>Type</th><th>Date</th><th className="ar">Amount</th><th>Reference</th><th>Age</th><th>Status</th></tr></thead>
         <tbody>{list.map(i => { const t = i.txn; return <tr key={t.id} className={sel.includes(t.id) ? 'sel' : ''}>
           <td><input type="checkbox" aria-label={`Select ${t.docNo || t.ref}`} checked={sel.includes(t.id)} onChange={() => setSel(sel.includes(t.id) ? sel.filter(x => x !== t.id) : [...sel, t.id])} /></td>
-          <td><span className={'rx-tag' + (t.originTag !== tag ? ' old' : '')}>{tagLabel(t.originTag)}</span></td>
+          <td><span className="rx-annref">{annexOfTx(t)}</span></td><td><span className={'rx-tag' + (t.originTag !== tag ? ' old' : '')}>{tagLabel(t.originTag)}</span></td>
           <td><button className="rw-link" onClick={() => setDetail(t.id)}>{t.docNo || t.ref}</button></td><td>{TYPE_LABEL[t.type]}</td><td>{fmtDay(t.date)}</td><td className="ar"><b>{signedMoney(t.amount, cur)}</b></td><td>{t.ref || (t.against ? `Against ${t.against}` : '—')}</td><td>{i.ageDays}d</td>
           <td>{i.candidateId ? <Pill tone="violet">Suggested</Pill> : <Pill tone={exTone(i.ex.status)}>{i.ex.status}</Pill>}</td></tr>; })}
-          {!list.length && <tr><td colSpan={9} className="rx-muted">No open {side === 'B' ? 'buyer' : 'vendor'} items.</td></tr>}</tbody></table></div>
+          {!list.length && <tr><td colSpan={10} className="rx-muted">No open {side === 'B' ? 'buyer' : 'vendor'} items.</td></tr>}</tbody></table></div>
     </section>;
   };
 
   return <>
     <PageHead title="Unreconciled transactions" actions={<><button className="rw-btn" onClick={() => go('matched')}>Reconciled transactions</button><button className="rw-btn lime" onClick={() => go('statement')}>Reconciliation statement →</button></>}>
-      Everything for {tagLabel(tag)} that is not yet reconciled: matches waiting for you, matches you may want to undo, and items still open on either side.
+      Everything for {tagLabel(tag)} that is not yet reconciled. Each item shows the statement annexure it belongs to and that annexure’s tag, so every line here ties back to the Reconciliation Statement.
     </PageHead>
     {locked && <p className="rw-note warn">The statement for this period is {p.phase}. Matching is locked; an approver can reopen it from the Reconciliation Statement tab.</p>}
     <div className="rw-tabs" role="tablist">{([['sugg', 'Suggested match', sugg.length], ['partial', 'Partially reconciled', partial.length], ['open', 'Open items', items.length]] as const).map(([k, l, n]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => { setTab(k); setFam(''); }}>{l}<em>{n}</em></button>)}</div>
     <div className="rx-cues" aria-label="By document type. Click to filter.">{cue(tab === 'sugg' ? 'All suggested' : tab === 'partial' ? 'All partially reconciled' : 'All open items', '')}{FAMS.map(f => cue(f, f))}</div>
 
     {tab === 'sugg' && <Card title="Suggested matches" tip="Probable pairings the platform will not close on its own. They stay unreconciled until you confirm; confirmed matches move to Reconciled transactions.">
-      <PairTable cur={cur} curTag={tag} status={<Pill tone="violet">Suggested</Pill>} empty="No suggested matches waiting for review." rows={sugg.filter(x => inFam([...x.B, ...x.V])).map(({ c, B, V }) => ({ key: c.id, tag: oldest([...B, ...V]), B, V, type: c.kind === 'contra' ? 'Contra (suggested)' : kindOf(B, V) + ' (suggested)', sub: `Score ${c.score} · ${c.reasons.join(' · ')}`,
+      <PairTable cur={cur} curTag={tag} status={<Pill tone="violet">Suggested</Pill>} empty="No suggested matches waiting for review." rows={sugg.filter(x => inFam([...x.B, ...x.V])).map(({ c, B, V }) => ({ key: c.id, annexures: annexes([...B, ...V]), tag: oldest([...B, ...V]), B, V, type: c.kind === 'contra' ? 'Contra (suggested)' : kindOf(B, V) + ' (suggested)', sub: `Score ${c.score} · ${c.reasons.join(' · ')}`,
         actions: <><button className="rw-btn small lime" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, true, user.name, at()), 'Confirmed. The items moved to Reconciled transactions.')}>Match</button><button className="rw-btn small" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, false, user.name, at()), 'Rejected; the items stay open.')}>Reject</button></> }))} />
     </Card>}
 
     {tab === 'partial' && <Card title="Partially reconciled" tip="Matches forced with a difference left over. The items stay open in the statement until the difference is resolved. Reverse a match to send its items back to Open items.">
-      <PairTable cur={cur} curTag={tag} status={<Pill tone="amber">Partial match</Pill>} empty="No partial matches. Fully matched items are on Reconciled transactions." rows={partial.filter(x => inFam([...x.B, ...x.V])).map(({ mm, B, V }) => ({ key: mm.id, tag: oldest([...B, ...V]), B, V, type: kindOf(B, V, mm.kind === 'contra'), sub: `${stageName(mm)} · ${mm.confidence}`,
+      <PairTable cur={cur} curTag={tag} status={<Pill tone="amber">Partial match</Pill>} empty="No partial matches. Fully matched items are on Reconciled transactions." rows={partial.filter(x => inFam([...x.B, ...x.V])).map(({ mm, B, V }) => ({ key: mm.id, annexures: annexes([...B, ...V]), tag: oldest([...B, ...V]), B, V, type: kindOf(B, V, mm.kind === 'contra'), sub: `${stageName(mm)} · ${mm.confidence}`,
         actions: <button className="rw-btn small" disabled={locked} onClick={() => { setRev(mm); setReason(''); }}>Reverse</button> }))} />
     </Card>}
 
