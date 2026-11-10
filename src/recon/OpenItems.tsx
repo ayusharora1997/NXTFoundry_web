@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { openItems, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type RelState, type ExStatus } from './cycle';
+import { openItems, decideCandidate, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type RelState, type ExStatus } from './cycle';
 import { ENTITIES } from './ledger';
 import { USERS } from './store';
 import { Avatar, Card, DataTable, Drawer, Icon, Pill, money, signedMoney, type Col } from './ui';
@@ -34,9 +34,10 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
   ];
   const cur = all.find(r => r.it.txn.id === detail);
   const pendingAdj = Object.values(ws.states).flatMap(st => st.adjustments.filter(a => a.status === 'pending').map(a => ({ st, a })));
+  const sugg = Object.values(ws.states).filter(x => !f.rel || x.rel.id === f.rel).flatMap(x => { const t = currentPeriod(x).tag; return x.candidates.filter(c => c.status === 'pending' && c.periodTag === t).map(c => ({ st: x, tag: t, c })); });
   const totals = (side: 'B' | 'V') => rows.filter(r => r.it.txn.side === side).length;
   return <>
-    <PageHead title="Unreconciled transactions">Everything still open in each relationship’s current period, with its original period, how long it has been carried, and who is working on it. Showing {f.rel ? label(ws.states[f.rel]) : 'all relationships'}; change it with the filters below.</PageHead>
+    <PageHead title="Unreconciled transactions">Everything not yet reconciled in each relationship’s current period, with its original period, how long it has been carried, and who is working on it. Showing {f.rel ? label(ws.states[f.rel]) : 'all relationships'}; change it with the filters below.</PageHead>
     <div className="rx-tiles four">
       <div className="rx-tile"><span>Open items shown</span><b>{rows.length}</b><small>{totals('B')} buyer-side · {totals('V')} vendor-side</small></div>
       <div className="rx-tile amber"><span>Carried from earlier periods</span><b>{rows.filter(r => r.it.txn.originTag !== r.tag).length}</b><small>Oldest {rows.length ? rows.map(r => r.it.txn.originTag).sort((a, b) => tagKey(a) - tagKey(b))[0] : '—'}</small></div>
@@ -46,6 +47,12 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
     {pendingAdj.length > 0 && <Card title="Adjustments awaiting approval" tip="Proposed by a preparer, approved by someone else. Approval settles the items in the reconciliation; it does not post to either ledger.">
       {pendingAdj.map(({ st, a }) => <div key={a.id} className="rx-adj"><div className="rw-stack"><b>{a.id} · {money(a.amount, st.rel.currency)}</b><small>{label(st)} · {a.txnIds.length} item(s) · proposed by {a.requestedBy} {a.at}</small><small>{a.reason}{a.evidence ? ` · ${a.evidence}` : ''}</small></div>
         <div className="rd-btns"><button className="rw-btn small lime" disabled={!ctx.approver || a.requestedBy === user.name} title={a.requestedBy === user.name ? 'You proposed this adjustment; someone else must approve it' : ''} onClick={() => run(s => decideAdjustment(s, a.id, true, user.name, at(), ctx.approver), `${a.id} approved; items settled`, st.rel.id)}>Approve</button><button className="rw-btn small" disabled={!ctx.approver} onClick={() => run(s => decideAdjustment(s, a.id, false, user.name, at(), ctx.approver), `${a.id} rejected`, st.rel.id)}>Reject</button></div></div>)}
+    </Card>}
+    {sugg.length > 0 && <Card title={`Suggested matches · ${sugg.length} to review`} tip="Probable pairings the platform will not close on its own. They stay unreconciled until confirmed; once confirmed they move to Reconciled transactions.">
+      {sugg.map(({ st, tag, c }) => { const tx = st.txns.filter(t => [...c.buyerIds, ...c.vendorIds].includes(t.id)); const locked = currentPeriod(st).phase !== 'working';
+        return <div key={c.id} className="rx-cand"><div className="rx-cand-h"><b>{c.kind === 'contra' ? 'Possible contra' : 'Suggested match'}</b><span className="rx-score">{c.score}</span><small>{label(st)} · {c.reasons.join(' · ')}</small></div>
+          <div className="rx-cand-tx">{tx.map(t => <div key={t.id}><span className="side">{t.side === 'B' ? 'Buyer' : 'Vendor'}</span><b>{t.docNo || t.ref}</b><small>{TYPE_LABEL[t.type]} · {fmtDay(t.date)} · {t.originTag}</small><b className="amt">{signedMoney(t.amount, st.rel.currency)}</b></div>)}</div>
+          <div className="rd-btns"><button className="rw-btn small lime" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, true, user.name, at()), 'Confirmed. The items moved to Reconciled transactions.', st.rel.id)}>Confirm match</button><button className="rw-btn small" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, false, user.name, at()), 'Rejected; the items stay unreconciled.', st.rel.id)}>Reject</button></div></div>; })}
     </Card>}
     <Card>
       <div className="rx-filters">
@@ -82,7 +89,7 @@ function ItemDrawer({ ctx, r, onClose, onWorkbench }: { ctx: Ctx; r: Row; onClos
     <h4 className="rw-h4">Period lineage</h4>
     <ol className="rx-lineage">{[t.originTag, ...it.carriedPeriods.filter(p => p !== t.originTag), tag].filter((x, i, a) => a.indexOf(x) === i).map((p, i, a) => <li key={p} className={i === a.length - 1 ? 'cur' : ''}><span className="rx-tag">{p}</span><small>{i === 0 ? 'Originated' : i === a.length - 1 ? 'Open now' : 'Carried forward at close'}</small></li>)}</ol>
     {linked.length > 0 && <><h4 className="rw-h4">Linked on the other side</h4>{linked.map(x => <p key={x.id} className="rx-muted"><b>{x.docNo || x.ref}</b> · {x.side === 'B' ? 'buyer' : 'vendor'} · {signedMoney(x.amount, c)} · difference {signedMoney(t.side === 'B' ? t.amount - x.amount : x.amount - t.amount, c)}</p>)}</>}
-    {it.candidateId && <p className="rw-note">A suggested pairing is waiting on the workbench. <button className="rw-link" onClick={onWorkbench}>Review it</button></p>}
+    {it.candidateId && <p className="rw-note">A suggested pairing for this item is listed under Suggested matches at the top of this screen.</p>}
     <div className="rd-two">
       <div><h4 className="rw-h4">Action required</h4><p className="rw-advice">{it.ex.action}</p>
         <h4 className="rw-h4">Status</h4><div className="rx-statuses">{MANUAL_STATUSES.map(s => <button key={s} className={it.ex.status === s ? 'on' : ''} onClick={() => upd({ status: s }, `Status set to ${s}`)}>{s}</button>)}</div>

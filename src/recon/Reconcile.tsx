@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { gate, previewFile, importFile, approveOpening, runStage, stageAvailable, decideCandidate, reverseMatch, manualMatch, closedTxnIds, openPool, STAGES, TYPE_LABEL, LEDGER_COLUMNS, fmtDay, r2, type LedgerFile, type MatchRec, type Candidate, type Txn, type StageId, type Side, type SideCheck, type RelState } from './cycle';
+import { gate, previewFile, importFile, approveOpening, runStage, stageAvailable, decideCandidate, reverseMatch, manualMatch, closedTxnIds, openPool, STAGES, TYPE_LABEL, LEDGER_COLUMNS, fmtDay, r2, type LedgerFile, type MatchRec, type Txn, type StageId, type Side, type SideCheck, type RelState } from './cycle';
 import { filesFor } from './store';
 import { tagLabel } from './ledger';
 import { parseCSV } from './csv';
@@ -8,15 +8,15 @@ import { Card, DataTable, Drawer, Icon, Pill, money, signedMoney, download, type
 import { PageHead, type Ctx, type Screen } from './App';
 import Dashboard from './Dashboard';
 
-type Cat = 'invdn' | 'cn' | 'pay' | 'tds' | 'paytds' | 'contra' | 'other' | 'suggested';
-const CATS: { id: Cat; label: string }[] = [{ id: 'invdn', label: 'Invoices & debit notes' }, { id: 'cn', label: 'Credit notes' }, { id: 'pay', label: 'Payments' }, { id: 'tds', label: 'TDS' }, { id: 'paytds', label: 'Payment + TDS' }, { id: 'contra', label: 'Contra' }, { id: 'other', label: 'Reviewed / manual' }, { id: 'suggested', label: 'Suggested matches' }];
+type Cat = 'invdn' | 'cn' | 'pay' | 'tds' | 'paytds' | 'contra' | 'other';
+const CATS: { id: Cat; label: string }[] = [{ id: 'invdn', label: 'Invoices & debit notes' }, { id: 'cn', label: 'Credit notes' }, { id: 'pay', label: 'Payments' }, { id: 'tds', label: 'TDS' }, { id: 'paytds', label: 'Payment + TDS' }, { id: 'contra', label: 'Contra' }, { id: 'other', label: 'Reviewed / manual' }];
 const catOf = (mm: MatchRec): Cat => mm.kind === 'contra' ? 'contra' : (['invdn', 'cn', 'pay', 'tds', 'paytds'] as string[]).includes(mm.stage) ? mm.stage as Cat : 'other';
-interface Row { key: string; mm?: MatchRec; cand?: Candidate; cat: Cat; B: Txn[]; V: Txn[]; tag: string; diff: number; value: number }
+interface Row { key: string; mm: MatchRec; cat: Cat; B: Txn[]; V: Txn[]; tag: string; diff: number; value: number }
 const pkey = (t: string) => t.slice(3) + t.slice(1, 3);
 const sum = (x: Txn[]) => r2(x.reduce((s, t) => s + t.amount, 0));
 /** How the items were grouped: contra, one to one, one to many, many to one, many to many. */
-const kindOf = (r: Row) => r.cand ? 'Suggested match' : r.cat === 'contra' ? 'Contra' : r.B.length === 1 && r.V.length === 1 ? 'One to one' : r.B.length === 1 ? 'One to many' : r.V.length === 1 ? 'Many to one' : 'Many to many';
-const KINDS = ['One to one', 'One to many', 'Many to one', 'Many to many', 'Contra', 'Suggested match'];
+const kindOf = (r: Row) => r.cat === 'contra' ? 'Contra' : r.B.length === 1 && r.V.length === 1 ? 'One to one' : r.B.length === 1 ? 'One to many' : r.V.length === 1 ? 'Many to one' : 'Many to many';
+const KINDS = ['One to one', 'One to many', 'Many to one', 'Many to many', 'Contra'];
 
 export default function Reconcile({ ctx }: { ctx: Ctx }) {
   const { st, tag, run, user, at, go } = ctx;
@@ -35,29 +35,25 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
       const B = mm.buyerIds.map(i => byId.get(i)!).filter(Boolean), V = mm.vendorIds.map(i => byId.get(i)!).filter(Boolean);
       out.push({ key: mm.id, mm, cat: catOf(mm), B, V, tag: oldest([...B, ...V]), diff: r2(sum(B) - sum(V)), value: val(B, V, mm.kind === 'contra') });
     });
-    st.candidates.filter(c => c.status === 'pending' && c.periodTag === tag).forEach(c => {
-      const B = c.buyerIds.map(i => byId.get(i)!).filter(Boolean), V = c.vendorIds.map(i => byId.get(i)!).filter(Boolean);
-      out.push({ key: c.id, cand: c, cat: 'suggested', B, V, tag: oldest([...B, ...V]), diff: r2(sum(B) - sum(V)), value: val(B, V, c.kind === 'contra') });
-    });
     return out.sort((a, b) => pkey(a.tag).localeCompare(pkey(b.tag)) || (a.B[0] ?? a.V[0]).date - (b.B[0] ?? b.V[0]).date);
   }, [st, tag]);
 
-  const stat = (c: Cat | 'all') => { const r = rows.filter(x => (c === 'all' ? !x.cand : x.cat === c)); return { n: r.length, b: r.reduce((s, x) => s + x.B.length, 0), v: r.reduce((s, x) => s + x.V.length, 0), value: r.reduce((s, x) => s + x.value, 0) }; };
+  const stat = (c: Cat | 'all') => { const r = rows.filter(x => (c === 'all' || x.cat === c)); return { n: r.length, b: r.reduce((s, x) => s + x.B.length, 0), v: r.reduce((s, x) => s + x.V.length, 0), value: r.reduce((s, x) => s + x.value, 0) }; };
   const shown = rows.filter(r => (cat === 'all' || r.cat === cat) && (!kind || kindOf(r) === kind) && (!q || [...r.B, ...r.V].some(t => `${t.docNo} ${t.ref} ${t.against}`.toLowerCase().includes(q.toLowerCase()))));
   const ref = (t: Txn) => t.ref || (t.against ? `Against ${t.against}` : '—');
   const cells = (items: Txn[], r: Row) => {
     const col = (f: (t: Txn) => React.ReactNode, cls = '') => <td className={cls}>{items.length ? items.map(t => <div key={t.id} className="rx-ln">{f(t)}</div>) : <span className="rx-muted">—</span>}</td>;
     return <>{col(t => <b>{t.docNo || t.ref}</b>, 'sep')}{col(t => TYPE_LABEL[t.type])}{col(t => fmtDay(t.date))}{col(t => <b>{signedMoney(t.amount, cur)}</b>, 'ar')}{col(ref)}{col(t => <small>{t.kind === 'period' ? 'Period ledger' : t.kind === 'backdated' ? 'Back-dated' : 'Historical'} · {t.line}</small>)}
-      {col(() => r.mm ? <Pill tone="green">Matched</Pill> : <Pill tone="violet">Suggested</Pill>)}</>;
+      {col(() => <Pill tone="green">Matched</Pill>)}</>;
   };
-  const exportCsv = () => download(`${st.rel.id}_${tag}_reconciled.csv`, toCSV(shown.map(r => ({ 'Open period': tagLabel(r.tag), 'Match type': kindOf(r), Rule: r.mm ? stageName(r.mm) : 'Suggested', 'Buyer documents': r.B.map(t => t.docNo || t.ref).join(' | '), 'Buyer amount': r.B.length ? sum(r.B) : '', 'Vendor documents': r.V.map(t => t.docNo || t.ref).join(' | '), 'Vendor amount': r.V.length ? sum(r.V) : '', 'Difference (buyer − vendor)': r.diff }))));
+  const exportCsv = () => download(`${st.rel.id}_${tag}_reconciled.csv`, toCSV(shown.map(r => ({ 'Open period': tagLabel(r.tag), 'Match type': kindOf(r), Rule: stageName(r.mm), 'Buyer documents': r.B.map(t => t.docNo || t.ref).join(' | '), 'Buyer amount': r.B.length ? sum(r.B) : '', 'Vendor documents': r.V.map(t => t.docNo || t.ref).join(' | '), 'Vendor amount': r.V.length ? sum(r.V) : '', 'Difference (buyer − vendor)': r.diff }))));
   const card = (id: Cat | 'all', label: string) => { const s = stat(id); return <button key={id} type="button" className={'rx-cue' + (cat === id ? ' on' : '') + (id === 'all' ? ' total' : '') + (!s.n ? ' zero' : '')} onClick={() => setCat(cat === id ? 'all' : id)} aria-pressed={cat === id}>
-    <span>{label}</span><b>{s.n}</b><i>{id === 'suggested' ? 'to review' : 'matched'} · {money(s.value, cur, 0)}</i>
+    <span>{label}</span><b>{s.n}</b><i>matched · {money(s.value, cur, 0)}</i>
     <span className="rx-cue-tip" role="tooltip">{label}: {s.n}<br />Buyer items {s.b} · Vendor items {s.v}<br />Value {money(s.value, cur, 0)}</span></button>; };
 
   return <>
     <PageHead title="Reconciled transactions" actions={<><button className="rw-btn" onClick={() => go('open')}>Unreconciled transactions</button><button className="rw-btn lime" onClick={() => go('statement')}>Reconciliation statement →</button></>}>
-      Buyer and vendor items the platform has matched for {tagLabel(tag)}, with the way they were grouped. Matched items sit on the same row. Anything still open is on the Unreconciled tab.
+      Buyer and vendor items the platform has matched for {tagLabel(tag)}, with the way they were grouped. Matched items sit on the same row. Anything still open, including suggested matches awaiting review, is on the Unreconciled tab; a reversed match moves back there.
     </PageHead>
     {p.phase === 'closed' && <p className="rw-note">This period is closed. Figures here reflect the latest state of the relationship; the statement exactly as signed is on the Reconciliation Statement tab.</p>}
     {lockedP && p.phase !== 'closed' && <p className="rw-note warn">The statement for this period is {p.phase}. Matching is locked; an approver can reopen it from the Reconciliation Statement tab, which creates version {p.version + 1}.</p>}
@@ -65,19 +61,18 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
 
     <div className="rx-cues" aria-label="Matched by type. Click to filter the table.">{card('all', 'All reconciled')}{CATS.map(c => card(c.id, c.label))}</div>
 
-    <Card title={`Reconciled transactions · ${shown.length}${shown.length !== rows.length ? ` of ${rows.length}` : ''}`} tip="Suggested matches are not reconciled yet. The platform will not close them on its own; confirm only when both sides are the same transaction." actions={<>
+    <Card title={`Reconciled transactions · ${shown.length}${shown.length !== rows.length ? ` of ${rows.length}` : ''}`} tip="Reversing a match reopens its items and moves them to Unreconciled transactions. Suggested matches are reviewed there until they are confirmed." actions={<>
       <select className="rx-q" value={kind} onChange={e => { setKind(e.target.value); setLimit(40); }} aria-label="Match type"><option value="">All match types</option>{KINDS.map(k => <option key={k}>{k}</option>)}</select>
       <input className="rx-q" value={q} onChange={e => { setQ(e.target.value); setLimit(40); }} placeholder="Search document or reference" aria-label="Search" />{(cat !== 'all' || kind) && <button className="rw-btn small ghost" onClick={() => { setCat('all'); setKind(''); }}>Clear filters</button>}<button className="rw-btn small" onClick={exportCsv}><Icon n="download" /> CSV</button></>}>
       <div className="rw-table-wrap"><table className="rw-table compact rx-rec">
         <thead><tr><th rowSpan={2}>Open period</th><th rowSpan={2}>Match type</th><th colSpan={7} className="grp sep">Buyer items</th><th colSpan={7} className="grp sep">Vendor items</th><th rowSpan={2} className="ar sep">Difference<br /><small>buyer − vendor</small></th><th rowSpan={2}><span className="sr-only">Actions</span></th></tr>
           <tr>{['Document no.', 'Type', 'Date', 'Amount', 'Reference', 'Source', 'Status', 'Document no.', 'Type', 'Date', 'Amount', 'Reference', 'Source', 'Status'].map((h, i) => <th key={i} className={(i === 0 || i === 7 ? 'sep ' : '') + (h === 'Amount' ? 'ar' : '')}>{h}</th>)}</tr></thead>
-        <tbody>{shown.slice(0, limit).map(r => <tr key={r.key} className={r.mm ? 'matched' : ''}>
+        <tbody>{shown.slice(0, limit).map(r => <tr key={r.key} className="matched">
           <td><span className={'rx-tag' + (r.tag !== tag ? ' old' : '')}>{tagLabel(r.tag)}</span></td>
-          <td><b>{kindOf(r)}</b><small className="rx-sub">{r.mm ? stageName(r.mm) : r.cand!.reasons[0] ?? 'Probable'}</small></td>
+          <td><b>{kindOf(r)}</b><small className="rx-sub">{stageName(r.mm)}</small></td>
           {cells(r.B, r)}{cells(r.V, r)}
           <td className="ar sep">{Math.abs(r.diff) < 0.005 ? <span className="rw-ok">0.00</span> : <b className="rw-neg">{signedMoney(r.diff, cur)}</b>}</td>
-          <td className="rx-act">{r.mm ? <button className="rw-link" disabled={lockedP} onClick={() => { setRev(r.mm!); setReason(''); }}>Reverse</button>
-            : <><button className="rw-btn small lime" disabled={lockedP} onClick={() => run(s0 => decideCandidate(s0, r.cand!.id, true, user.name, at()), 'Confirmed by reviewer')}>Confirm</button><button className="rw-btn small" disabled={lockedP} onClick={() => run(s0 => decideCandidate(s0, r.cand!.id, false, user.name, at()), 'Rejected; items stay open')}>Reject</button></>}</td></tr>)}
+          <td className="rx-act"><button className="rw-link" disabled={lockedP} onClick={() => { setRev(r.mm); setReason(''); }}>Reverse</button></td></tr>)}
           {!shown.length && <tr><td colSpan={18} className="rx-muted">Nothing to show for this filter.</td></tr>}</tbody></table></div>
       {shown.length > limit && <div className="rd-btns"><button className="rw-btn small" onClick={() => setLimit(limit + 60)}>Show more ({shown.length - limit} left)</button></div>}
     </Card>
