@@ -44,7 +44,7 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
   const cells = (items: Txn[], r: Row) => {
     const col = (f: (t: Txn) => React.ReactNode, cls = '') => <td className={cls}>{items.length ? items.map(t => <div key={t.id} className="rx-ln">{f(t)}</div>) : <span className="rx-muted">—</span>}</td>;
     return <>{col(t => <b>{t.docNo || t.ref}</b>, 'sep')}{col(t => TYPE_LABEL[t.type])}{col(t => fmtDay(t.date))}{col(t => <b>{signedMoney(t.amount, cur)}</b>, 'ar')}{col(ref)}{col(t => <small>{t.kind === 'period' ? 'Period ledger' : t.kind === 'backdated' ? 'Back-dated' : 'Historical'} · {t.line}</small>)}
-      {col(() => <Pill tone="green">Matched</Pill>)}</>;
+      {col(() => r.mm.confidence === 'Manual' ? <Pill tone="violet">Manual match</Pill> : r.mm.confidence === 'Probable' ? <Pill tone="amber">Suggested match</Pill> : <Pill tone="green">Matched</Pill>)}</>;
   };
   const exportCsv = () => download(`${st.rel.id}_${tag}_reconciled.csv`, toCSV(shown.map(r => ({ 'Open period': tagLabel(r.tag), 'Match type': kindOf(r), Rule: stageName(r.mm), 'Buyer documents': r.B.map(t => t.docNo || t.ref).join(' | '), 'Buyer amount': r.B.length ? sum(r.B) : '', 'Vendor documents': r.V.map(t => t.docNo || t.ref).join(' | '), 'Vendor amount': r.V.length ? sum(r.V) : '', 'Difference (buyer − vendor)': r.diff }))));
   const card = (id: Cat | 'all', label: string) => { const s = stat(id); return <button key={id} type="button" className={'rx-cue' + (cat === id ? ' on' : '') + (id === 'all' ? ' total' : '') + (!s.n ? ' zero' : '')} onClick={() => setCat(cat === id ? 'all' : id)} aria-pressed={cat === id}>
