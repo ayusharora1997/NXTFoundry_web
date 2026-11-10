@@ -747,3 +747,6 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .nav-menu-item .nav-menu-tag{align-self:flex-start;margin-top:4px;font-size:9.5px;letter-spacing:.1em;padding:3px 8px;border-radius:20px;border:1px solid currentColor;line-height:1.2;opacity:.9}
 .nav-menu-item .nav-menu-tag i{width:6px;height:6px}
 .nav-menu-item{gap:3px}
+.nav-menu-item .nav-menu-tag{align-self:flex-end;margin-top:auto}
+.header nav .nav-menu-item{height:100%}
+.nav-menu-item small{margin-bottom:6px}
