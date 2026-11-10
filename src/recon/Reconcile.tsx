@@ -4,7 +4,7 @@ import { filesFor } from './store';
 import { tagLabel } from './ledger';
 import { parseCSV } from './csv';
 import { toCSV } from './engine';
-import { Card, DataTable, Drawer, Icon, Pill, money, signedMoney, download, type Col } from './ui';
+import { Card, Collapsible, DataTable, Drawer, Icon, Pill, money, signedMoney, download, type Col } from './ui';
 import { PageHead, type Ctx, type Screen } from './App';
 import Dashboard from './Dashboard';
 
@@ -59,7 +59,7 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
     {lockedP && p.phase !== 'closed' && <p className="rw-note warn">The statement for this period is {p.phase}. Matching is locked; an approver can reopen it from the Reconciliation Statement tab, which creates version {p.version + 1}.</p>}
     {!p.stages.other && <p className="rw-note warn">Matching has not run for {tagLabel(tag)} yet. It starts automatically once both ledgers are in and the opening check passes. <button className="rw-link" onClick={() => go('upload')}>See Vendor ledger upload</button></p>}
 
-    <div className="rx-cues" aria-label="Matched by type. Click to filter the table.">{card('all', 'All reconciled')}{CATS.map(c => card(c.id, c.label))}</div>
+    <Collapsible id="reconciled" label="summary"><div className="rx-cues" aria-label="Matched by type. Click to filter the table.">{card('all', 'All reconciled')}{CATS.map(c => card(c.id, c.label))}</div></Collapsible>
 
     <Card title={`Reconciled transactions · ${shown.length}${shown.length !== rows.length ? ` of ${rows.length}` : ''}`} tip="Reversing a match reopens its items and moves them to Unreconciled transactions. Suggested matches are reviewed there until they are confirmed." actions={<>
       <select className="rx-q" value={kind} onChange={e => { setKind(e.target.value); setLimit(40); }} aria-label="Match type"><option value="">All match types</option>{KINDS.map(k => <option key={k}>{k}</option>)}</select>

@@ -1,5 +1,5 @@
 // Which statement annexure an unreconciled item belongs to. Shared by the statement and the Unreconciled screen so the two always agree.
-import { FAMILY, type Txn } from './cycle';
+import { FAMILY, heldTxnIds, type RelState, type Statement, type Txn } from './cycle';
 
 export interface Info { fam: string; side: 'B' | 'V'; held: boolean; timing: boolean }
 const INVF = ['INV', 'DN'];
@@ -23,4 +23,15 @@ export const sectionOf = (i: Info) => SECT.find(d => d.fam.includes(i.fam) && d.
 export function annexOf(t: Txn, held: Set<string>, timing: boolean): string {
   const d = sectionOf({ fam: FAMILY[t.type], side: t.side, held: held.has(t.id), timing });
   return d ? `Annexure ${d.n}${d.sub ?? ''} · ${t.originTag}` : '—';
+}
+
+/** Annexures that carry a value for a statement, numbered as on the statement. Annexures that are empty or net to nil are left out. */
+export function annexSummary(st: RelState, s: Statement) {
+  const held = heldTxnIds(st); const byId = new Map(st.txns.map(t => [t.id, t])); const rows = s.annexures.flatMap(a => a.rows);
+  return [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => {
+    const secs = SECT.filter(d => d.n === n); let count = 0, effect = 0;
+    rows.forEach(r => { const t = byId.get(r.txnId); if (!t) return; const i: Info = { fam: FAMILY[t.type], side: r.buyerAmount !== null ? 'B' : 'V', held: held.has(r.txnId), timing: r.category.endsWith('(timing)') };
+      if (secs.some(d => d.fam.includes(i.fam) && d.t(i))) { count++; effect += r.buyerAmount !== null ? -r.buyerAmount : (r.vendorAmount ?? 0); } });
+    return { n, name: n === 5 ? 'Credit notes' : n === 9 ? 'TDS' : secs[0].title, count, effect: Math.round(effect * 100) / 100 };
+  }).filter(a => a.effect !== 0);
 }

@@ -992,3 +992,16 @@
 
 .rx-vbar{margin:0;background:#eef3ff;color:#233a7a;border-bottom:1px solid #d3def7;padding:7px 26px;font-size:12.5px}
 @media(max-width:700px){.rx-vbar{padding:7px 14px}}
+
+/* Foldable summary strips, selection totals */
+.rx-fold{margin-bottom:12px}
+.rx-fold-btn{display:inline-flex;align-items:center;gap:6px;background:none;border:0;padding:2px 0 8px;font:inherit;font-size:12.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.rx-fold-btn:hover{color:var(--ink)}
+.rx-fold-btn svg{transition:transform .15s}.rx-fold.shut .rx-fold-btn svg{transform:rotate(-90deg)}
+.rx-fold.shut{margin-bottom:6px}.rx-fold.shut .rx-fold-btn{padding-bottom:2px}
+.rx-fold>.rx-cues,.rx-fold>.rx-tiles{margin-top:0}
+.rx-mtot{display:flex;flex-direction:column;line-height:1.25;min-width:110px}
+.rx-mtot em{font-style:normal;font-size:11px;color:#8f9a94;letter-spacing:.04em}
+.rx-mtot b{color:#fff;font-size:15px;font-variant-numeric:tabular-nums}.rx-mtot b.ok{color:var(--lime)}
+.rx-mx tfoot td{font-weight:700;background:var(--bg2);border-top:2px solid var(--line)}
+.rx-mx tfoot tr.sel td{background:var(--lime-t)}

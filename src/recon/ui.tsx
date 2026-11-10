@@ -220,3 +220,11 @@ export function PeriodPicker({ tags, value, quarterly, onPick }: { tags: string[
   return <div className="rx-pp" ref={ref}><button type="button" className="rx-pp-btn" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}><i>Period</i><b>{tagLabel(value)}</b><Icon n="chevron" /></button>
     {open && <div className="rx-pp-pop"><PeriodCalendar tags={tags} value={value} quarterly={quarterly} onPick={t => { onPick(t); setOpen(false); }} /></div>}</div>;
 }
+
+/** A strip of summary cards that can be folded away. The choice is remembered per strip in this browser. */
+export function Collapsible({ id, label, children }: { id: string; label: string; children: React.ReactNode }) {
+  const key = `nxt-recon-collapsed-${id}`;
+  const [closed, setClosed] = useState(() => { try { return localStorage.getItem(key) === '1'; } catch { return false; } });
+  const flip = () => { const n = !closed; setClosed(n); try { localStorage.setItem(key, n ? '1' : '0'); } catch { /* remembering is optional */ } };
+  return <div className={'rx-fold' + (closed ? ' shut' : '')}><button type="button" className="rx-fold-btn" aria-expanded={!closed} onClick={flip}><Icon n="chevron" />{closed ? `Show ${label}` : `Hide ${label}`}</button>{!closed && children}</div>;
+}

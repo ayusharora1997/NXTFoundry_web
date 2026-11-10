@@ -4,7 +4,7 @@ import { ENTITIES, tagLabel } from './ledger';
 import { PairTable, kindOf, sumOf } from './PairTable';
 import { annexOf } from './annex';
 import { USERS } from './store';
-import { Avatar, Card, DataTable, Drawer, Icon, Pill, money, signedMoney, type Col } from './ui';
+import { Avatar, Card, Collapsible, DataTable, Drawer, Icon, Pill, money, signedMoney, type Col } from './ui';
 import { PageHead, vendorOf, entityOf, type Ctx } from './App';
 
 interface Row { st: RelState; tag: string; it: OpenItem }
@@ -66,7 +66,8 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
           <td><span className="rx-annref">{annexOfTx(t)}</span></td><td><span className={'rx-tag' + (t.originTag !== tag ? ' old' : '')}>{tagLabel(t.originTag)}</span></td>
           <td><button className="rw-link" onClick={() => setDetail(t.id)}>{t.docNo || t.ref}</button></td><td>{TYPE_LABEL[t.type]}</td><td>{fmtDay(t.date)}</td><td className="ar"><b>{signedMoney(t.amount, cur)}</b></td><td>{t.ref || (t.against ? `Against ${t.against}` : '—')}</td><td>{i.ageDays}d</td>
           <td>{i.candidateId ? <Pill tone="violet">Suggested</Pill> : <Pill tone={exTone(i.ex.status)}>{i.ex.status}</Pill>}</td></tr>; })}
-          {!list.length && <tr><td colSpan={10} className="rx-muted">No open {side === 'B' ? 'buyer' : 'vendor'} items.</td></tr>}</tbody></table></div>
+          {!list.length && <tr><td colSpan={10} className="rx-muted">No open {side === 'B' ? 'buyer' : 'vendor'} items.</td></tr>}</tbody>
+          {list.length > 0 && <tfoot><tr><td colSpan={6}>Total · {list.length} item{list.length === 1 ? '' : 's'}</td><td className="ar"><b>{signedMoney(sumOf(list.map(i => i.txn)), cur)}</b></td><td colSpan={3} /></tr>{sel.length > 0 && <tr className="sel"><td colSpan={6}>Selected · {sel.length}</td><td className="ar"><b>{signedMoney(sumOf(get(sel)), cur)}</b></td><td colSpan={3} /></tr>}</tfoot>}</table></div>
     </section>;
   };
 
@@ -80,7 +81,7 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
       {(ctx.isVendor ? myReqs : pendingReqs).map(r => <div key={r.id} className="rx-adj"><div className="rw-stack"><b>{r.id} · {kindName(r)}</b><small>{r.summary}</small><small>{r.by} · {r.at}{r.reason ? ` · ${r.reason}` : ''}</small></div>
         {ctx.isVendor ? <Pill tone={r.status === 'pending' ? 'amber' : r.status === 'approved' ? 'green' : 'red'}>{r.status === 'pending' ? 'With buyer' : r.status === 'approved' ? 'Approved' : 'Rejected'}</Pill> : <div className="rd-btns"><button className="rw-btn small lime" onClick={() => ctx.decide(r.id, true)}>Approve</button><button className="rw-btn small" onClick={() => ctx.decide(r.id, false)}>Reject</button></div>}</div>)}
     </Card>}
-    <div className="rx-cues" aria-label="By document type. Click to filter.">{cue(tab === 'sugg' ? 'All suggested' : tab === 'partial' ? 'All partially reconciled' : 'All open items', '')}{FAMS.map(f => cue(f, f))}</div>
+    <Collapsible id="unreconciled" label="summary">    <div className="rx-cues" aria-label="By document type. Click to filter.">{cue(tab === 'sugg' ? 'All suggested' : tab === 'partial' ? 'All partially reconciled' : 'All open items', '')}{FAMS.map(f => cue(f, f))}</div></Collapsible>
 
     {tab === 'sugg' && <Card title="Suggested matches" tip="Probable pairings the platform will not close on its own. They stay unreconciled until you confirm; confirmed matches move to Reconciled transactions.">
       <PairTable cur={cur} curTag={tag} status={<Pill tone="violet">Suggested</Pill>} empty="No suggested matches waiting for review." rows={sugg.filter(x => inFam([...x.B, ...x.V])).map(({ c, B, V }) => ({ key: c.id, annexures: annexes([...B, ...V]), tag: oldest([...B, ...V]), B, V, type: c.kind === 'contra' ? 'Contra (suggested)' : kindOf(B, V) + ' (suggested)', sub: `Score ${c.score} · ${c.reasons.join(' · ')}`,
@@ -97,7 +98,7 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
         {pendingAdj.map(a => <div key={a.id} className="rx-adj"><div className="rw-stack"><b>{a.id} · {money(a.amount, cur)}</b><small>{a.txnIds.length} item(s) · proposed by {a.requestedBy} {a.at}</small><small>{a.reason}{a.evidence ? ` · ${a.evidence}` : ''}</small></div>
           <div className="rd-btns"><button className="rw-btn small lime" disabled={!ctx.approver || a.requestedBy === user.name} title={a.requestedBy === user.name ? 'You proposed this adjustment; someone else must approve it' : ''} onClick={() => run(s => decideAdjustment(s, a.id, true, user.name, at(), ctx.approver), `${a.id} approved`)}>Approve</button><button className="rw-btn small" disabled={!ctx.approver || a.requestedBy === user.name} onClick={() => run(s => decideAdjustment(s, a.id, false, user.name, at(), ctx.approver), `${a.id} rejected`)}>Reject</button></div></div>)}
       </Card>}
-      <div className="rx-matchbar"><span>Select items on both sides to match buyer with vendor. Select on one side only to match them as a contra (buyer to buyer, or vendor to vendor).</span><b>{sB.length} buyer · {sV.length} vendor</b>
+      <div className="rx-matchbar"><span>Select items on both sides to match buyer with vendor. Select on one side only to match them as a contra (buyer to buyer, or vendor to vendor).</span><span className="rx-mtot"><em>Buyer · {sB.length}</em><b>{signedMoney(sumOf(get(sB)), cur)}</b></span><span className="rx-mtot"><em>Vendor · {sV.length}</em><b>{signedMoney(sumOf(get(sV)), cur)}</b></span><span className="rx-mtot"><em>{sB.length && sV.length ? 'Difference (buyer − vendor)' : 'Net of selection'}</em><b className={Math.abs(sB.length && sV.length ? sumOf(get(sB)) - sumOf(get(sV)) : sumOf(get([...sB, ...sV]))) < 0.005 ? 'ok' : ''}>{signedMoney(sB.length && sV.length ? r2(sumOf(get(sB)) - sumOf(get(sV))) : sumOf(get([...sB, ...sV])), cur)}</b></span>
         <button className="rw-btn lime" disabled={locked || sB.length + sV.length === 0} onClick={() => setMatching(true)}
           >{sB.length && !sV.length ? 'Match as buyer contra' : sV.length && !sB.length ? 'Match as vendor contra' : 'Match selected'}</button>{sB.length + sV.length > 0 && <button className="rw-btn ghost" onClick={() => { setSelB([]); setSelV([]); }}>Clear</button>}</div>
       <div className="rx-mxs">{panel('B')}{panel('V')}</div>
