@@ -716,3 +716,4 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .px-cta b{font-size:19px}.px-cta span{color:#c7d0c9;flex:1;min-width:200px}
 @media(max-width:1200px){.px-stage{grid-template-columns:minmax(0,1fr);min-height:0}.px-show{grid-template-columns:270px minmax(0,1fr)}}
 @media(max-width:800px){.px-show{grid-template-columns:minmax(0,1fr)}.px-rail{flex-direction:row;overflow-x:auto;border-right:0;border-bottom:1px solid var(--line)}.px-tab{min-width:210px;border-bottom:0;border-right:1px solid var(--line)}.px-tab.on{box-shadow:inset 0 -3px 0 var(--lime)}.px-stage{padding:20px}.px-info h2{font-size:26px}.px-visual{min-height:0;padding:14px}.px-values{grid-template-columns:1fr}}
+.px-tab.cooking .px-prog,.px-tab.simmer .px-prog{background:#e8c46a}.px-tab.prep .px-prog{background:#9fc7ff}.px-tab.menu .px-prog{background:#c9a6ff}

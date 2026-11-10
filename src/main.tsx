@@ -113,17 +113,17 @@ const Status=({kind,children}:{kind:Kind;children:React.ReactNode})=> <span clas
 const ROTATE_MS=9000; const durOf=(id:string)=>id==='products-vendor'||id==='products-customer'?14000:ROTATE_MS;
 function Products(){
   const fromHash=()=>{const h=window.location.hash.slice(1);return suite.some(s=>s[0]===h)?h:'products-vendor'};
-  const [sel,setSel]=useState(fromHash); const [auto,setAuto]=useState(()=>window.location.hash==='#products'&&!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
-  const [hover,setHover]=useState(false); const [tick,setTick]=useState(0);
-  React.useEffect(()=>{const f=()=>{if(window.location.hash.startsWith('#products-')){setSel(fromHash());setAuto(false);}};window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
-  // Auto-advance through the products until the visitor picks one; pauses while the pointer is over the showcase.
-  React.useEffect(()=>{if(!auto||hover)return;const start=Date.now()-tick;const id=setInterval(()=>{const e=Date.now()-start;if(e>=durOf(sel)){setTick(0);setSel(s=>suite[(suite.findIndex(x=>x[0]===s)+1)%suite.length][0]);}else setTick(e);},100);return()=>clearInterval(id)},[auto,hover,sel]);
-  const pick=(id:string)=>{setSel(id);setAuto(false);setTick(0)};
+  const [sel,setSel]=useState(fromHash); const [auto]=useState(()=>!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
+  const [tick,setTick]=useState(0);
+  React.useEffect(()=>{const f=()=>{if(window.location.hash.startsWith('#products-')){setSel(fromHash());setTick(0);}};window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
+  // Auto-advance through the products all the time. Picking one jumps there and the rotation carries on from it.
+  React.useEffect(()=>{if(!auto)return;const start=Date.now()-tick;const id=setInterval(()=>{const e=Date.now()-start;if(e>=durOf(sel)){setTick(0);setSel(s=>suite[(suite.findIndex(x=>x[0]===s)+1)%suite.length][0]);}else setTick(e);},100);return()=>clearInterval(id)},[auto,sel]);
+  const pick=(id:string)=>{setSel(id);setTick(0)};
   // On phones the product list scrolls sideways; keep the selected product in view without moving the page.
   React.useEffect(()=>{const r=document.querySelector('.px-rail') as HTMLElement|null;const t=document.getElementById(sel);if(r&&t&&r.scrollWidth>r.clientWidth)r.scrollTo({left:t.offsetLeft-12,behavior:'smooth'})},[sel]);
   const cur=suite.find(s=>s[0]===sel)!; const d=SHOW[sel]; const live=cur[4]==='live';
   return <section className="page section px" id="products"><Label>PRODUCTS & PLATFORMS</Label><h1>Every number you share with someone else, <em>checked.</em></h1><p className="page-lede">Six tools, one engine. One is live today; the rest are in the kitchen.</p>
-  <div className="px-show" id="products-suite" onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}>
+  <div className="px-show" id="products-suite">
     <div className="px-rail" role="tablist" aria-label="Products">{suite.map(([id,n,t,,k,st])=>{const on=id===sel;return <button key={id} role="tab" id={id} aria-selected={on} aria-controls="px-stage" className={'px-tab '+k+(on?' on':'')} onClick={()=>pick(id)}>
       <span className="px-n">{n}</span><span className="px-t"><b>{t}</b><Status kind={k}>{st}</Status></span>{on&&auto&&<i className="px-prog" style={{width:`${(tick/durOf(id))*100}%`}}/>}</button>})}</div>
     <div className="px-stage" id="px-stage" role="tabpanel" aria-labelledby={sel} key={sel}>
