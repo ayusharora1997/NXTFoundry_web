@@ -975,3 +975,12 @@
 @media(max-width:700px){.rx-sumchk{grid-template-columns:1fr}}
 
 .rx-annref{font-weight:700;white-space:nowrap;font-size:12.5px}
+
+/* Compact period cards */
+.rx-hist{grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px}
+.rx-hcard{padding:8px 10px;gap:5px;border-radius:8px}
+.rx-hcard header{gap:6px;flex-wrap:nowrap}.rx-hcard header b{font-size:14px;white-space:nowrap}
+.rx-hact{margin-left:auto;display:flex;gap:4px}.rx-hact .rw-btn{padding:3px 8px;font-size:12px}
+.rx-hcard dl{gap:4px 8px}.rx-hcard dt{font-size:10.5px}.rx-hcard dd{font-size:12.5px}
+.rx-hcard p{font-size:11.5px;line-height:1.35}
+#annexures{scroll-margin-top:200px}

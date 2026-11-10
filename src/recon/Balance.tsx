@@ -29,6 +29,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
   const secs = SECT.map(d => { const rows = allRows.filter(r => { const i = info(r); return d.fam.includes(i.fam) && d.t(i); }); return { ...d, rows, effect: r2(rows.reduce((x, r) => x + eff(r), 0)) }; });
   const ANN = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => { const ss = secs.filter(x => x.n === n); return { n, name: n === 5 ? 'Credit notes' : n === 9 ? 'TDS' : ss[0].title, secs: ss, count: ss.reduce((x, y) => x + y.rows.length, 0), effect: r2(ss.reduce((x, y) => x + y.effect, 0)) }; });
   const SHOWN = ANN.filter(a => a.effect !== 0); // annexures with nothing to explain are left out
+  const selN = SHOWN.some(a => a.n === open) ? open : SHOWN[0]?.n;
   const annTotal = r2(ANN.reduce((x, a) => x + a.effect, 0)); // equals vendor − buyer once adjustments and unexplained are nil
   const adjRows = s.adjustments.map(a => ({ id: a.id, label: a.kind === 'rounding' ? 'Rounding adjustment' : a.kind === 'opening-position' ? 'Approved opening position' : a.kind.startsWith('opening') ? `Approved ${a.side === 'B' ? 'buyer' : 'vendor'} opening difference` : 'Approved adjustment', effect: r2(-a.effect) }));
   const unexEff = s.unexplained === null ? 0 : r2(-s.unexplained);
@@ -67,7 +68,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
             <p className="sub">Add / (less) to reach the vendor’s balance</p>
             {!SHOWN.length && <div className="row"><span className="rx-muted">No unreconciled items. No annexures.</span><b>—</b></div>}
             {SHOWN.map(a => <React.Fragment key={a.n}>
-              <button type="button" className="row ann" onClick={() => { setOpen(open === a.n ? null : a.n); document.getElementById(`ann-${a.n}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}><span>Annexure {a.n} · {a.name} <em>{a.count} item{a.count === 1 ? '' : 's'}</em></span><b>{a.effect ? signedMoney(a.effect, cur) : '—'}</b></button>
+              <button type="button" className="row ann" onClick={() => { setOpen(a.n); document.getElementById('annexures')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}><span>Annexure {a.n} · {a.name} <em>{a.count} item{a.count === 1 ? '' : 's'}</em></span><b>{a.effect ? signedMoney(a.effect, cur) : '—'}</b></button>
               {a.secs.length > 1 && a.secs.filter(x => x.effect !== 0).map(x => <div key={x.sub} className="row subr"><span>{x.title} <em>{x.rows.length}</em></span><b>{x.effect ? signedMoney(x.effect, cur) : '—'}</b></div>)}
             </React.Fragment>)}
             {adjRows.map(a => <div key={a.id} className="row adj"><span>{a.label} <em>{a.id}</em></span><b>{signedMoney(a.effect, cur)}</b></div>)}
@@ -78,9 +79,10 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
           <div className="rx-sumchk"><div><span>Difference in closing balances (buyer − vendor)</span><b>{m(s.difference)}</b></div><div><span>Sum of all annexures</span><b>{m(r2(-annTotal))}</b></div><div className={s.balanced ? 'ok' : 'bad'}><span>{s.balanced ? 'Annexures explain the full difference' : adjRows.length ? 'Annexures + adjustments' : 'Left unexplained'}</span><b>{s.balanced ? '✓' : m(s.unexplained)}</b></div></div>
           <p className="rx-muted">Amounts are shown from the buyer’s payable view: items only the buyer has are taken out, items only the vendor has are added. {s.matched} matches and {s.contras} contra pairs are reconciled and not part of any annexure{s.pendingCandidates ? `; ${s.pendingCandidates} suggestion(s) await review and appear as open items` : ''}.</p>
         </Card>
-        <Card title="Annexures" tip="Each annexure lists the unreconciled items behind its line in the statement, with the period each first appeared in. Items held in a partial match appear under ‘partially matched’.">
+        <div id="annexures"><Card title="Annexures" tip="Each annexure lists the unreconciled items behind its line in the statement, with the period each first appeared in. Items held in a partial match appear under ‘partially matched’.">
           {!SHOWN.length && <p className="rx-muted">No unreconciled items, so there are no annexures.</p>}
-          {SHOWN.map(a => <div key={a.n} id={`ann-${a.n}`} className={'rx-annex' + (open === null || a.n === open ? '' : ' collapsed')}>
+          {SHOWN.length > 0 && <div className="rw-tabs" role="tablist" aria-label="Annexures">{SHOWN.map(a => <button key={a.n} role="tab" aria-selected={a.n === selN} className={a.n === selN ? 'on' : ''} onClick={() => setOpen(a.n)}>Annexure {a.n}<em>{a.count}</em></button>)}</div>}
+          {SHOWN.filter(a => a.n === selN).map(a => <div key={a.n} className="rx-annex">
             <h4>Annexure {a.n} — {a.name} <small>{a.count} item{a.count === 1 ? '' : 's'} · {signedMoney(a.effect, cur)}</small></h4>
             {a.secs.filter(x => x.effect !== 0).map(x => <div key={x.sub ?? 'x'}>
               {a.secs.length > 1 && <h5 className="rx-annex-sub">{a.n}{x.sub}. {x.title}</h5>}
@@ -89,7 +91,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
                 <tfoot><tr><td colSpan={8}>Total {a.secs.length > 1 ? `${a.n}${x.sub}` : `annexure ${a.n}`}</td><td className="ar">{signedMoney(x.effect, cur)}</td></tr></tfoot></table></div>}
             </div>)}
           </div>)}
-        </Card>
+        </Card></div>
       </div>
       <aside className="rx-side">
         <Card title="Where the difference sits" tip="Each bar is one annexure: how far it moves the buyer’s closing balance towards the vendor’s. Hover or tap the statement lines to open an annexure.">
