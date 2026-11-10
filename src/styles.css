@@ -786,3 +786,6 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 @keyframes beat{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.25)}}
 @media(prefers-reduced-motion:reduce){.heart{animation:none}}
 @media(max-width:700px){.made-in{margin-left:0}}
+.made-in{color:var(--lime)}
+.heart{color:var(--lime)}
+.made-tr{opacity:.75}
