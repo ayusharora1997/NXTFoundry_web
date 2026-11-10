@@ -110,6 +110,11 @@ const SHOW: Record<string,{short:string;points:string[];preview:React.ReactNode;
 };
 const Steam=()=> <span className="steam" aria-hidden="true"><i/><i/><i/></span>;
 const Status=({kind,children}:{kind:Kind;children:React.ReactNode})=> <span className={'ps-status '+kind}>{kind==='live'?<i className="dot"/>:<Steam/>}{children}</span>;
+// The two money cycles, step by step. A step with a product id is covered by one of our tools; null = not a tool yet.
+const FLOW:{id:string;title:string;sub:string;steps:[string,string|null][]}[]=[
+  {id:'p2p',title:'Procure to Pay',sub:'P2P · the buying side',steps:[['Vendor onboarding',null],['Purchase requisition',null],['Purchase order',null],['Goods receipt',null],['Invoice capture','products-invoice'],['3-way match','products-invoice'],['Payment run',null],['Bank reconciliation','products-bank'],['Vendor reconciliation','products-vendor'],['GST input credit · GSTR-2B','products-gstr'],['Balance confirmation',null]]},
+  {id:'o2c',title:'Order to Cash',sub:'O2C · the selling side',steps:[['Customer onboarding & credit',null],['Sales order',null],['Dispatch & e-way bill',null],['Invoicing & e-invoice',null],['Collections & dunning',null],['Gateway & marketplace settlements','products-settlements'],['Cash application',null],['Bank reconciliation','products-bank'],['Customer reconciliation','products-customer'],['GST output · GSTR-1','products-gstr'],['Balance confirmation',null]]},
+];
 const ROTATE_MS=9000; const durOf=(id:string)=>id==='products-vendor'||id==='products-customer'?14000:ROTATE_MS;
 function Products(){
   const fromHash=()=>{const h=window.location.hash.slice(1);return suite.some(s=>s[0]===h)?h:'products-vendor'};
@@ -133,9 +138,15 @@ function Products(){
       {live?<a className="px-visual" href="#reconciliation-lab" aria-label="Open the live tool">{d.preview}</a>:<div className="px-visual soon">{d.preview}<span className="ps-tape">{cur[4]==='menu'?'Next on the menu':'Something’s cooking'}</span></div>}
     </div>
   </div>
-  <div className="px-flow" aria-label="How the products fit together"><span className="px-flow-l">How they fit</span>
-    {[[['products-invoice']],[['products-vendor'],['products-customer']],[['products-gstr'],['products-bank'],['products-settlements']]].map((grp,i)=><React.Fragment key={i}>{i>0&&<span className="px-arrow">→</span>}<span className="px-grp">{grp.map(([id])=><button key={id} className={'px-chip '+(suite.find(s=>s[0]===id)![4])+(id===sel?' on':'')} onClick={()=>{pick(id);document.getElementById('products-suite')?.scrollIntoView({behavior:'smooth',block:'start'})}}>{SHOW[id].short}</button>)}</span></React.Fragment>)}
-    <span className="px-arrow">→</span><span className="px-end">One statement, signed off</span></div>
+  <div className="px-fit" aria-label="How the products fit the P2P and O2C processes">
+    <div className="px-fit-head"><div><Label>HOW THEY FIT</Label><h2>Mapped to how money <em>moves.</em></h2></div>
+      <div className="px-legend"><span><i className="lg live"/>Our tools (by status)</span><span><i className="lg grey"/>Not a tool yet, could be</span></div></div>
+    {FLOW.map(l=><div className="px-lane" key={l.id}><div className="px-lane-h"><b>{l.title}</b><small>{l.sub}</small></div>
+      <ol className="px-steps">{l.steps.map(([step,tool],i)=>{const t=tool?suite.find(s=>s[0]===tool)!:null;
+        return <li key={step} className={t?'tool '+t[4]+(tool===sel?' on':''):'grey'}>{t?<button type="button" onClick={()=>{pick(tool!);document.getElementById('products-suite')?.scrollIntoView({behavior:'smooth',block:'start'})}}><span className="px-sn">{String(i+1).padStart(2,'0')}</span><b>{step}</b><em>{SHOW[tool!].short}</em></button>
+          :<div><span className="px-sn">{String(i+1).padStart(2,'0')}</span><b>{step}</b><em>Could be a tool</em></div>}</li>})}</ol></div>)}
+    <div className="px-close"><span className="grey">Month-end close</span><span className="px-arrow">→</span><span className="px-end">One statement per counterparty, signed off</span></div>
+  </div>
   <div className="px-values">{[['01','Opening balance first','Nothing is matched until both openings agree.'],['02','Nothing closed on a guess','Suggestions wait for a person to confirm.'],['03','Every difference explained','Annexures add up to the gap, to the rupee.']].map(([n,t,x])=><div key={n}><span>{n}</span><b>{t}</b><p>{x}</p></div>)}</div>
   <div className="px-cta"><b>Want one of these sooner?</b><span>Tell us which, and what it would save you.</span><a className="button" href="#contact">Talk to us <ArrowUpRight size={16}/></a></div>
   </section>}
