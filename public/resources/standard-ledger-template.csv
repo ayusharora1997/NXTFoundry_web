@@ -1,0 +1,3 @@
+Line ID,Document No,Document Date,Posting Date,Type,Debit,Credit,Reference,Against Doc,Narration
+L1,INV/26-27/0001,02-09-2026,02-09-2026,Invoice,0,118000,,,"Example: invoice from vendor (buyer ledger: credit)"
+L2,PAY/0001,20-09-2026,20-09-2026,Payment,100000,0,UTR123456789,INV/26-27/0001,"Example: part payment with bank reference"
