@@ -1010,3 +1010,7 @@
 .rx-tiles.mini .rx-tile{padding:8px 12px;gap:0}
 .rx-tiles.mini .rx-tile span{font-size:10.5px}.rx-tiles.mini .rx-tile b{font-size:21px}
 .rx-legend{font-size:12px;line-height:1.5;margin:10px 0 0}
+
+/* Keep absolutely positioned helpers (screen-reader labels) inside the scrolling table, not stretching the page */
+.rw-table-wrap{position:relative}
+.sr-only{left:0;top:0;white-space:nowrap}
