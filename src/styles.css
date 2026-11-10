@@ -772,3 +772,8 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .px-facts small{font-size:13px;color:#a7b0aa;line-height:1.45}
 @media(max-width:1000px){.px-gains{grid-template-columns:1fr}.px-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.px-facts div:nth-child(2){border-right:0}.px-facts div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
 @media(max-width:600px){.px-swap li{grid-template-columns:1fr;gap:4px}.px-swap-arrow{display:none}.px-facts b{font-size:38px}}
+
+.px-gains{animation:tp-in .4s ease-out}
+.px-for{display:inline-block;margin-top:14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:20px;border:1px solid var(--lime);color:var(--lime)}
+.px-for.cooking,.px-for.simmer{border-color:#e8c46a;color:#e8c46a}.px-for.prep{border-color:#9fc7ff;color:#9fc7ff}.px-for.menu{border-color:#c9a6ff;color:#c9a6ff}
+.px-note{grid-column:1/-1;margin:2px 0 0;font-size:12px;color:#7f8a84}

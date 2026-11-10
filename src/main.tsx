@@ -111,15 +111,31 @@ const SHOW: Record<string,{short:string;points:string[];preview:React.ReactNode;
 const Steam=()=> <span className="steam" aria-hidden="true"><i/><i/><i/></span>;
 const Status=({kind,children}:{kind:Kind;children:React.ReactNode})=> <span className={'ps-status '+kind}>{kind==='live'?<i className="dot"/>:<Steam/>}{children}</span>;
 const ROTATE_MS=9000; const durOf=(id:string)=>id==='products-vendor'||id==='products-customer'?14000:ROTATE_MS;
-// What changes for a finance team, then a few true facts about the engine that count up when they scroll into view.
-const GAINS:[string,string][]=[['Chasing vendors for statements over email','Vendors upload in any format; the AI reads it'],['Ticking two ledgers line by line in Excel','Contra, invoices, credit notes, payments and TDS matched for you'],['A difference nobody can explain at year-end','Every rupee of the gap sits in a numbered annexure'],['“Did they agree?” lost in a mail thread','The vendor signs off on the statement itself']];
-const FACTS:[number,string,string][]=[[8,'matching stages','run in the same order, every time'],[9,'annexures','explain any gap between two closing balances'],[68,'automated checks','run on the engine before every release'],[0,'guesses closed','suggestions always wait for a person']];
+// What changes for a finance team, per product. Follows the product selected in the showcase above.
+// The ~% figures are indicative estimates, labelled as such on the page; replace them with measured results once clients report them.
+type Fact=[string,number|null,string,string,string]; // prefix, number to count up to (null = show prefix as text), suffix, label, small print
+const GAINS:Record<string,{head:[string,string];rows:[string,string][];facts:Fact[]}>={
+  'products-vendor':{head:['Less chasing.','More closing.'],rows:[['Chasing vendors for statements over email','Vendors upload in any format; AI reads and maps it'],['Ticking two ledgers line by line in Excel','AI and rule-based matching across invoices, credit notes, payments and TDS'],['A difference nobody can explain at year-end','Every rupee of the gap traced to the entries behind it'],['“Did they agree?” lost in a mail thread','The vendor signs off on the statement itself']],
+    facts:[['~',75,'%','less time on vendor recon','compared with manual Excel matching'],['~',60,'%','lower reconciliation cost','fewer hours, fewer follow-ups'],['ML',null,'','assisted matching','learns your vendors’ numbering patterns'],['',100,'%','backtraced and logged','every match, reversal and sign-off']]},
+  'products-customer':{head:['Less chasing.','More cash.'],rows:[['Asking customers for their payable ledger','Customers upload in any format; AI reads and maps it'],['Short payments buried in lump-sum receipts','Deductions and short pays surfaced item by item'],['Unapplied cash sitting for months','Receipts matched to invoices automatically'],['Balance confirmations chased over email','The customer signs off on the statement itself']],
+    facts:[['~',70,'%','less time on customer recon','compared with manual matching'],['~',55,'%','lower reconciliation cost','fewer hours, faster disputes'],['ML',null,'','assisted matching','pairs receipts with the right invoices'],['',100,'%','backtraced and logged','every match, deduction and sign-off']]},
+  'products-gstr':{head:['Less guessing.','More credit.'],rows:[['Downloading GSTR-2B and running VLOOKUPs','2B matched to your purchase register invoice by invoice'],['Input credit lost to suppliers who never filed','Credit at risk flagged, with the supplier to chase'],['Mismatches found at the annual return','Mismatches found every month'],['Sales register checked against GSTR-1 by hand','Books against GSTR-1, automatically']],
+    facts:[['~',80,'%','less time on GST recon','compared with spreadsheet matching'],['~',60,'%','lower compliance effort','fewer manual checks each month'],['AI',null,'','fuzzy matching','on GSTIN, invoice number and value'],['',100,'%','backtraced and logged','every match back to the return line']]},
+  'products-invoice':{head:['Less typing.','More checking.'],rows:[['Typing every invoice into the ERP','AI reads PDFs, scans, photos and email attachments'],['Three-way match done by eye','PO, goods receipt and invoice matched automatically'],['Duplicate invoices slipping through','Duplicates caught before anything is booked'],['Approvals over WhatsApp','Routed, approved and logged in one place']],
+    facts:[['~',85,'%','less data-entry time','compared with manual keying'],['~',50,'%','lower processing cost','per invoice, end to end'],['AI',null,'','field extraction','with a confidence score on every field'],['',100,'%','backtraced and logged','every field linked to the source document']]},
+  'products-bank':{head:['Less ticking.','More knowing.'],rows:[['Ticking the bank statement line by line','Matched by UTR, amount and date automatically'],['Bank charges found at month-end','Proposed as entries the day they appear'],['Unknown credits parked in suspense','The most likely payer suggested'],['Bank recon once a month','Bank recon every day']],
+    facts:[['~',80,'%','less time on bank recon','compared with manual ticking'],['~',60,'%','lower reconciliation cost','across all your accounts'],['ML',null,'','payer suggestions','learns who usually pays what'],['',100,'%','backtraced and logged','every line, match and entry']]},
+  'products-settlements':{head:['Less trusting.','More tracing.'],rows:[['Accepting the payout total as it comes','Every payout broken down to order level'],['Fees never checked against the contract','Commission, shipping and fees checked against agreed rates'],['Short settlements nobody notices','A claim list drafted automatically'],['One spreadsheet per marketplace','One view across gateways and marketplaces']],
+    facts:[['~',75,'%','less time on settlements','compared with spreadsheet work'],['~',65,'%','lower reconciliation cost','per payout cycle'],['ML',null,'','order matching','maps platform IDs to your orders'],['',100,'%','backtraced and logged','every order, fee and claim']]},
+};
 function CountUp({to}:{to:number}){const ref=React.useRef<HTMLSpanElement>(null);const [n,setN]=useState(to);
   React.useEffect(()=>{if(!to||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;setN(0);let raf=0;const io=new IntersectionObserver(([e])=>{if(!e.isIntersecting)return;io.disconnect();const t0=performance.now();const step=(t:number)=>{const k=Math.min(1,(t-t0)/1100);setN(Math.round(to*(1-Math.pow(1-k,3))));if(k<1)raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)});if(ref.current)io.observe(ref.current);return()=>{io.disconnect();cancelAnimationFrame(raf)}},[to]);
   return <span ref={ref}>{n}</span>}
-function Gains(){return <div className="px-gains"><div className="px-gains-h"><Label>WHAT CHANGES</Label><h2>Less chasing. <em>More closing.</em></h2></div>
-  <ul className="px-swap">{GAINS.map(([was,now])=><li key={was}><s>{was}</s><span className="px-swap-arrow" aria-hidden="true">→</span><b>{now}</b></li>)}</ul>
-  <div className="px-facts">{FACTS.map(([n,t,x])=><div key={t}><b><CountUp to={n}/></b><span>{t}</span><small>{x}</small></div>)}</div></div>}
+function Gains({id}:{id:string}){const g=GAINS[id];const p=suite.find(s=>s[0]===id)!;
+  return <div className="px-gains" aria-live="polite"><div className="px-gains-h"><Label>WHAT CHANGES</Label><h2>{g.head[0]} <em>{g.head[1]}</em></h2><span className={'px-for '+p[4]}>{p[2]}</span></div>
+  <ul className="px-swap">{g.rows.map(([was,now])=><li key={was}><s>{was}</s><span className="px-swap-arrow" aria-hidden="true">→</span><b>{now}</b></li>)}</ul>
+  <div className="px-facts">{g.facts.map(([pre,n,suf,t,x])=><div key={t}><b>{n===null?pre:<>{pre}<CountUp to={n}/>{suf}</>}</b><span>{t}</span><small>{x}</small></div>)}</div>
+  <p className="px-note">~ Indicative estimates for a typical mid-sized finance team, not a guarantee. Actual savings depend on volumes and data quality.</p></div>}
 // Closing block on the Products page: pick the tools you want sooner; the choice is carried into the contact form.
 function EarlyAccess(){const soon=suite.filter(s=>s[4]!=='live');const [want,setWant]=useState<string[]>([]);
   const go=()=>{try{sessionStorage.setItem('nxt-interest',JSON.stringify(want.map(id=>suite.find(s=>s[0]===id)![2])))}catch{/* prefill is optional */}};
@@ -151,7 +167,7 @@ function Products(){
   <div className="px-flow" aria-label="How the products fit together"><span className="px-flow-l">How they fit</span>
     {[[['products-invoice']],[['products-vendor'],['products-customer']],[['products-gstr'],['products-bank'],['products-settlements']]].map((grp,i)=><React.Fragment key={i}>{i>0&&<span className="px-arrow">→</span>}<span className="px-grp">{grp.map(([id])=><button key={id} className={'px-chip '+(suite.find(s=>s[0]===id)![4])+(id===sel?' on':'')} onClick={()=>{pick(id);document.getElementById('products-suite')?.scrollIntoView({behavior:'smooth',block:'start'})}}>{SHOW[id].short}</button>)}</span></React.Fragment>)}
     <span className="px-arrow">→</span><span className="px-end">One statement, signed off</span></div>
-  <Gains/>
+  <Gains id={sel} key={sel}/>
   <EarlyAccess/>
   </section>}
 // Our Approach page. Written in "we"; no names and no fees anywhere.
