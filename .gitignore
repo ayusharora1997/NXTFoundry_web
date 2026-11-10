@@ -4,3 +4,5 @@ dist/
 .env.local
 offline
 .claude/
+
+VENDOR_RECONCILIATION_PLAYBOOK.md
