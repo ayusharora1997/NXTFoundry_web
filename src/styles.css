@@ -777,3 +777,12 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .px-for{display:inline-block;margin-top:14px;font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:5px 11px;border-radius:20px;border:1px solid var(--lime);color:var(--lime)}
 .px-for.cooking,.px-for.simmer{border-color:#e8c46a;color:#e8c46a}.px-for.prep{border-color:#9fc7ff;color:#9fc7ff}.px-for.menu{border-color:#c9a6ff;color:#c9a6ff}
 .px-note{grid-column:1/-1;margin:2px 0 0;font-size:12px;color:#7f8a84}
+
+/* Footer sign-off */
+.footer-bottom{display:flex;flex-wrap:wrap;gap:8px 24px;justify-content:space-between;align-items:center}
+.made-in{margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:#c7d0c9}
+.made-in b{color:var(--lime);font-weight:700}
+.heart{font-style:normal;color:#ff6b6b;display:inline-block;animation:beat 1.6s ease-in-out infinite}
+@keyframes beat{0%,40%,100%{transform:scale(1)}20%{transform:scale(1.25)}}
+@media(prefers-reduced-motion:reduce){.heart{animation:none}}
+@media(max-width:700px){.made-in{margin-left:0}}
