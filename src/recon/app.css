@@ -989,3 +989,6 @@
 .rx-hcard header{flex-wrap:wrap;row-gap:4px}
 .rx-hact{flex-wrap:nowrap}.rx-hact .rw-btn{white-space:nowrap}
 .rx-rechead{display:flex;align-items:baseline;gap:8px}.rx-rechead small{color:var(--muted);font-weight:500}.rx-rechead .rw-link{margin-left:auto;font-size:12.5px}
+
+.rx-vbar{margin:0;background:#eef3ff;color:#233a7a;border-bottom:1px solid #d3def7;padding:7px 26px;font-size:12.5px}
+@media(max-width:700px){.rx-vbar{padding:7px 14px}}

@@ -3,7 +3,9 @@ import { STAGES, SIGN, TYPE_LABEL, LEDGER_COLUMNS, DEFAULT_SETTINGS, type TxnTyp
 import { BUYER, ENTITIES, VENDORS, RELS } from './ledger';
 import { USERS } from './store';
 import { Avatar, Card, DataTable, Pill } from './ui';
-import { PageHead, vendorOf, type Ctx } from './App';
+import { PageHead, vendorOf, STATUS_TONE, type Ctx } from './App';
+import { currentPeriod } from './cycle';
+import { tagLabel } from './ledger';
 
 const PERMS: [string, boolean, boolean][] = [
   ['Import ledgers and preview files', true, true], ['Run matching stages, confirm or reject suggestions', true, true], ['Manual and grouped matches', true, true], ['Reverse a match from the current period', true, true],
@@ -13,12 +15,12 @@ const PERMS: [string, boolean, boolean][] = [
 
 export default function SettingsScreen({ ctx }: { ctx: Ctx }) {
   const { settings, setSettings, approver, user } = ctx;
-  const [tab, setTab] = useState<'policy' | 'stages' | 'signs' | 'import' | 'users' | 'master'>('policy');
+  const [tab, setTab] = useState<'policy' | 'stages' | 'signs' | 'import' | 'users' | 'vendors' | 'master'>('policy');
   const editable = approver;
   const num = (label: string, help: string, value: number, set: (n: number) => void, unit = '') => <label className="rw-setting"><span><b>{label}</b><small>{help}</small></span><span><input type="number" min={0} value={value} disabled={!editable} onChange={e => set(Math.max(0, Number(e.target.value) || 0))} />{unit}</span></label>;
   return <>
     <PageHead title="Admin settings">Reconciliation policy, matching order, sign convention, import profiles, roles and master data.</PageHead>
-    <div className="rw-tabs" role="tablist">{([['policy', 'Reconciliation policy'], ['stages', 'Matching stages'], ['signs', 'Sign convention'], ['import', 'Import profiles'], ['users', 'Users and roles'], ['master', 'Master data']] as const).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
+    <div className="rw-tabs" role="tablist">{([['policy', 'Reconciliation policy'], ['stages', 'Matching stages'], ['signs', 'Sign convention'], ['import', 'Import profiles'], ['users', 'Users and roles'], ['vendors', 'Vendor map'], ['master', 'Master data']] as const).map(([k, l]) => <button key={k} role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>)}</div>
     {!editable && (tab === 'policy' || tab === 'stages') && <p className="rw-note warn">Signed in as {user.name} ({user.role}). Policy is read-only; switch to an approver or admin to change it.</p>}
     {tab === 'policy' && <div className="rx-grid2">
       <Card title="Rounding tolerance by currency" tip="The largest unexplained difference that can be recorded as rounding. It never closes anything by itself: an approver must record the adjustment with a reason.">
@@ -59,6 +61,14 @@ export default function SettingsScreen({ ctx }: { ctx: Ctx }) {
       <Card title="Permissions"><div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th>Action</th><th>Preparer</th><th>Approver</th></tr></thead><tbody>{PERMS.map(([a, p, ap]) => <tr key={a}><td>{a}</td><td>{p ? '✓' : '—'}</td><td>{ap ? '✓' : '—'}</td></tr>)}</tbody></table></div>
         <p className="rx-muted">Segregation of duties: an adjustment cannot be approved by the person who proposed it.</p></Card>
     </div>}
+    {tab === 'vendors' && <Card title="Vendor map" tip="Who is who for every buyer–vendor relationship: the vendor user who responds to statements, the buyer owner who reviews, and where the current period stands. Switch to a vendor user to see the vendor’s side.">
+      <div className="rw-table-wrap"><table className="rw-table"><thead><tr><th>Vendor</th><th>Vendor user</th><th>Buyer owner</th><th>Entity · business unit</th><th>Frequency</th><th>Current period</th><th>Status</th></tr></thead>
+        <tbody>{Object.values(ctx.ws.states).map(x => { const v = vendorOf(x); const login = USERS.find(u => u.vendorId === v.id); const p = currentPeriod(x); const wf = ctx.stat(x, p.tag);
+          return <tr key={x.rel.id}><td><b>{v.displayName}</b><small className="rx-sub">{x.rel.vendorCode} · {x.rel.currency}</small></td>
+            <td>{v.contact.name}<small className="rx-sub">{v.contact.email}</small>{login ? <Pill tone="green">Can sign in</Pill> : <Pill>No login yet</Pill>}</td>
+            <td><span className="rd-owner"><Avatar name={x.rel.owner} />{x.rel.owner}</span></td><td>{x.rel.entityId} · {x.rel.bu}</td><td>{x.rel.frequency}</td><td>{tagLabel(p.tag)}</td><td><Pill tone={STATUS_TONE[wf]}>{wf}</Pill></td></tr>; })}</tbody></table></div>
+      <p className="rx-muted">Vendor users see every screen for their own account only. What they match, unmatch or ask for goes to the buyer owner for review; their statement response (accept, or raise concerns with a justification) is theirs to give.</p>
+    </Card>}
     {tab === 'master' && <>
       <Card title="Buyer and legal entities"><dl className="rw-dl"><div><dt>Buyer</dt><dd>{BUYER.name}</dd></div><div><dt>Source system</dt><dd>{BUYER.erp}</dd></div><div><dt>Base currency</dt><dd>{BUYER.currency}</dd></div></dl>
         <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th>Entity</th><th>GSTIN</th><th>Business units</th></tr></thead><tbody>{ENTITIES.map(e => <tr key={e.id}><td>{e.name}</td><td>{e.gstin}</td><td>{e.bus.join(', ')}</td></tr>)}</tbody></table></div></Card>

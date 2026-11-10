@@ -80,7 +80,7 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
     {rev && <Drawer title={`Reverse ${rev.id}`} sub={`${rev.rule} · ${stageName(rev)}`} onClose={() => setRev(null)}>
       <p className="rw-note">The items reopen with their original periods. The reversal is recorded with your name and reason.</p>
       <label className="rw-field"><span>Reason</span><textarea rows={3} value={reason} onChange={e => setReason(e.target.value)} placeholder="Why this should not have matched" /></label>
-      <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={() => setRev(null)}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!reason.trim()} onClick={() => { if (run(s => reverseMatch(s, rev.id, tag, reason, user.name, at(), approver), `${rev.id} reversed; items reopened with their original periods`)) setRev(null); }}>Reverse match</button></div>
+      <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={() => setRev(null)}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!reason.trim()} onClick={() => { if (ctx.isVendor) { ctx.submit({ relId: st.rel.id, tag, kind: 'reverse', ids: [...rev.buyerIds, ...rev.vendorIds], refId: rev.id, force: false, reason, summary: `${rev.buyerIds.length} buyer + ${rev.vendorIds.length} vendor item(s) · ${rev.rule}` }); setRev(null); return; } if (run(s => reverseMatch(s, rev.id, tag, reason, user.name, at(), approver), `${rev.id} reversed; items reopened with their original periods`)) setRev(null); }}>{ctx.isVendor ? 'Request reversal' : 'Reverse match'}</button></div>
     </Drawer>}
   </>;
 }

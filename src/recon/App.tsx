@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
-import { initWorkspace, USERS, canApprove, now, type Workspace, type User } from './store';
+import { manualMatch, reverseMatch, decideCandidate, status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
+import { initWorkspace, USERS, canApprove, now, type Workspace, type User, type VendorRequest } from './store';
 import { VENDORS, ENTITIES, tagLabel } from './ledger';
 import { Icon, Drawer, Picker, PeriodPicker, Toasts, Avatar, type Toast } from './ui';
 import Reconcile from './Reconcile';
@@ -26,6 +26,8 @@ export interface Ctx {
   relId: string; tag: string; st: RelState; select: (relId: string, tag?: string) => void; go: (s: Screen, relId?: string, tag?: string) => void;
   run: (fn: (st: RelState) => Result<RelState>, okMsg: string, relId?: string) => boolean; toast: (msg: string, tone?: Toast['tone']) => void; at: () => string;
   stat: (st: RelState, tag: string) => WfStatus; label: (st: RelState) => string;
+  isVendor: boolean; visible: RelState[]; requests: VendorRequest[];
+  submit: (r: Pick<VendorRequest, 'relId' | 'tag' | 'kind' | 'ids' | 'refId' | 'force' | 'reason' | 'summary'>) => void; decide: (id: string, approve: boolean) => void;
 }
 export const vendorOf = (st: RelState) => VENDORS.find(v => v.id === st.rel.vendorId)!;
 export const entityOf = (st: RelState) => ENTITIES.find(e => e.id === st.rel.entityId)!;
@@ -33,7 +35,8 @@ export const STATUS_TONE: Record<WfStatus, string> = { 'Awaiting ledgers': 'grey
 
 function readRoute(ws: Workspace): { screen: Screen; relId: string; tag: string } {
   const [, s, r, t] = window.location.hash.split('/');
-  const relId = r && ws.states[r] ? r : 'R3'; const st = ws.states[relId];
+  const u = USERS.find(x => x.id === ws.userId)!; const ok = (id: string) => !!ws.states[id] && (!u.vendorId || ws.states[id].rel.vendorId === u.vendorId);
+  const relId = r && ok(r) ? r : ok('R3') ? 'R3' : Object.values(ws.states).find(x => ok(x.rel.id))!.rel.id; const st = ws.states[relId];
   return { screen: ALL_SCREENS.includes(s as Screen) ? s as Screen : 'dash', relId, tag: t && st.periods.some(p => p.tag === t) ? t : currentPeriod(st).tag };
 }
 
@@ -50,10 +53,15 @@ export default function ReconApp() {
   const toast = (msg: string, tone: Toast['tone'] = 'ok') => { const id = Date.now() + Math.random(); setToasts(t => [...t.slice(-2), { id, msg, tone }]); setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), tone === 'warn' ? 9000 : 6000); };
   const go = (s: Screen, relId = route.relId, tag?: string) => { const t = tag ?? (relId === route.relId ? route.tag : currentPeriod(ws.states[relId]).tag); window.location.hash = `reconciliation-lab/${s}/${relId}/${t}`; };
   const label = (x: RelState) => `${vendorOf(x).displayName} · ${x.rel.bu} · ${x.rel.currency}`;
+  const visible = Object.values(ws.states).filter(x => !user.vendorId || x.rel.vendorId === user.vendorId);
   const ctx: Ctx = {
-    ws, user, approver: canApprove(user), settings: ws.settings, setSettings: s => setWs(w => ({ ...w, settings: s })), setUserId: id => setWs(w => ({ ...w, userId: id })),
+    ws, user, approver: canApprove(user), settings: ws.settings, setSettings: s => setWs(w => ({ ...w, settings: s })), setUserId: id => { setWs(w => ({ ...w, userId: id })); const u = USERS.find(x => x.id === id)!; if (u.vendorId) { const f = Object.values(wsRef.current.states).find(x => x.rel.vendorId === u.vendorId)!; window.location.hash = `reconciliation-lab/dash/${f.rel.id}/${currentPeriod(f).tag}`; } },
     relId: route.relId, tag: route.tag, st, select: (r, t) => go(route.screen, r, t), go, toast, at: now, label,
-    stat: (x, t) => status(x, t, ws.settings),
+    stat: (x, t) => status(x, t, ws.settings), isVendor: !!user.vendorId, visible, requests: ws.requests,
+    submit: r => { setWs(w => ({ ...w, requests: [...w.requests, { ...r, id: `REQ-${String(w.requests.length + 1).padStart(3, '0')}`, status: 'pending', by: user.name, at: now() }] })); toast('Sent to the buyer for review. Nothing changes until they approve it.'); },
+    decide: (id, approve) => { const q = wsRef.current.requests.find(x => x.id === id); if (!q) return; const s0 = wsRef.current.states[q.relId]; const note = `${q.reason ? q.reason + ' · ' : ''}requested by ${q.by}, reviewed by ${user.name}`;
+      if (approve) { const res = q.kind === 'match' ? manualMatch(s0, q.tag, q.ids, note, user.name, now(), q.force) : q.kind === 'reverse' ? reverseMatch(s0, q.refId, q.tag, note, user.name, now(), canApprove(user)) : decideCandidate(s0, q.refId, q.kind === 'confirm', user.name, now()); if (!res.ok) { toast(res.error, 'warn'); return; } const next = res.state; setWs(w => ({ ...w, states: { ...w.states, [q.relId]: next } })); }
+      setWs(w => ({ ...w, requests: w.requests.map(x => x.id === id ? { ...x, status: approve ? 'approved' : 'rejected', decidedBy: user.name, decidedAt: now() } : x) })); toast(approve ? `${q.id} approved and applied` : `${q.id} rejected`); },
     run: (fn, okMsg, relId = route.relId) => { const r = fn(wsRef.current.states[relId]); if (!r.ok) { toast(r.error, 'warn'); return false; } const next = r.state; setWs(w => ({ ...w, states: { ...w.states, [relId]: next } })); if (okMsg) toast(okMsg); return true; },
   };
   const curStat = status(st, route.tag, ws.settings);
@@ -69,12 +77,12 @@ export default function ReconApp() {
       <div className="rx-bar">
         <div className="rd-brand"><span className="rw-mark">NXT</span><div><b>Vendor Payable Reconciliation</b><small>Meridian Consumer Products · buyer workspace</small></div></div>
         {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <>
-          <Picker value={route.relId} onChange={v => v !== 'ALL' && ctx.select(v)} allLabel="Choose a relationship" options={Object.values(ws.states).map(x => ({ id: x.rel.id, label: label(x), meta: `${x.rel.entityId} · ${status(x, currentPeriod(x).tag, ws.settings)}`, dot: dot(x) }))} />
+          <Picker value={route.relId} onChange={v => v !== 'ALL' && ctx.select(v)} allLabel="Choose a relationship" options={visible.map(x => ({ id: x.rel.id, label: label(x), meta: `${x.rel.entityId} · ${status(x, currentPeriod(x).tag, ws.settings)}`, dot: dot(x) }))} />
           <PeriodPicker tags={st.periods.map(p => p.tag)} value={route.tag} quarterly={st.rel.frequency === 'Quarterly'} onPick={t => ctx.select(route.relId, t)} />
         </>}
         <div className="rd-actions">
           <button className="rd-act" onClick={() => setAudit(true)}><Icon n="chat" /> Audit log</button>
-          <label className="rx-user"><Avatar name={user.name} /><select value={user.id} onChange={e => ctx.setUserId(e.target.value)} aria-label="Signed in as">{USERS.map(u => <option key={u.id} value={u.id}>{u.name} · {u.role}</option>)}</select></label>
+          <label className="rx-user"><Avatar name={user.name} /><select value={user.id} onChange={e => ctx.setUserId(e.target.value)} aria-label="Signed in as">{USERS.map(u => <option key={u.id} value={u.id}>{u.name} · {u.role === 'Vendor' ? `Vendor, ${VENDORS.find(v => v.id === u.vendorId)?.displayName}` : u.role}</option>)}</select></label>
         </div>
       </div>
       <nav className="rx-nav" aria-label="Screens">{NAV.map(n => { const on = navOf(route.screen).id === n.id; return <a key={n.id} href={`#reconciliation-lab/${n.subs[0][0]}/${route.relId}/${route.tag}`} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}><Icon n={n.icon} />{n.label}</a>; })}</nav>
@@ -82,6 +90,7 @@ export default function ReconApp() {
         {id === 'open' && <em>{badge.open}</em>}{id === 'statement' && <em className={badge.balance === 'ok' ? 'ok' : 'warn'}>{badge.balance === 'ok' ? '✓' : '!'}</em>}</a>)}</nav>}
     </div>
     <p className="rw-banner">Illustrative NXT Foundry demo · synthetic data, in-memory only. The buyer, vendors, people and every figure are fictional; the user switcher stands in for sign-in and permissions.</p>
+    {user.vendorId && <p className="rx-vbar"><b>Vendor view · {vendorOf(st).displayName}.</b> You can see every screen for your own account. Statement responses are yours to give; matches, reversals and suggestions you make are sent to the buyer for review and only apply once approved.</p>}
     {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <div className="rx-context">
       <div><b>{vendorOf(st).legalName}</b><span>{st.rel.vendorCode} · {entityOf(st).name} · {st.rel.bu} · {st.rel.currency} · {st.rel.frequency}</span></div>
       <div className="rx-context-r"><span className={'rw-pill ' + STATUS_TONE[curStat]}>{curStat}</span><b>{tagLabel(route.tag)}</b>{period.version > 1 && <span>v{period.version}</span>}</div>

@@ -15,12 +15,12 @@ interface Row { st: RelState; tag: string; status: WfStatus; gateOk: boolean; op
 export default function Dashboard({ ctx }: { ctx: Ctx }) {
   const { ws, settings, go } = ctx;
   const [entity, setEntity] = useState(''); const [bu, setBu] = useState('');
-  const rows: Row[] = Object.values(ws.states).filter(st => (!entity || st.rel.entityId === entity) && (!bu || st.rel.bu === bu)).map(st => {
+  const rows: Row[] = ctx.visible.filter(st => (!entity || st.rel.entityId === entity) && (!bu || st.rel.bu === bu)).map(st => {
     const tag = currentPeriod(st).tag; const items = openItems(st, tag, settings); const s = statement(st, tag, settings); const p = currentPeriod(st);
     return { st, tag, status: ctx.stat(st, tag), gateOk: gate(st, tag).passed || !p.imports.V, openB: s.countB, openV: s.countV, hist: items.filter(i => i.txn.originTag !== tag).length, value: items.reduce((t, i) => t + Math.abs(i.txn.amount), 0), s, matched: st.matches.filter(m => !m.reversed && m.periodTag === tag).length };
   });
   const inr = rows.filter(r => r.st.rel.currency === 'INR'), usd = rows.filter(r => r.st.rel.currency === 'USD');
-  const closed = Object.values(ws.states).reduce((n, st) => n + st.periods.filter(p => p.phase === 'closed').length, 0);
+  const closed = ctx.visible.reduce((n, st) => n + st.periods.filter(p => p.phase === 'closed').length, 0);
   const awaiting = rows.filter(r => r.status === 'Awaiting ledgers');
   const tiles: [string, React.ReactNode, string, string?][] = [
     ['Vendor relationships', rows.length, `${VENDORS.length} vendors · ${ENTITIES.length} entities`],

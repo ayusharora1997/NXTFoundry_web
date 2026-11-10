@@ -8,14 +8,18 @@ import {
 } from './cycle';
 import { generateAll, periodsFor, RELS, VENDORS, CURRENT } from './ledger';
 
-export interface User { id: string; name: string; role: 'Preparer' | 'Approver' | 'Admin' }
+export interface User { id: string; name: string; role: 'Preparer' | 'Approver' | 'Admin' | 'Vendor'; vendorId?: string }
 export const USERS: User[] = [
   { id: 'u1', name: 'Priya Nair', role: 'Preparer' },
   { id: 'u2', name: 'Arjun Mehta', role: 'Approver' },
   { id: 'u3', name: 'System admin', role: 'Admin' },
+  { id: 'u4', name: 'R. Iyer', role: 'Vendor', vendorId: 'V01' },
+  { id: 'u5', name: 'S. Reddy', role: 'Vendor', vendorId: 'V02' },
 ];
-export const canApprove = (u: User) => u.role !== 'Preparer';
-export interface Workspace { states: Record<string, RelState>; files: LedgerFile[]; truth: Record<string, string>; settings: Settings; userId: string }
+export const canApprove = (u: User) => u.role === 'Approver' || u.role === 'Admin';
+/** Something a vendor user asked for. Nothing changes in the reconciliation until the buyer approves it. */
+export interface VendorRequest { id: string; relId: string; tag: string; kind: 'match' | 'reverse' | 'confirm' | 'reject'; ids: string[]; refId: string; force: boolean; reason: string; summary: string; by: string; at: string; status: 'pending' | 'approved' | 'rejected'; decidedBy?: string; decidedAt?: string }
+export interface Workspace { states: Record<string, RelState>; files: LedgerFile[]; truth: Record<string, string>; settings: Settings; userId: string; requests: VendorRequest[] }
 
 const DAY = 86400000; const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export const stampAt = (ms: number, hhmm = '10:00') => { const d = new Date(ms); return `${String(d.getUTCDate()).padStart(2, '0')}-${MON[d.getUTCMonth()]}-${d.getUTCFullYear()} ${hhmm}`; };
@@ -90,7 +94,7 @@ export function initWorkspace(): Workspace {
     st = drive(st, base, defs[CURRENT[rel.id]].tag, TARGET[rel.id], rel.id !== 'R2');
     states[rel.id] = st;
   });
-  return { states, files, truth, settings: DEFAULT_SETTINGS, userId: 'u1' };
+  return { states, files, truth, settings: DEFAULT_SETTINGS, userId: 'u1', requests: [] };
 }
 /** Continue a period that has already been matched through review, sign-off and close. */
 function finishFrom(st: RelState, ws: Pick<Workspace, 'files' | 'truth' | 'settings'>, tag: string): RelState {
