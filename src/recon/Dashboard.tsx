@@ -34,9 +34,9 @@ export default function Dashboard({ ctx }: { ctx: Ctx }) {
     ['Partially reconciled', rows.reduce((n, r) => n + r.pt, 0), 'Forced matches with a difference'],
     ['Vendor requests', rows.reduce((n, r) => n + r.rq, 0), 'Awaiting buyer review', rows.some(r => r.rq) ? 'violet' : ''],
     ['Vendor concerns raised', rows.filter(r => r.status === 'Vendor disputed').length, 'Statements the vendor did not accept', rows.some(r => r.status === 'Vendor disputed') ? 'red' : ''],
-    ['Carried from earlier periods', rows.reduce((n, r) => n + r.hist, 0), 'Still open after a previous close', 'amber'],
-    ['Periods closed', closed, 'Signed off and carried forward'],
   ];
+  const ANNCOLS: Col<Row>[] = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => ({ key: `A${n}`, label: `A${n}`, align: 'right' as const, text: r => { const a = r.ann.find(x => x.n === n); return a ? money(a.effect, r.st.rel.currency, 0) : ''; }, sort: r => r.ann.find(x => x.n === n)?.effect ?? 0,
+    render: r => { const a = r.ann.find(x => x.n === n); return a ? <span title={`Annexure ${n} · ${a.name}: ${a.count} item(s)`}><b>{signedMoney(a.effect, r.st.rel.currency, 0)}</b></span> : <span className="rx-muted">—</span>; } }));
   const cols: Col<Row>[] = [
     { key: 'v', label: 'Vendor', width: 230, sticky: true, noToggle: true, text: r => ctx.label(r.st), render: r => <span className="rd-vlink"><span className={'rw-dot ' + STATUS_TONE[r.status]} /><span><b>{vendorOf(r.st).displayName}</b><small>{r.st.rel.vendorCode} · {r.st.rel.bu} · {r.st.rel.currency}</small></span></span> },
     { key: 'e', label: 'Entity', hidden: true, text: r => entityOf(r.st).name },
@@ -50,7 +50,7 @@ export default function Dashboard({ ctx }: { ctx: Ctx }) {
     { key: 'sg', label: 'Suggested', align: 'right', text: r => String(r.sg), sort: r => r.sg, render: r => r.sg ? <button className="rw-link" onClick={e => { e.stopPropagation(); go('open', r.st.rel.id); }}>{r.sg}</button> : <span className="rx-muted">0</span> },
     { key: 'pt', label: 'Partial', align: 'right', text: r => String(r.pt), sort: r => r.pt, render: r => r.pt ? <button className="rw-link" onClick={e => { e.stopPropagation(); go('open', r.st.rel.id); }}>{r.pt}</button> : <span className="rx-muted">0</span> },
     { key: 'rq', label: 'Vendor requests', align: 'right', text: r => String(r.rq), sort: r => r.rq, render: r => r.rq ? <button className="rw-link" onClick={e => { e.stopPropagation(); go('open', r.st.rel.id); }}>{r.rq} pending</button> : <span className="rx-muted">0</span> },
-    { key: 'a', label: 'Annexures', width: 260, text: r => r.ann.map(a => `A${a.n} ${a.count}`).join(' '), render: r => r.ann.length ? <span className="rx-annex-chips">{r.ann.map(a => <span key={a.n} title={`Annexure ${a.n} · ${a.name}: ${a.count} item(s), ${signedMoney(a.effect, r.st.rel.currency, 0)}`}><b>A{a.n}</b>{a.count}</span>)}</span> : <span className="rx-muted">—</span> },
+    ...ANNCOLS,
     { key: 'u', label: 'Unexplained', align: 'right', text: r => r.s.unexplained === null ? '—' : money(r.s.unexplained, r.st.rel.currency), render: r => r.s.unexplained === null ? '—' : Math.abs(r.s.unexplained) < 0.005 ? <span className="rw-ok">✓ 0</span> : <span className="rw-neg">{money(r.s.unexplained, r.st.rel.currency)}</span> },
     { key: 'n', label: 'Next', noToggle: true, text: r => NEXT[r.status][0], render: r => <button className="rw-btn small" onClick={e => { e.stopPropagation(); go(NEXT[r.status][1], r.st.rel.id); }}>{NEXT[r.status][0]} →</button> },
   ];
@@ -68,9 +68,10 @@ export default function Dashboard({ ctx }: { ctx: Ctx }) {
       <select className="rx-sel" value={bu} onChange={e => setBu(e.target.value)} aria-label="Business unit"><option value="">All business units</option>{ENTITIES.filter(e => !entity || e.id === entity).flatMap(e => e.bus).map(b => <option key={b}>{b}</option>)}</select></div>}>
       Every vendor, where its current period stands, and how its difference breaks down into annexures by the period each open item came from.
     </PageHead>
-    <Collapsible id="dashboard" label="summary"><div className="rx-tiles four">{tiles.map(([k, v, s, tone]) => <div key={k} className={'rx-tile ' + (tone ?? '')}><span>{k}</span><b>{v}</b><small>{s}</small></div>)}</div></Collapsible>
-    <Card title="Vendors" tip="Click a vendor to see its balances and each annexure. Annexure chips show the originating period and how many items it holds; the current period is highlighted.">
+    <Collapsible id="dashboard" label="summary"><div className="rx-tiles mini">{tiles.map(([k, v, s, tone]) => <div key={k} title={s} className={'rx-tile ' + (tone ?? '')}><span>{k}</span><b>{v}</b></div>)}</div></Collapsible>
+    <Card title="Vendors" tip="Click a vendor to see its balances and each annexure. The A1 to A9 columns give each annexure’s value for that vendor; hover a value for what it holds.">
       <DataTable rows={rows} cols={cols} rowKey={r => r.st.rel.id} fileName="vendor-summary.csv" expand={expand} pageSize={10} />
+      <p className="rx-muted rx-legend"><b>A1</b> invoices subsequently accounted by buyer · <b>A2</b> invoices not accounted by buyer · <b>A3</b> invoices partially matched · <b>A4</b> invoices not accounted by vendor · <b>A5</b> credit notes · <b>A6</b> payments not accounted by buyer · <b>A7</b> payments partially matched · <b>A8</b> payments not accounted by vendor · <b>A9</b> TDS. Values are each annexure’s effect on the move from the buyer’s closing balance to the vendor’s; they add up to the difference.</p>
     </Card>
   </>;
 }

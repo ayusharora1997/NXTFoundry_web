@@ -1005,3 +1005,8 @@
 .rx-mtot b{color:#fff;font-size:15px;font-variant-numeric:tabular-nums}.rx-mtot b.ok{color:var(--lime)}
 .rx-mx tfoot td{font-weight:700;background:var(--bg2);border-top:2px solid var(--line)}
 .rx-mx tfoot tr.sel td{background:var(--lime-t)}
+
+.rx-tiles.mini{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin-bottom:12px}
+.rx-tiles.mini .rx-tile{padding:8px 12px;gap:0}
+.rx-tiles.mini .rx-tile span{font-size:10.5px}.rx-tiles.mini .rx-tile b{font-size:21px}
+.rx-legend{font-size:12px;line-height:1.5;margin:10px 0 0}
