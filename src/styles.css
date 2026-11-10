@@ -750,3 +750,15 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .nav-menu-item .nav-menu-tag{align-self:flex-end;margin-top:auto}
 .header nav .nav-menu-item{height:100%}
 .nav-menu-item small{margin-bottom:6px}
+
+/* Not-live products read as "in progress": dimmer, faded, and the status chips desaturated */
+.header nav .nav-menu-item:is(.cooking,.simmer,.prep,.menu){background:#0c1411}
+.nav-menu-item:is(.cooking,.simmer,.prep,.menu) b{color:#8f9a94}
+.nav-menu-item:is(.cooking,.simmer,.prep,.menu) small{color:#66716b}
+.nav-menu-item:is(.cooking,.simmer,.prep,.menu) .nav-menu-tag{opacity:.55;filter:saturate(.45)}
+.header nav .nav-menu-item:is(.cooking,.simmer,.prep,.menu):hover b{color:#c7d0c9}
+.header nav .nav-menu-item:is(.cooking,.simmer,.prep,.menu):hover{border-color:#3a4741}
+.px-tab:not(.live):not(.on) .px-t b{color:#8a948e}
+.px-tab:not(.live):not(.on) .ps-status{opacity:.55;filter:saturate(.45)}
+.footer-prod:not([target]){color:#8a948e}
+.footer-prod:not([target]) em{opacity:.6;filter:saturate(.45)}
