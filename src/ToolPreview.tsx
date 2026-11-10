@@ -134,3 +134,44 @@ export function InvoicePreview() {
     <div className="tp-foot"><span><b>{got}</b> fields read · <b>{INV_CHECKS.slice(0, checks).filter(c => c[2]).length}</b> checks passed</span><ol><li className={t < 4200 ? 'on' : 'done'}>Read</li><li className={t >= 4200 ? 'on' : ''}>Reconcile</li></ol></div>
   </div>;
 }
+
+// Bank reconciliation: statement lines on one side, ledger on the other; lines pair off as they match.
+const BANK_ROWS: [string, string, string, 'ok' | 'fee' | 'new'][] = [
+  ['NEFT · KAVERI PKG', '−₹1,18,000', 'Payment · KAV/0485', 'ok'],
+  ['UPI · ARCADIA RETAIL', '+₹2,36,000', 'Receipt · INV/0123', 'ok'],
+  ['BANK CHARGES', '−₹590', 'Not in books yet', 'fee'],
+  ['IMPS · UNKNOWN 88213', '+₹45,000', 'Unidentified credit', 'new'],
+  ['RTGS · NANDI LOG', '−₹63,270', 'Payment · NAN/2207', 'ok'],
+];
+const BANK_LABEL = { ok: 'Matched', fee: 'Book it', new: 'Who paid?' };
+export function BankPreview() {
+  const ref = useRef<HTMLDivElement>(null);
+  const t = useLoop(ref, 9000, 7000);
+  const shown = Math.max(0, Math.min(BANK_ROWS.length, Math.floor((t - 500) / 800) + 1));
+  return <div className="tp tp-bank" ref={ref} role="img" aria-label="Animated preview of bank reconciliation">
+    <div className="tp-bar"><i /><i /><i /><span>Bank statement vs ledger · Current account · Sep 2026</span></div>
+    <div className="tp-body gst-body">
+      <div className="gst-head bank"><span>Bank statement</span><span>Amount</span><span>In your books</span><span>Result</span></div>
+      {BANK_ROWS.map((r, i) => <div key={r[0]} className={'gst-row bank' + (i < shown ? ' on ' + (r[3] === 'ok' ? 'ok' : r[3] === 'fee' ? 'diff' : 'miss') : '')}><b>{r[0]}</b><span>{r[1]}</span><span>{r[2]}</span><em>{i < shown ? BANK_LABEL[r[3]] : '…'}</em></div>)}
+    </div>
+    <div className="tp-foot"><span><b>{BANK_ROWS.slice(0, shown).filter(r => r[3] === 'ok').length}</b> matched · <b>{BANK_ROWS.slice(0, shown).filter(r => r[3] !== 'ok').length}</b> to look at</span><ol><li className="on">Statement</li><li>Ledger</li></ol></div>
+  </div>;
+}
+
+// Settlements: a marketplace payout broken back down into orders, fees, refunds and taxes until it equals what reached the bank.
+const SET_ROWS: [string, string, number][] = [['142 orders delivered', '+₹4,86,300', 0], ['Commission & fixed fees', '−₹58,356', 1], ['Shipping charged by platform', '−₹21,420', 1], ['Returns & refunds (9)', '−₹31,860', 1], ['TCS 1% · TDS 0.1%', '−₹4,377', 1], ['Short-settled orders (2)', '−₹3,180', 2]];
+export function SettlementPreview() {
+  const ref = useRef<HTMLDivElement>(null);
+  const t = useLoop(ref, 9000, 7600);
+  const shown = Math.max(0, Math.min(SET_ROWS.length, Math.floor((t - 400) / 700) + 1));
+  const done = t > 400 + SET_ROWS.length * 700;
+  return <div className="tp tp-set" ref={ref} role="img" aria-label="Animated preview of payment and marketplace settlement reconciliation">
+    <div className="tp-bar"><i /><i /><i /><span>Marketplace payout · 15–21 Sep 2026</span></div>
+    <div className="tp-body gst-body">
+      {SET_ROWS.map(([k, v, c], i) => <div key={k} className={'set-row' + (i < shown ? ' on' : '') + (c === 2 ? ' flag' : '')}><span>{k}</span><b>{v}</b></div>)}
+      <div className={'set-row total' + (done ? ' on' : '')}><span>Expected payout</span><b>₹3,67,107</b></div>
+      <div className={'set-row bank' + (done ? ' on' : '')}><span>Received in bank</span><b>₹3,67,107 ✓</b></div>
+    </div>
+    <div className="tp-foot"><span><b>{done ? 2 : 0}</b> orders short-settled · claim drafted</span><ol><li className="on">Payout</li><li>Orders</li></ol></div>
+  </div>;
+}
