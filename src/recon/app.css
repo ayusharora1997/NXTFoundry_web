@@ -903,3 +903,8 @@
 .rx-src small{color:var(--muted);overflow-wrap:anywhere}
 .rx-docs{display:flex;gap:10px;flex-wrap:wrap}
 @media(max-width:700px){.rx-fmt,.rx-src{grid-template-columns:1fr}.rx-pp{flex:1 1 100%}.rx-pp-btn{width:100%}.rx-pp-pop{width:100%}}
+
+/* Demo notice stays pinned to the bottom of the window */
+.rw-banner{position:fixed;left:0;right:0;bottom:0;z-index:60;border-bottom:0;border-top:1px solid #e3f2a6;box-shadow:0 -6px 16px -10px rgba(0,0,0,.25)}
+.rx{padding-bottom:40px}
+@media(max-width:700px){.rx{padding-bottom:64px}}
