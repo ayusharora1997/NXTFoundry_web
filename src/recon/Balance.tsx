@@ -16,7 +16,7 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
   const s: Statement = p.phase !== 'working' && p.snapshot ? p.snapshot : live;
   const frozen = s !== live;
   const wf = ctx.stat(st, tag);
-  const [open, setOpen] = useState<number | null>(null);
+  const [open, setOpen] = useState<number | null>(null); const [recAll, setRecAll] = useState(false);
   const [rep, setRep] = useState(vendorOf(st).contact.name); const [comments, setComments] = useState(''); const [reason, setReason] = useState(''); const [round, setRound] = useState('');
   const next = nextDef(st.rel, tag); const nextReady = next && filesFor(ws, st.rel.id, next.tag).some(f => f.kind === 'period');
   const v = vendorOf(st), e = entityOf(st);
@@ -118,8 +118,8 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
           {p.phase === 'closed' && <>{next && st.periods.some(x => x.tag === next.tag) && <button className="rw-btn lime full" onClick={() => go('upload', st.rel.id, next.tag)}>Open {next.tag}{nextReady ? '' : ' (files not in yet)'} →</button>}<p className="rx-muted">Closed {p.dates.closed}. {p.carriedOut.length} item(s) carried forward.</p></>}
           {['prepared', 'shared', 'accepted', 'disputed', 'signed'].includes(p.phase) && <div className="rx-reopen"><input value={reason} onChange={e => setReason(e.target.value)} placeholder={p.phase === 'disputed' ? 'What will be amended (required)' : 'Reason to reopen (required)'} aria-label="Reopen reason" />
             <button className="rw-btn small" disabled={!approver || !reason.trim()} title={approver ? '' : 'Approver only'} onClick={() => run(x => reopen(x, tag, reason, user.name, at(), approver), `Reopened as version ${p.version + 1}`)}>Reopen as v{p.version + 1}</button></div>}
-          <h4 className="rw-h4">Record</h4>
-          <ol className="rw-timeline compact">{[...p.signoffs].reverse().map((x, i) => <li key={i} className={x.event === 'disputed' ? 'reminder' : x.event === 'signed' || x.event === 'accepted' ? 'signoff' : ''}><span className="rw-avatar">v{x.version}</span><div><p><b>{x.event[0].toUpperCase() + x.event.slice(1)}</b> · {x.by}{x.rep ? ` · vendor: ${x.rep}` : ''}</p>{x.comments && <blockquote>{x.comments}</blockquote>}<small>{x.at}</small></div></li>)}{!p.signoffs.length && <li className="empty">Not prepared yet.</li>}</ol>
+          <h4 className="rw-h4 rx-rechead">Record <small>{p.signoffs.length} entr{p.signoffs.length === 1 ? 'y' : 'ies'}</small>{p.signoffs.length > 2 && <button type="button" className="rw-link" aria-expanded={recAll} onClick={() => setRecAll(!recAll)}>{recAll ? 'Show last 2' : 'Show all'}</button>}</h4>
+          <ol className="rw-timeline compact">{[...p.signoffs].reverse().slice(0, recAll ? undefined : 2).map((x, i) => <li key={i} className={x.event === 'disputed' ? 'reminder' : x.event === 'signed' || x.event === 'accepted' ? 'signoff' : ''}><span className="rw-avatar">v{x.version}</span><div><p><b>{x.event[0].toUpperCase() + x.event.slice(1)}</b> · {x.by}{x.rep ? ` · vendor: ${x.rep}` : ''}</p>{x.comments && <blockquote>{x.comments}</blockquote>}<small>{x.at}</small></div></li>)}{!p.signoffs.length && <li className="empty">Not prepared yet.</li>}</ol>
         </Card>
       </aside>
     </div>
