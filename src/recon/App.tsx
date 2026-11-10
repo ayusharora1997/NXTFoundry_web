@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { status, gate, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
 import { initWorkspace, USERS, canApprove, now, type Workspace, type User } from './store';
 import { VENDORS, ENTITIES, tagLabel } from './ledger';
-import { Icon, Drawer, Picker, Toasts, Avatar, type Toast } from './ui';
+import { Icon, Drawer, Picker, PeriodPicker, Toasts, Avatar, type Toast } from './ui';
 import Reconcile from './Reconcile';
 import Dashboard from './Dashboard';
 import LedgerUpload from './LedgerUpload';
@@ -70,7 +70,7 @@ export default function ReconApp() {
         <div className="rd-brand"><span className="rw-mark">NXT</span><div><b>Vendor Payable Reconciliation</b><small>Meridian Consumer Products · buyer workspace</small></div></div>
         {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <>
           <Picker value={route.relId} onChange={v => v !== 'ALL' && ctx.select(v)} allLabel="Choose a relationship" options={Object.values(ws.states).map(x => ({ id: x.rel.id, label: label(x), meta: `${x.rel.entityId} · ${status(x, currentPeriod(x).tag, ws.settings)}`, dot: dot(x) }))} />
-          <label className="rx-period"><i>Period</i><select value={route.tag} onChange={e => ctx.select(route.relId, e.target.value)} aria-label="Reconciliation period">{[...st.periods].reverse().map(p => <option key={p.tag} value={p.tag}>{p.tag} · {p.label}{p.phase === 'closed' ? ' · closed' : ' · current'}</option>)}</select></label>
+          <PeriodPicker tags={st.periods.map(p => p.tag)} value={route.tag} quarterly={st.rel.frequency === 'Quarterly'} onPick={t => ctx.select(route.relId, t)} />
         </>}
         <div className="rd-actions">
           <button className="rd-act" onClick={() => setAudit(true)}><Icon n="chat" /> Audit log</button>
@@ -84,7 +84,7 @@ export default function ReconApp() {
     <p className="rw-banner">Illustrative NXT Foundry demo · synthetic data, in-memory only. The buyer, vendors, people and every figure are fictional; the user switcher stands in for sign-in and permissions.</p>
     {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <div className="rx-context">
       <div><b>{vendorOf(st).legalName}</b><span>{st.rel.vendorCode} · {entityOf(st).name} · {st.rel.bu} · {st.rel.currency} · {st.rel.frequency}</span></div>
-      <div className="rx-context-r"><span className={'rw-pill ' + STATUS_TONE[curStat]}>{curStat}</span><span className="rx-tag">{route.tag}</span><span>{tagLabel(route.tag)}{period.version > 1 ? ` · v${period.version}` : ''}</span></div>
+      <div className="rx-context-r"><span className={'rw-pill ' + STATUS_TONE[curStat]}>{curStat}</span><b>{tagLabel(route.tag)}</b>{period.version > 1 && <span>v{period.version}</span>}</div>
     </div>}
     <div className="rw-main">
       {route.screen === 'unmapped' && <Planned title="Unmapped credits" what="Credit and debit notes not yet tied to the invoice they adjust." />}

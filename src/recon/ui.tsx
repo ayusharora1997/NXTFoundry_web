@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toCSV } from './engine';
+import { tagLabel, TODAY } from './ledger';
 
 // ---------- Formatting ----------
 export const inr = (n: number | null | undefined, dp = 0) => n === null || n === undefined ? '—' : (n < -0.004 ? '−' : '') + '₹' + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp });
@@ -22,6 +23,7 @@ const P: Record<string, React.ReactNode> = {
   info: <><circle cx="12" cy="12" r="8" /><path d="M12 11v5M12 8h.01" /></>,
   cols: <><rect x="4" y="5" width="16" height="14" rx="1" /><path d="M10 5v14M15 5v14" /></>,
   search: <><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" /></>,
+  chevron: <path d="m6 9 6 6 6-6" />,
   x: <><path d="M6 6l12 12" /><path d="M18 6 6 18" /></>,
   rules: <><path d="M4 7h10M18 7h2M4 17h4M12 17h8" /><circle cx="16" cy="7" r="2" /><circle cx="10" cy="17" r="2" /></>,
   sort: <><path d="m8 9 4-4 4 4" /><path d="m8 15 4 4 4-4" /></>,
@@ -197,3 +199,24 @@ export function Picker({ value, options, onChange, allLabel }: { value: string; 
 /** Currency-aware amount: ₹ with Indian grouping, $ with Western grouping. */
 export const money = (n: number | null | undefined, cur = 'INR', dp = 2) => n === null || n === undefined ? '—' : (n < -0.004 ? '−' : '') + (cur === 'USD' ? '$' + Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: dp, maximumFractionDigits: dp }) : '₹' + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp }));
 export const signedMoney = (n: number, cur = 'INR', dp = 2) => (n > 0.004 ? '+' : '') + money(n, cur, dp);
+
+// ---------- Period calendar ----------
+const SHORT_M = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** Month (or quarter) grid. Periods that have started are open; upcoming and out-of-scope ones are greyed out. */
+export function PeriodCalendar({ tags, value, quarterly, onPick }: { tags: string[]; value: string; quarterly: boolean; onPick: (tag: string) => void }) {
+  const [year, setYear] = useState(Number(value.slice(3)));
+  const cells = quarterly ? [3, 6, 9, 12].map(m => ({ m, label: `${SHORT_M[m - 3]}–${SHORT_M[m - 1]}`, tag: `Q${String(m).padStart(2, '0')}${year}`, start: Date.UTC(year, m - 3, 1) }))
+    : SHORT_M.map((l, i) => ({ m: i + 1, label: l, tag: `M${String(i + 1).padStart(2, '0')}${year}`, start: Date.UTC(year, i, 1) }));
+  return <div className="rx-cal" role="group" aria-label="Choose a period">
+    <div className="rx-cal-head"><button type="button" className="rw-iconbtn" aria-label="Previous year" onClick={() => setYear(year - 1)}>‹</button><b>{year}</b><button type="button" className="rw-iconbtn" aria-label="Next year" onClick={() => setYear(year + 1)}>›</button></div>
+    <div className={'rx-cal-grid' + (quarterly ? ' q' : '')}>{cells.map(c => { const upcoming = c.start > TODAY, inScope = tags.includes(c.tag), off = upcoming || !inScope;
+      return <button type="button" key={c.tag} disabled={off} className={c.tag === value ? 'on' : ''} aria-pressed={c.tag === value} title={upcoming ? 'Upcoming period' : inScope ? undefined : 'Not part of this reconciliation'} onClick={() => onPick(c.tag)}>{c.label}</button>; })}</div>
+    <p className="rx-cal-note">Greyed out: upcoming periods, or periods before this reconciliation began.</p>
+  </div>;
+}
+export function PeriodPicker({ tags, value, quarterly, onPick }: { tags: string[]; value: string; quarterly: boolean; onPick: (tag: string) => void }) {
+  const [open, setOpen] = useState(false); const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (!open) return; const f = (e: MouseEvent) => { if (!ref.current?.contains(e.target as Node)) setOpen(false); }; document.addEventListener('mousedown', f); return () => document.removeEventListener('mousedown', f); }, [open]);
+  return <div className="rx-pp" ref={ref}><button type="button" className="rx-pp-btn" aria-haspopup="dialog" aria-expanded={open} onClick={() => setOpen(!open)}><i>Period</i><b>{tagLabel(value)}</b><Icon n="chevron" /></button>
+    {open && <div className="rx-pp-pop"><PeriodCalendar tags={tags} value={value} quarterly={quarterly} onPick={t => { onPick(t); setOpen(false); }} /></div>}</div>;
+}

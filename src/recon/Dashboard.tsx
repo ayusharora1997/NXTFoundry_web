@@ -35,7 +35,7 @@ export default function Dashboard({ ctx }: { ctx: Ctx }) {
   const cols: Col<Row>[] = [
     { key: 'v', label: 'Vendor', width: 230, sticky: true, noToggle: true, text: r => ctx.label(r.st), render: r => <span className="rd-vlink"><span className={'rw-dot ' + STATUS_TONE[r.status]} /><span><b>{vendorOf(r.st).displayName}</b><small>{r.st.rel.vendorCode} · {r.st.rel.bu} · {r.st.rel.currency}</small></span></span> },
     { key: 'e', label: 'Entity', hidden: true, text: r => entityOf(r.st).name },
-    { key: 'p', label: 'Period', text: r => r.tag, render: r => <span className="rw-stack"><span className="rx-tag">{r.tag}</span><small>{tagLabel(r.tag)}</small></span> },
+    { key: 'p', label: 'Period', text: r => r.tag, render: r => <b>{tagLabel(r.tag)}</b> },
     { key: 's', label: 'Status', text: r => r.status, render: r => <Pill tone={STATUS_TONE[r.status]}>{r.status}</Pill> },
     { key: 'b', label: 'Buyer closing', align: 'right', text: r => money(r.s.buyerClosing, r.st.rel.currency, 0), sort: r => r.s.buyerClosing ?? 0 },
     { key: 'vc', label: 'Vendor closing', align: 'right', text: r => money(r.s.vendorClosing, r.st.rel.currency, 0), sort: r => r.s.vendorClosing ?? 0 },

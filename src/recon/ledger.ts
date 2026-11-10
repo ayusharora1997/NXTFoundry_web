@@ -8,6 +8,7 @@ import { SIGN, r2, type Buyer, type Entity, type Vendor, type Relationship, type
 
 const DAY = 86400000;
 const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+export const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const fmt = (ms: number) => { const d = new Date(ms); return `${String(d.getUTCDate()).padStart(2, '0')}-${MON[d.getUTCMonth()]}-${d.getUTCFullYear()}`; };
 export const TODAY = Date.UTC(2026, 10, 9); // files for periods that ended before this date are available
 
@@ -36,8 +37,8 @@ export const RELS: Relationship[] = [
 ];
 
 // ---------- Periods ----------
-const month = (y: number, m: number): PeriodDef => ({ tag: `M${String(m).padStart(2, '0')}${y}`, type: 'Monthly', start: Date.UTC(y, m - 1, 1), end: Date.UTC(y, m, 0), label: `${MON[m - 1]} ${y}` });
-const quarter = (y: number, endM: number, fq: string): PeriodDef => ({ tag: `Q${String(endM).padStart(2, '0')}${y}`, type: 'Quarterly', start: Date.UTC(y, endM - 3, 1), end: Date.UTC(y, endM, 0), label: `${MON[endM - 3]}–${MON[endM - 1]} ${y} (${fq})` });
+const month = (y: number, m: number): PeriodDef => ({ tag: `M${String(m).padStart(2, '0')}${y}`, type: 'Monthly', start: Date.UTC(y, m - 1, 1), end: Date.UTC(y, m, 0), label: `${MONTHS[m - 1]} ${y}` });
+const quarter = (y: number, endM: number, fq: string): PeriodDef => ({ tag: `Q${String(endM).padStart(2, '0')}${y}`, type: 'Quarterly', start: Date.UTC(y, endM - 3, 1), end: Date.UTC(y, endM, 0), label: `${MONTHS[endM - 3]} – ${MONTHS[endM - 1]} ${y} (${fq})` });
 export function periodsFor(rel: Relationship): PeriodDef[] {
   if (rel.frequency === 'Quarterly') return [quarter(2026, 6, 'Q1 FY27'), quarter(2026, 9, 'Q2 FY27'), quarter(2026, 12, 'Q3 FY27')];
   if (rel.id === 'R8') return [month(2026, 9), month(2026, 10), month(2026, 11)];
@@ -45,7 +46,7 @@ export function periodsFor(rel: Relationship): PeriodDef[] {
 }
 /** Index of the period each relationship is working on today. Earlier periods are closed history. */
 export const CURRENT: Record<string, number> = { R1: 3, R2: 3, R3: 3, R4: 1, R5: 3, R6: 3, R7: 3, R8: 0 };
-export const tagLabel = (tag: string) => { const m = Number(tag.slice(1, 3)), y = tag.slice(3); return tag[0] === 'Q' ? `${MON[m - 3]}–${MON[m - 1]} ${y}` : `${MON[m - 1]} ${y}`; };
+export const tagLabel = (tag: string) => { const m = Number(tag.slice(1, 3)), y = tag.slice(3); return tag[0] === 'Q' ? `${MONTHS[m - 3]} – ${MONTHS[m - 1]} ${y}` : `${MONTHS[m - 1]} ${y}`; };
 
 // ---------- Generator ----------
 interface Spec { side: Side; tag: string; kind: LedgerFile['kind']; origin?: string; type: TxnType; doc: string; date: number; amt: number; ref?: string; against?: string; narr: string; truth: string }

@@ -24,7 +24,7 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
   const pending = st.candidates.filter(c => c.status === 'pending' && c.periodTag === tag);
   const ran = (ids: StageId[]) => ids.every(i => p.stages[i]);
   const steps: { t: string; d: string; done: boolean; href: string; sub: Screen }[] = [
-    { t: 'Period', d: `${p.tag} · ${p.type}`, done: true, href: 'rx-period', sub: 'upload' },
+    { t: 'Period', d: `${tagLabel(p.tag)} · ${p.type}`, done: true, href: 'rx-period', sub: 'upload' },
     { t: 'Carry forward', d: prev ? `${p.carriedIn.length} items in` : 'First period', done: true, href: 'rx-period', sub: 'upload' },
     { t: 'Buyer ledger', d: p.imports.B ? 'Imported' : 'Awaited', done: !!p.imports.B, href: 'rx-import', sub: 'upload' },
     { t: 'Vendor ledger', d: p.imports.V ? 'Imported' : 'Awaited', done: !!p.imports.V, href: 'rx-import', sub: 'upload' },
