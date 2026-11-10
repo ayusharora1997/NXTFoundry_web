@@ -956,3 +956,20 @@
 .rx-chips li{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:3px 4px 3px 9px;font-size:12.5px;max-width:100%}
 .rx-chips li span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
 .rx-chips button{border:0;background:#e1e4dc;border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;color:var(--ink)}
+
+/* Statement: closing balance per buyer to closing balance per vendor */
+.rx-bridge button.row{width:100%;background:none;border:0;border-bottom:1px solid var(--line2);font:inherit;text-align:left;cursor:pointer;color:inherit}
+.rx-bridge button.row:hover{background:var(--lime-t)}
+.rx-bridge .row.subr{padding-left:22px;font-size:13px;color:var(--soft)}
+.rx-sumchk{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:14px 0 8px}
+.rx-sumchk div{background:#fff;padding:9px 12px;display:flex;flex-direction:column;gap:2px}
+.rx-sumchk span{font-size:11.5px;color:var(--muted)}.rx-sumchk b{font-size:16px;font-variant-numeric:tabular-nums}
+.rx-sumchk .ok b{color:var(--green)}.rx-sumchk .bad b{color:var(--red)}
+.rx-annex-sub{margin:10px 0 4px;font-size:13px;color:var(--soft)}
+.rx-abars{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:7px}
+.rx-abars li{display:grid;grid-template-columns:86px 1fr 92px;align-items:center;gap:8px;font-size:12.5px}
+.rx-abars i{display:block;height:10px;background:var(--line2);border-radius:5px;overflow:hidden}
+.rx-abars b{display:block;height:100%;background:#7b857f;border-radius:5px}
+.rx-abars li.pos b{background:#8fb51c}.rx-abars li.neg b{background:#e58a78}
+.rx-abars em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+@media(max-width:700px){.rx-sumchk{grid-template-columns:1fr}}
