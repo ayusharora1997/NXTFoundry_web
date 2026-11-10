@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { status, gate, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
+import { status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
 import { initWorkspace, USERS, canApprove, now, type Workspace, type User } from './store';
 import { VENDORS, ENTITIES, tagLabel } from './ledger';
 import { Icon, Drawer, Picker, PeriodPicker, Toasts, Avatar, type Toast } from './ui';
@@ -59,7 +59,7 @@ export default function ReconApp() {
   const curStat = status(st, route.tag, ws.settings);
   const badge = useMemo(() => {
     const open = openItems(st, route.tag, ws.settings); const s = statement(st, route.tag, ws.settings);
-    return { open: open.length, balance: s.balanced ? 'ok' : 'bad' };
+    const held = heldTxnIds(st); return { open: open.filter(i => !held.has(i.txn.id)).length, balance: s.balanced ? 'ok' : 'bad' };
   }, [ws, route.relId, route.tag]);
   const period = st.periods.find(p => p.tag === route.tag)!;
   const dot = (x: RelState) => STATUS_TONE[status(x, currentPeriod(x).tag, ws.settings)];

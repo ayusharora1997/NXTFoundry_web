@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { openItems, FAMILY, decideCandidate, manualMatch, reverseMatch, STAGES, r2, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type MatchRec, type Txn, type RelState, type ExStatus } from './cycle';
+import { openItems, heldTxnIds, FAMILY, decideCandidate, manualMatch, reverseMatch, STAGES, r2, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type MatchRec, type Txn, type RelState, type ExStatus } from './cycle';
 import { ENTITIES, tagLabel } from './ledger';
 import { PairTable, kindOf, sumOf } from './PairTable';
 import { USERS } from './store';
@@ -17,7 +17,8 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
   const { st, tag, settings, run, user, at, go } = ctx; const cur = st.rel.currency; const p = st.periods.find(x => x.tag === tag)!; const locked = p.phase !== 'working';
   const [tab, setTab] = useState<Tab>('sugg'); const [selB, setSelB] = useState<string[]>([]); const [selV, setSelV] = useState<string[]>([]);
   const [matching, setMatching] = useState(false); const [detail, setDetail] = useState<string | null>(null); const [rev, setRev] = useState<MatchRec | null>(null); const [reason, setReason] = useState('');
-  const items = useMemo(() => openItems(st, tag, settings), [st, tag, settings]);
+  const held = useMemo(() => heldTxnIds(st), [st]);
+  const items = useMemo(() => openItems(st, tag, settings).filter(i => !held.has(i.txn.id)), [st, tag, settings, held]);
   const byId = useMemo(() => new Map(st.txns.map(t => [t.id, t])), [st]);
   const get = (ids: string[]) => ids.map(i => byId.get(i)!).filter(Boolean);
   const oldest = (x: Txn[]) => x.map(t => t.originTag).sort((a, b) => tagKey(a) - tagKey(b))[0] ?? tag;
@@ -26,9 +27,9 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
 
   const sugg = st.candidates.filter(c => c.status === 'pending' && c.periodTag === tag).map(c => ({ c, B: get(c.buyerIds), V: get(c.vendorIds) }));
   const pop = new Set(st.txns.filter(t => t.importedIn === tag || p.carriedIn.includes(t.id)).map(t => t.id));
-  // Matched but with a difference left over. A group whose difference is zero is fully reconciled and lives on Reconciled transactions. Reversing sends the items back to open.
-  const partial = st.matches.filter(mm => !mm.reversed && mm.kind !== 'adjustment' && [...mm.buyerIds, ...mm.vendorIds].some(i => pop.has(i)))
-    .map(mm => ({ mm, B: get(mm.buyerIds), V: get(mm.vendorIds) })).filter(x => Math.abs(sumOf(x.B) - sumOf(x.V)) >= 0.005);
+  // Forced matches that still carry a difference. A match that nets to zero is fully reconciled and lives on Reconciled transactions. Reversing sends the items back to open.
+  const partial = st.matches.filter(mm => !mm.reversed && mm.partial && [...mm.buyerIds, ...mm.vendorIds].some(i => pop.has(i)))
+    .map(mm => ({ mm, B: get(mm.buyerIds), V: get(mm.vendorIds) }));
   const openB = items.filter(i => i.txn.side === 'B').sort((a, b) => a.txn.date - b.txn.date), openV = items.filter(i => i.txn.side === 'V').sort((a, b) => a.txn.date - b.txn.date);
   const openIds = new Set(items.map(i => i.txn.id)); const sB = selB.filter(i => openIds.has(i)), sV = selV.filter(i => openIds.has(i));
   const pendingAdj = st.adjustments.filter(a => a.status === 'pending');
@@ -73,8 +74,8 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
         actions: <><button className="rw-btn small lime" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, true, user.name, at()), 'Confirmed. The items moved to Reconciled transactions.')}>Match</button><button className="rw-btn small" disabled={locked} onClick={() => run(s0 => decideCandidate(s0, c.id, false, user.name, at()), 'Rejected; the items stay open.')}>Reject</button></> }))} />
     </Card>}
 
-    {tab === 'partial' && <Card title="Partially reconciled" tip="Matches that still carry a difference. Once the difference is zero a match is fully reconciled and moves to Reconciled transactions. Reverse one to send its items back to Open items.">
-      <PairTable cur={cur} curTag={tag} status={<Pill tone="amber">Matched</Pill>} empty="No matches carry a difference. Fully matched items are on Reconciled transactions." rows={partial.filter(x => inFam([...x.B, ...x.V])).map(({ mm, B, V }) => ({ key: mm.id, tag: oldest([...B, ...V]), B, V, type: kindOf(B, V, mm.kind === 'contra'), sub: `${stageName(mm)} · ${mm.confidence}`,
+    {tab === 'partial' && <Card title="Partially reconciled" tip="Matches forced with a difference left over. The items stay open in the statement until the difference is resolved. Reverse a match to send its items back to Open items.">
+      <PairTable cur={cur} curTag={tag} status={<Pill tone="amber">Partial match</Pill>} empty="No partial matches. Fully matched items are on Reconciled transactions." rows={partial.filter(x => inFam([...x.B, ...x.V])).map(({ mm, B, V }) => ({ key: mm.id, tag: oldest([...B, ...V]), B, V, type: kindOf(B, V, mm.kind === 'contra'), sub: `${stageName(mm)} · ${mm.confidence}`,
         actions: <button className="rw-btn small" disabled={locked} onClick={() => { setRev(mm); setReason(''); }}>Reverse</button> }))} />
     </Card>}
 
@@ -107,12 +108,12 @@ function MatchDrawer({ ctx, B, V, onClose, onDone }: { ctx: Ctx; B: Txn[]; V: Tx
     {same && <p className="rw-note">Entries from one ledger only, so this is recorded as a contra: they should cancel each other out (for example an invoice and its reversal). Buyer and vendor items are never mixed in a contra.</p>}
     {(!same || B.length > 0) && list('Buyer entries', B)}{(!same || V.length > 0) && list('Vendor entries', V)}
     <dl className="rw-dl four"><div><dt>Buyer value</dt><dd>{signedMoney(sumOf(B), cur)}</dd></div><div><dt>Vendor value</dt><dd>{signedMoney(sumOf(V), cur)}</dd></div><div><dt>{same ? 'Net of selection' : 'Difference (buyer − vendor)'}</dt><dd className={ok ? 'rw-ok' : 'rw-neg'}>{ok ? '✓ 0.00' : signedMoney(net, cur)}</dd></div></dl>
-    {!ok && <p className="rw-note warn">These do not net to zero, so they cannot be closed as a {same ? 'contra' : 'match'}. Change the selection, or open an item and propose an adjustment for the difference.</p>}
+    {!ok && (same ? <p className="rw-note warn">A contra must net to zero. Change the selection.</p> : <p className="rw-note warn">These do not net to zero. <b>Force match</b> links them as a partial match: the {signedMoney(net, cur)} difference stays open, and the pair is listed under Partially reconciled until you reverse it. Or change the selection, or propose an adjustment on an item.</p>)}
     <label className="rw-field"><span>Remarks</span><textarea rows={3} value={remarks} onChange={e => setRemarks(e.target.value)} placeholder={same ? 'Why these cancel each other (e.g. invoice booked twice and reversed)' : 'Why these belong together (e.g. vendor allocated one receipt across three invoices)'} /></label>
     <div className="rw-field"><span>Supporting files (optional)</span>
       <label className="rx-attach"><input type="file" multiple onChange={e => { const n = [...(e.target.files ?? [])].map(f => f.name); setFiles(f => [...new Set([...f, ...n])]); e.target.value = ''; }} /><Icon n="upload" s={18} /><span><b>Attach files</b><small>Emails, statements, images or sheets</small></span></label>
       {files.length > 0 && <ul className="rx-chips">{files.map(n => <li key={n}><Icon n="file" s={14} /><span>{n}</span><button type="button" aria-label={`Remove ${n}`} onClick={() => setFiles(files.filter(x => x !== n))}>×</button></li>)}</ul>}</div>
-    <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={onClose}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!ok || !remarks.trim() || !(B.length + V.length)} onClick={() => { if (run(s => manualMatch(s, tag, [...B, ...V].map(t => t.id), remarks.trim() + (files.length ? ` [Attachments: ${files.join(', ')}]` : ''), user.name, at()), same ? 'Contra recorded. The items moved to Reconciled transactions.' : 'Match recorded. The items moved to Reconciled transactions.')) onDone(); }}>{same ? 'Record contra' : 'Record match'}</button></div>
+    <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={onClose}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={(!ok && same) || !remarks.trim() || !(B.length + V.length)} onClick={() => { if (run(s => manualMatch(s, tag, [...B, ...V].map(t => t.id), remarks.trim() + (files.length ? ` [Attachments: ${files.join(', ')}]` : ''), user.name, at(), !ok), same ? 'Contra recorded. The items moved to Reconciled transactions.' : ok ? 'Match recorded. The items moved to Reconciled transactions.' : 'Forced match recorded. The pair is under Partially reconciled.')) onDone(); }}>{same ? 'Record contra' : ok ? 'Record match' : 'Force match'}</button></div>
   </Drawer>;
 }
 

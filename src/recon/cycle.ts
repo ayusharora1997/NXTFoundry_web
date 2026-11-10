@@ -63,6 +63,8 @@ export interface MatchRec {
   id: string; relId: string; kind: 'contra' | 'match' | 'adjustment'; stage: StageId | 'manual' | 'adjustment'; rule: string; confidence: Confidence;
   buyerIds: string[]; vendorIds: string[]; explanation: string; amountDiff: number; dateDiff: number; by: string; at: string; periodTag: string; engine: string;
   reversed?: { by: string; at: string; reason: string; periodTag: string };
+  /** Forced match with a difference left over. The items stay open in the statement; the pairing is only a link until the difference is resolved or the match is reversed. */
+  partial?: boolean;
 }
 export interface Candidate { id: string; stage: StageId; kind: 'contra' | 'probable'; buyerIds: string[]; vendorIds: string[]; score: number; reasons: string[]; status: 'pending' | 'confirmed' | 'rejected' | 'superseded'; periodTag: string; by?: string; at?: string }
 export type AdjKind = 'opening-continuity' | 'opening-position' | 'rounding' | 'accounting';
@@ -202,7 +204,9 @@ export function approveOpening(st0: RelState, tag: string, side: Side, kind: 'op
 }
 
 // ---------- Pools ----------
-export function closedTxnIds(st: RelState): Set<string> { const s = new Set<string>(); st.matches.forEach(m => { if (!m.reversed) { m.buyerIds.forEach(i => s.add(i)); m.vendorIds.forEach(i => s.add(i)); } }); return s; }
+export function closedTxnIds(st: RelState): Set<string> { const s = new Set<string>(); st.matches.forEach(m => { if (!m.reversed && !m.partial) { m.buyerIds.forEach(i => s.add(i)); m.vendorIds.forEach(i => s.add(i)); } }); return s; }
+/** Items held in a partial match: still open for the statement, but not offered to automatic stages or new matches. */
+export function heldTxnIds(st: RelState): Set<string> { const s = new Set<string>(); st.matches.forEach(m => { if (!m.reversed && m.partial) { m.buyerIds.forEach(i => s.add(i)); m.vendorIds.forEach(i => s.add(i)); } }); return s; }
 /** Open transactions available in a period: everything imported up to it, not in an active match, contra or settlement. */
 export function openPool(st: RelState, tag: string): Txn[] {
   const idx = periodIndex(st, tag); const closed = closedTxnIds(st); const order = new Map(st.periods.map((p, i) => [p.tag, i]));
@@ -229,7 +233,7 @@ export function runStage(st0: RelState, tag: string, id: StageId, settings: Sett
   // A possible contra waits for a reviewer before either item is matched across ledgers. A pending "other" suggestion may be
   // overtaken by a deterministic stage (e.g. after credit mapping), and is then marked superseded.
   const pendContra = new Set(st.candidates.filter(c => c.status === 'pending' && c.kind === 'contra').flatMap(c => [...c.buyerIds, ...c.vendorIds]));
-  const pool = openPool(st, tag).filter(t => !pendContra.has(t.id) && (id !== 'other' || !pend.has(t.id)));
+  const held = heldTxnIds(st); const pool = openPool(st, tag).filter(t => !held.has(t.id) && !pendContra.has(t.id) && (id !== 'other' || !pend.has(t.id)));
   const B = pool.filter(t => t.side === 'B'), V = pool.filter(t => t.side === 'V');
   let considered = 0; const before = st.matches.length, candBefore = st.candidates.length;
   const add = (stage: StageId, kind: MatchRec['kind'], conf: Confidence, rule: string, bs: Txn[], vs: Txn[], explanation: string) => {
@@ -361,7 +365,8 @@ export function decideCandidate(st0: RelState, id: string, accept: boolean, by: 
   return { ok: true, state: st };
 }
 /** Reviewer-built match. Closes only if the group nets to zero; otherwise the difference must be dealt with explicitly. */
-export function manualMatch(st0: RelState, tag: string, ids: string[], reason: string, by: string, at: string): Result<RelState> {
+/** Matches open items by hand. With force, buyer and vendor items that do not net to zero are linked as a partial match instead of being refused. */
+export function manualMatch(st0: RelState, tag: string, ids: string[], reason: string, by: string, at: string, force = false): Result<RelState> {
   const p = getPeriod(st0, tag); if (!p || locked(p)) return fail('Period is locked. Reopen it to change matches.');
   const tx = ids.map(i => st0.txns.find(t => t.id === i));
   if (tx.some(t => !t)) return fail('Transactions from another buyer–vendor relationship cannot be matched here (cross-vendor, cross-entity, cross-unit and cross-currency matches are blocked).');
@@ -371,9 +376,11 @@ export function manualMatch(st0: RelState, tag: string, ids: string[], reason: s
   if (!reason.trim()) return fail('Give a reason for the manual match.');
   const same = b.length && !v.length ? 'B' : v.length && !b.length ? 'V' : '';
   const net = same ? sum(tx as Txn[]) : r2(sum(b) - sum(v));
-  if (Math.abs(net) >= 0.005) return fail(`These items do not net to zero (difference ${net.toFixed(2)}). Leave them open or record an adjustment for the difference.`);
+  const partial = Math.abs(net) >= 0.005;
+  if (partial && (!force || same)) return fail(same ? `A contra must net to zero (difference ${net.toFixed(2)}).` : `These items do not net to zero (difference ${net.toFixed(2)}). Use force match to link them as a partial match, or record an adjustment for the difference.`);
+  if ((tx as Txn[]).some(t => heldTxnIds(st0).has(t.id))) return fail('An item is already in a partial match. Reverse that match first.');
   const st = clone(st0); const dates = (tx as Txn[]).map(t => t.date);
-  st.matches.push({ id: nid(st, same ? 'CT' : 'MT'), relId: st.rel.id, kind: same ? 'contra' : 'match', stage: 'manual', rule: same ? 'Manual contra' : `Manual grouped match ${b.length}:${v.length}`, confidence: 'Manual', buyerIds: b.map(t => t.id), vendorIds: v.map(t => t.id), explanation: reason, amountDiff: 0, dateDiff: Math.round((Math.max(...dates) - Math.min(...dates)) / DAY), by, at, periodTag: tag, engine: ENGINE_VERSION });
+  st.matches.push({ id: nid(st, same ? 'CT' : 'MT'), relId: st.rel.id, kind: same ? 'contra' : 'match', stage: 'manual', rule: same ? 'Manual contra' : partial ? `Forced partial match ${b.length}:${v.length}` : `Manual grouped match ${b.length}:${v.length}`, confidence: 'Manual', partial: partial || undefined, buyerIds: b.map(t => t.id), vendorIds: v.map(t => t.id), explanation: reason, amountDiff: partial ? net : 0, dateDiff: Math.round((Math.max(...dates) - Math.min(...dates)) / DAY), by, at, periodTag: tag, engine: ENGINE_VERSION });
   log(st, by, at, tag, 'Manual match', `${b.length} buyer + ${v.length} vendor item(s)`, { reason });
   return { ok: true, state: st };
 }

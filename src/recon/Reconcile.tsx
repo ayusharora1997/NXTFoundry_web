@@ -30,7 +30,7 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
     const pop = new Set(st.txns.filter(t => t.importedIn === tag || p.carriedIn.includes(t.id)).map(t => t.id)); const byId = new Map(st.txns.map(t => [t.id, t])); const out: Row[] = [];
     const oldest = (x: Txn[]) => x.map(t => t.originTag).sort((a, b) => pkey(a).localeCompare(pkey(b)))[0] ?? tag;
     const val = (B: Txn[], V: Txn[], contra: boolean) => contra ? r2([...B, ...V].reduce((s, t) => s + Math.abs(t.amount), 0) / 2) : Math.max(Math.abs(sum(B)), Math.abs(sum(V)));
-    st.matches.filter(mm => !mm.reversed && mm.kind !== 'adjustment').forEach(mm => {
+    st.matches.filter(mm => !mm.reversed && !mm.partial && mm.kind !== 'adjustment').forEach(mm => {
       if (![...mm.buyerIds, ...mm.vendorIds].some(i => pop.has(i))) return;
       const B = mm.buyerIds.map(i => byId.get(i)!).filter(Boolean), V = mm.vendorIds.map(i => byId.get(i)!).filter(Boolean);
       out.push({ key: mm.id, mm, cat: catOf(mm), B, V, tag: oldest([...B, ...V]), diff: r2(sum(B) - sum(V)), value: val(B, V, mm.kind === 'contra') });
