@@ -40,7 +40,7 @@ export interface Resource { title: string; kind: ResourceKind; summary: string; 
 export const RESOURCE_KINDS: ResourceKind[] = ['Template', 'Checklist', 'Guide', 'Tool'];
 
 export const resources: Resource[] = [
-  { title: 'Vendor Payable Reconciliation: live demo', kind: 'Tool', status: 'available', format: 'Runs in your browser', href: '#reconciliation-lab',
+  { title: 'Vendor Payable Reconciliation: live demo', kind: 'Tool', status: 'available', format: 'Runs in your browser', href: '#reconciliation-lab', external: true,
     summary: 'Try the full reconciliation cycle on synthetic data: upload, opening check, matching, statement and sign-off.' },
   { title: 'Standard ledger template', kind: 'Template', status: 'available', format: 'CSV', href: '/resources/standard-ledger-template.csv',
     summary: 'The column layout our reconciliation tools read directly. Useful for asking vendors and customers for a clean ledger.' },

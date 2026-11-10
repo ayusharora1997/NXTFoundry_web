@@ -1014,3 +1014,7 @@
 /* Keep absolutely positioned helpers (screen-reader labels) inside the scrolling table, not stretching the page */
 .rw-table-wrap{position:relative}
 .sr-only{left:0;top:0;white-space:nowrap}
+
+/* Standalone tool: no site header above it */
+.tool-only .rx-top{top:0}
+a.rd-brand{color:inherit;text-decoration:none}

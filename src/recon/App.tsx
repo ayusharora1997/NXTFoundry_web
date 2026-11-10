@@ -75,7 +75,7 @@ export default function ReconApp() {
   return <section className="rw rx" id="reconciliation-lab">
     <div className="rx-top">
       <div className="rx-bar">
-        <div className="rd-brand"><span className="rw-mark">NXT</span><div><b>Vendor Payable Reconciliation</b><small>Meridian Consumer Products · buyer workspace</small></div></div>
+        <a className="rd-brand" href="#products" title="NXT Foundry products"><span className="rw-mark">NXT</span><div><b>Vendor Payable Reconciliation</b><small>Meridian Consumer Products · buyer workspace</small></div></a>
         {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <>
           <Picker value={route.relId} onChange={v => v !== 'ALL' && ctx.select(v)} allLabel="Choose a relationship" options={visible.map(x => ({ id: x.rel.id, label: label(x), meta: `${x.rel.entityId} · ${status(x, currentPeriod(x).tag, ws.settings)}`, dot: dot(x) }))} />
           <PeriodPicker tags={st.periods.map(p => p.tag)} value={route.tag} quarterly={st.rel.frequency === 'Quarterly'} onPick={t => ctx.select(route.relId, t)} />
