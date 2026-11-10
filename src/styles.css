@@ -667,3 +667,8 @@ a.res-card:hover{border-color:var(--lime);transform:translateY(-3px)}
 @media(max-width:700px){.ins-grid,.res-grid{grid-template-columns:1fr}.ins-cta{padding:24px}}
 .header nav{gap:26px}
 .ins-sub small{letter-spacing:normal;word-spacing:normal;font-family:inherit}
+
+/* Footer products: name and status chip in two aligned columns */
+.footer-prod{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;line-height:1.35}
+.footer-prod em{justify-self:end;white-space:nowrap}
+.footer-prod em.fp-prep{color:#9fc7ff;border-color:#3d5a7a}.footer-prod em.fp-next{color:#c9a6ff;border-color:#5a4a7a}
