@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { periodsFor, tagLabel, BUYER, TODAY, ENTITIES } from './ledger';
 import { fmtDay, LEDGER_COLUMNS, type RelState } from './cycle';
 import { stampAt, type BcRec, type BcStatus } from './store';
@@ -112,7 +112,9 @@ function VendorView({ ctx }: { ctx: Ctx }) {
   const list = mine.filter(b => (!bu || ws.states[b.relId].rel.bu === bu) && (!asOf || String(endOf(b)) === asOf));
   const pending = list.filter(b => b.status === 'Awaiting response' || b.status === 'Escalated');
   const [sel, setSel] = useState<string>(() => (mine.find(b => b.relId === ctx.relId && b.tag === ctx.tag) ?? mine.find(b => b.status === 'Awaiting response' || b.status === 'Escalated') ?? mine[0])?.id ?? '');
-  const b = mine.find(x => x.id === sel);
+  // The request shown follows the filters: keep the current one if it still matches, else the first awaiting, else the latest.
+  const b = list.find(x => x.id === sel) ?? pending[0] ?? list[0];
+  useEffect(() => { if (b && (b.relId !== ctx.relId || b.tag !== ctx.tag)) ctx.select(b.relId, b.tag); }, [b?.id]);
   const pickB = (x: BcRec) => { setSel(x.id); if (x.relId !== ctx.relId || x.tag !== ctx.tag) ctx.select(x.relId, x.tag); };
   const cols: Col<BcRec>[] = [
     { key: 'asof', label: 'As on', text: x => fmtDay(endOf(x)), sort: endOf },
@@ -129,10 +131,10 @@ function VendorView({ ctx }: { ctx: Ctx }) {
       {bus.length > 1 && <label>Business unit<select className="rx-sel" value={bu} onChange={e => setBu(e.target.value)}><option value="">All business units</option>{bus.map(x => <option key={x}>{x}</option>)}</select></label>}
       {(asOf || bu) && <button className="rw-btn small ghost" onClick={() => { setAsOf(''); setBu(''); }}>Reset filters</button>}
     </div>
-    {pending.length > 0 && <div className="rx-bc-tabs" role="tablist" aria-label="Awaiting your response"><span className="rx-bc-tabs-l">Awaiting your response</span>{pending.map(x => <button key={x.id} role="tab" aria-selected={x.id === sel} className={x.id === sel ? 'on' : ''} onClick={() => pickB(x)}><b>{ws.states[x.relId].rel.bu}</b> · {tagLabel(x.tag)} <Pill tone={BC_TONE[x.status]}>{x.status}</Pill></button>)}</div>}
+    {pending.length > 0 && <div className="rx-bc-tabs" role="tablist" aria-label="Awaiting your response"><span className="rx-bc-tabs-l">Awaiting your response</span>{pending.map(x => <button key={x.id} role="tab" aria-selected={x.id === b?.id} className={x.id === b?.id ? 'on' : ''} onClick={() => pickB(x)}><b>{ws.states[x.relId].rel.bu}</b> · {tagLabel(x.tag)} <Pill tone={BC_TONE[x.status]}>{x.status}</Pill></button>)}</div>}
     {b ? <BcDetail key={b.id} ctx={ctx} b={b} /> : <div className="rx-empty">No balance confirmation requests.</div>}
     <Card title="All confirmations and certificates" tip="Every period the buyer asked you to confirm, with the outcome. A certificate is issued when you confirm the balance, or when the reconciliation is signed off.">
-      <DataTable rows={list} cols={cols} rowKey={x => x.id} fileName="my-balance-confirmations" onRowClick={pickB} activeKey={sel} empty="No confirmations for these filters." pageSize={8} />
+      <DataTable rows={list} cols={cols} rowKey={x => x.id} fileName="my-balance-confirmations" onRowClick={pickB} activeKey={b?.id} empty="No confirmations for these filters." pageSize={8} />
     </Card>
   </>;
 }
