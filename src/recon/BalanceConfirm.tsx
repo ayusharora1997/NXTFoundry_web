@@ -10,6 +10,8 @@ import { UploadLedgerDrawer } from './LedgerUpload';
 // Balance confirmation: the buyer's closing balance is sent to the vendor. Agreed → certificate, no reconciliation for that
 // period. Disagreed → the vendor reconciles on their side from our ledger, or uploads theirs and the tool reconciles it.
 const DAY = 86400000;
+/** The entity's name without the legal suffix, as people say it: “Meridian Consumer Products”. */
+const entityShort = (st: RelState) => entityOf(st).name.replace(/\s+(Pvt\.?\s*Ltd\.?|Private Limited|Limited|LLP)$/i, '');
 export const BC_TONE: Record<BcStatus, string> = { 'Not sent': 'grey', 'Awaiting response': 'amber', Escalated: 'red', Confirmed: 'green', Disputed: 'violet' };
 const shown = (b: BcRec, c?: Cert | null) => b.status === 'Disputed' ? (c ? 'Reconciled · certified' : b.route === 'upload' ? 'Disputed · ledger uploaded' : 'Disputed · reconciling on their side') : b.status === 'Confirmed' ? 'Confirmed · certified' : b.status;
 /** A certificate exists once the balance is agreed: directly (confirmed) or after the reconciliation was signed off. */
@@ -163,10 +165,10 @@ function BcDetail({ ctx, b }: { ctx: Ctx; b: BcRec }) {
       <div className="rx-bc-badges"><Pill tone={certOf(ctx, b) ? 'green' : BC_TONE[b.status]}>{shown(b, certOf(ctx, b))}</Pill>{due && <span className={'rx-bc-due' + (due.startsWith('Overdue') ? ' late' : '')}>{due}{b.reminders.length > 0 && ` · reminder ${b.reminders.length} of 2 sent`}</span>}</div></div>
     <ol className="rx-bc-steps">{steps.map(([l, s], i) => <li key={l} className={s}><span>{s === 'done' ? '✓' : s === 'skip' ? '–' : i + 1}</span><b>{l}</b></li>)}</ol>
     <div className="rx-bc-grid">
-      <Card title={ctx.isVendor ? 'Balance as per the buyer’s books' : 'Balance as per our books'}>
-        <div className="rx-bc-amt"><b>{money(b.balance, cur, 2)}</b><span>{ctx.isVendor ? `Receivable from ${BUYER.name}` : `Payable to ${v.displayName}`}<small>Position as on {fmtDay(d.end)}</small></span></div>
+      <Card title={`Balance as per ${entityShort(st)}`}>
+        <div className="rx-bc-amt"><b>{money(b.balance, cur, 2)}</b><span>{ctx.isVendor ? `Receivable from ${entityShort(st)}` : `Payable to ${v.displayName}`}<small>Position as on {fmtDay(d.end)}</small></span></div>
         <dl className="rx-bc-meta"><div><dt>Reporting period</dt><dd>{fmtDay(d.start)} – {fmtDay(d.end)}</dd></div><div><dt>As-on date</dt><dd>{fmtDay(d.end)}</dd></div><div><dt>Currency</dt><dd>{cur}</dd></div><div><dt>Buyer entity</dt><dd>{entityOf(st).name}</dd></div><div><dt>Business unit</dt><dd>{st.rel.bu}</dd></div><div><dt>Vendor code</dt><dd>{st.rel.vendorCode}</dd></div></dl>
-        <button className="rw-btn" onClick={() => downloadLedger(ctx, b)}><Icon n="download" /> Download {ctx.isVendor ? 'their' : 'our'} ledger (XLS)</button>
+        <button className="rw-btn" onClick={() => downloadLedger(ctx, b)}><Icon n="download" /> Download {entityShort(st)} ledger (XLS)</button>
       </Card>
       <Card title={ctx.isVendor ? 'Your response' : 'Vendor response'}>
         {canRespond && <>
@@ -176,7 +178,7 @@ function BcDetail({ ctx, b }: { ctx: Ctx; b: BcRec }) {
           {pick === 'disagree' && <div className="rx-bc-dis"><b>How do you want to reconcile?</b>
             <div className="rx-bc-routes" role="radiogroup" aria-label="Reconcile how">
               <button type="button" role="radio" aria-checked={route === 'upload'} className={route === 'upload' ? 'on' : ''} onClick={() => setRoute('upload')}><Icon n="upload" /><b>Upload your ledger</b><small>The tool reads it, checks the opening and reconciles it automatically.</small></button>
-              <button type="button" role="radio" aria-checked={route === 'download'} className={route === 'download' ? 'on' : ''} onClick={() => setRoute('download')}><Icon n="download" /><b>Download their ledger</b><small>Reconcile on your side, then upload your ledger when ready.</small></button>
+              <button type="button" role="radio" aria-checked={route === 'download'} className={route === 'download' ? 'on' : ''} onClick={() => setRoute('download')}><Icon n="download" /><b>Download {entityShort(st)} ledger</b><small>Reconcile on your side, then upload your ledger when ready.</small></button>
             </div></div>}
           {pick && <textarea className="rx-bc-rem" rows={2} value={remarks} onChange={e => setRemarks(e.target.value)} placeholder={pick === 'disagree' ? 'Reason (required), e.g. invoice not booked, payment in transit' : 'Remarks (optional)'} aria-label="Remarks" />}
           {pick && <label className="rx-bc-auth"><input type="checkbox" checked={auth} onChange={e => setAuth(e.target.checked)} /> I am authorised to respond for {v.displayName}</label>}
