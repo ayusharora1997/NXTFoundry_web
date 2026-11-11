@@ -6,6 +6,33 @@ import { xlsx, saveBlob } from './xlsx';
 import { Card, DataTable, Drawer, Icon, Pill, Avatar, money, type Col } from './ui';
 import { PageHead, vendorOf, entityOf, type Ctx } from './App';
 import { UploadLedgerDrawer } from './LedgerUpload';
+import { Tour, useTour, type TourStep } from './tour';
+
+// Guided tours: one for the buyer's tracker, one for the vendor's response screen. Each step spotlights one area.
+const BUYER_TOUR: TourStep[] = [
+  { target: '.rx-t-help', title: 'Balance confirmation in a minute', body: <>Here you ask each vendor to confirm our closing balance. If they agree, the period is certified and needs no reconciliation. This short tour shows how. Skip it anytime; <b>Help</b> brings it back.</> },
+  { target: '.rx-bc-filters', title: 'Pick the cycle', body: 'Choose the as-on date of the balances, then narrow by entity, business unit or currency. Everything below follows these filters.' },
+  { target: '.rx-bc-cadence', title: 'The follow-up rhythm', body: 'Confirmation mail on day 1, reminder 1 after 7 days, reminder 2 after 14 days, then escalation. Every step is logged with who and when.' },
+  { target: '.rx-tiles', title: 'Where every vendor stands', body: 'Confirmed, disputed, awaiting a response or escalated. Click a tile to see only those vendors; click again to show all.' },
+  { target: '.rx-t-tracker', title: 'One row per vendor', body: 'Our closing balance for the period, when the request went out and which reminders followed. Search, sort, choose columns or export the list.' },
+  { target: '.rx-t-resp', title: 'The vendor’s answer', body: <>Agreed balances are <b>certified</b>. A disagreement goes to reconciliation: the vendor uploads their ledger, or reconciles on their side from ours. Overdue requests are flagged.</> },
+  { target: '.rx-t-recon', title: 'Disputes flow into reconciliation', body: 'When a vendor disagrees, this shows the reconciliation status. Click it to open the reconciliation for that vendor and period.' },
+  { target: '.rx-bc-acts', title: 'Act on a row', body: <><b>View</b> opens the full request and its history. The next step button sends the request, a reminder or escalates. <b>Certificate</b> downloads it once the balance is agreed.</> },
+  { target: '.rx-t-help', title: 'Need it again?', body: 'Click Help anytime to replay this tutorial.' },
+];
+const VENDOR_TOUR: TourStep[] = [
+  { target: '.rx-t-help', title: 'Confirming balances, step by step', body: <>Your customer asks you to confirm the balance in their books. This short tour shows how to respond and where your certificates are. Skip it anytime; <b>Help</b> brings it back.</> },
+  { target: '.rx-bc-filters', title: 'Choose the period', body: 'Pick an as-on date or business unit. The request shown and the list below follow your choice.' },
+  { target: '.rx-bc-tabs', title: 'Waiting for your response', body: 'Requests you have not answered yet. Click one to open it.' },
+  { target: '.rx-bc-steps', title: 'Where this request is', body: 'Received, reviewed, your response, your ledger if you disagree, then certified or reconciled.' },
+  { target: '.rx-t-bal', title: 'The balance to confirm', body: 'The closing balance in your customer’s books for this period, with the as-on date, currency and business unit. Compare it with your own books.' },
+  { target: '.rx-t-dl', title: 'See every entry', body: 'Download their ledger for the period to check entry by entry before you respond.' },
+  { target: '.rx-t-respcard', title: 'Agree or disagree', body: <><b>Agree</b> and a confirmation certificate is issued; no reconciliation is needed. <b>Disagree</b> with a reason and either upload your ledger, so the tool reconciles it, or download theirs and reconcile on your side.</> },
+  { target: '.rx-t-log', title: 'Every action is recorded', body: 'Requests, reminders and responses, with who and when.' },
+  { target: '.rx-t-certs', title: 'Your certificates', body: 'Every period you were asked to confirm, with the outcome. Download any certificate, including earlier periods.' },
+  { target: '.rx-t-help', title: 'Need it again?', body: 'Click Help anytime to replay this tutorial.' },
+];
+function HelpButton({ onClick }: { onClick: () => void }) { return <button type="button" className="rw-btn rx-t-help" onClick={onClick} title="Replay the tutorial for this screen"><Icon n="info" /> Help</button>; }
 
 // Balance confirmation: the buyer's closing balance is sent to the vendor. Agreed → certificate, no reconciliation for that
 // period. Disagreed → the vendor reconciles on their side from our ledger, or uploads theirs and the tool reconciles it.
@@ -77,9 +104,9 @@ function BuyerView({ ctx }: { ctx: Ctx }) {
     { key: 'bal', label: 'Balance as per our books', align: 'right', text: b => String(b.balance), sort: b => b.balance, render: b => <b>{money(b.balance, st(b).rel.currency, 2)}</b> },
     { key: 'sent', label: 'BC sent', text: b => b.sentAt?.split(' ')[0] ?? '—' },
     { key: 'rem', label: 'Reminders', text: b => b.reminders.map((_, i) => `R${i + 1}`).join(' · ') || '—', render: b => b.reminders.length ? b.reminders.map((_, i) => <span key={i} className="rx-tag">R{i + 1} ✓</span>) : <span className="rx-muted">—</span> },
-    { key: 'resp', label: 'Vendor response', text: b => shown(b, certOf(ctx, b)), render: b => <><Pill tone={certOf(ctx, b) ? 'green' : BC_TONE[b.status]}>{shown(b, certOf(ctx, b))}</Pill>{dueText(b) && <><br /><small className={dueText(b).startsWith('Overdue') ? 'rx-bc-late' : 'rx-muted'}>{dueText(b)}</small></>}</> },
+    { key: 'resp', label: 'Vendor response', text: b => shown(b, certOf(ctx, b)), render: b => <span className="rx-t-resp"><Pill tone={certOf(ctx, b) ? 'green' : BC_TONE[b.status]}>{shown(b, certOf(ctx, b))}</Pill>{dueText(b) && <><br /><small className={dueText(b).startsWith('Overdue') ? 'rx-bc-late' : 'rx-muted'}>{dueText(b)}</small></>}</span> },
     { key: 'next', label: 'Reconciliation', text: b => b.status === 'Confirmed' ? 'Not required' : b.status === 'Disputed' ? ctx.stat(st(b), b.tag) : '—',
-      render: b => b.status === 'Confirmed' ? <span className="rx-muted">Not required</span> : b.status === 'Disputed' ? <button className="rw-btn small ghost" onClick={e => { e.stopPropagation(); ctx.go(b.route === 'upload' ? 'statement' : 'upload', b.relId, b.tag); }}>{b.route === 'upload' ? ctx.stat(st(b), b.tag) : 'Awaiting ledger'}</button> : <span className="rx-muted">—</span> },
+      render: b => b.status === 'Confirmed' ? <span className="rx-muted">Not required</span> : b.status === 'Disputed' ? <button className="rw-btn small ghost rx-t-recon" onClick={e => { e.stopPropagation(); ctx.go(b.route === 'upload' ? 'statement' : 'upload', b.relId, b.tag); }}>{b.route === 'upload' ? ctx.stat(st(b), b.tag) : 'Awaiting ledger'}</button> : <span className="rx-muted">—</span> },
     { key: 'act', label: 'Action', noToggle: true, text: () => '', render: b => { const n = nextAction(b); return <span className="rx-bc-acts">
       <button className="rw-btn small" onClick={e => { e.stopPropagation(); setView(b.id); }}>View</button>
       {n && <button className={'rw-btn small' + (n[0] === 'Escalate' ? '' : ' lime')} onClick={e => { e.stopPropagation(); act(b); }}>{n[0]}</button>}
@@ -87,8 +114,10 @@ function BuyerView({ ctx }: { ctx: Ctx }) {
   ];
   const tiles: [string, number, string, BcStatus | ''][] = [['In this cycle', all.length, '', ''], ['Confirmed & certified', count('Confirmed'), 'green', 'Confirmed'], ['Disputed → reconciliation', count('Disputed'), 'violet', 'Disputed'], ['Awaiting response', count('Awaiting response'), 'amber', 'Awaiting response'], ['Escalated', count('Escalated'), 'red', 'Escalated']];
   const vb = view ? ws.bcs.find(b => b.id === view) : undefined;
+  const [tour, startTour, endTour] = useTour('bc-buyer');
   return <>
-    <PageHead title="Balance confirmation">Send each vendor our closing balance. If they agree, a confirmation certificate is issued and that period needs no reconciliation. If they don’t, they reconcile from our ledger or upload theirs and the tool reconciles it.</PageHead>
+    {tour && <Tour steps={BUYER_TOUR} onClose={endTour} onSkip={() => ctx.toast('Tutorial skipped. Click Help anytime to see it again.')} />}
+    <PageHead title="Balance confirmation" actions={<HelpButton onClick={startTour} />}>Send each vendor our closing balance. If they agree, a confirmation certificate is issued and that period needs no reconciliation. If they don’t, they reconcile from our ledger or upload theirs and the tool reconciles it.</PageHead>
     <div className="rx-filters rx-bc-filters" role="group" aria-label="Filters">
       <label>As on<select className="rx-sel" value={asOf} onChange={e => setAsOf(e.target.value)}><option value="">All dates</option>{dates.map(d => <option key={d} value={String(d)}>{fmtDay(d)}</option>)}</select></label>
       <label>Entity<select className="rx-sel" value={entity} onChange={e => { setEntity(e.target.value); setBu(''); }}><option value="">All entities</option>{ENTITIES.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}</select></label>
@@ -98,7 +127,7 @@ function BuyerView({ ctx }: { ctx: Ctx }) {
     </div>
     <p className="rx-bc-cadence"><Icon n="info" s={14} /> BC mail on day 1 · reminder 1 after 7 days · reminder 2 after 14 days · escalate after reminder 2 · every step logged</p>
     <div className="rx-tiles mini">{tiles.map(([k, v, tone, s]) => <button type="button" key={k} className={'rx-tile rx-bc-tile ' + (v ? tone : '') + (f === s && s ? ' on' : '')} onClick={() => setF(f === s ? '' : s)} aria-pressed={!!s && f === s}><span>{k}</span><b>{v}</b></button>)}</div>
-    <Card title={`Vendor tracker${f ? ` · ${f}` : ''}`} actions={f ? <button className="rw-btn small ghost" onClick={() => setF('')}>Show all</button> : undefined}>
+    <Card className="rx-t-tracker" title={`Vendor tracker${f ? ` · ${f}` : ''}`} actions={f ? <button className="rw-btn small ghost" onClick={() => setF('')}>Show all</button> : undefined}>
       <DataTable rows={rows} cols={cols} rowKey={b => b.id} fileName="balance-confirmation-tracker" onRowClick={b => setView(b.id)} empty="No confirmations with this status." />
     </Card>
     {vb && <Drawer wide title={`Balance confirmation · ${vendorOf(st(vb)).displayName}`} sub={`${vb.id} · ${st(vb).rel.bu} · ${tagLabel(vb.tag)}`} onClose={() => setView(null)}><BcDetail ctx={ctx} b={vb} /></Drawer>}
@@ -126,8 +155,10 @@ function VendorView({ ctx }: { ctx: Ctx }) {
     { key: 'st', label: 'Outcome', text: x => shown(x, certOf(ctx, x)), render: x => <Pill tone={certOf(ctx, x) ? 'green' : BC_TONE[x.status]}>{shown(x, certOf(ctx, x))}</Pill> },
     { key: 'cert', label: 'Certificate', noToggle: true, text: x => certOf(ctx, x)?.no ?? '', render: x => { const c = certOf(ctx, x); return <span className="rx-bc-acts"><button className="rw-btn small" onClick={e => { e.stopPropagation(); pickB(x); }}>Open</button>{c ? <button className="rw-btn small ghost" onClick={e => { e.stopPropagation(); downloadCert(ctx, x); }}><Icon n="download" /> {c.no}</button> : <span className="rx-muted">Not yet issued</span>}</span>; } },
   ];
+  const [tour, startTour, endTour] = useTour('bc-vendor');
   return <>
-    <PageHead title="Balance confirmation">{BUYER.name} sends its closing balance for you to confirm. Agree and you receive a confirmation certificate; disagree and either reconcile from their ledger or upload yours. Certificates for every earlier period stay available below.</PageHead>
+    {tour && <Tour steps={VENDOR_TOUR} onClose={endTour} onSkip={() => ctx.toast('Tutorial skipped. Click Help anytime to see it again.')} />}
+    <PageHead title="Balance confirmation" actions={<HelpButton onClick={startTour} />}>{BUYER.name} sends its closing balance for you to confirm. Agree and you receive a confirmation certificate; disagree and either reconcile from their ledger or upload yours. Certificates for every earlier period stay available below.</PageHead>
     <div className="rx-filters rx-bc-filters" role="group" aria-label="Filters">
       <label>As on<select className="rx-sel" value={asOf} onChange={e => setAsOf(e.target.value)}><option value="">All dates</option>{dates.map(d => <option key={d} value={String(d)}>{fmtDay(d)}</option>)}</select></label>
       {bus.length > 1 && <label>Business unit<select className="rx-sel" value={bu} onChange={e => setBu(e.target.value)}><option value="">All business units</option>{bus.map(x => <option key={x}>{x}</option>)}</select></label>}
@@ -135,7 +166,7 @@ function VendorView({ ctx }: { ctx: Ctx }) {
     </div>
     {pending.length > 0 && <div className="rx-bc-tabs" role="tablist" aria-label="Awaiting your response"><span className="rx-bc-tabs-l">Awaiting your response</span>{pending.map(x => <button key={x.id} role="tab" aria-selected={x.id === b?.id} className={x.id === b?.id ? 'on' : ''} onClick={() => pickB(x)}><b>{ws.states[x.relId].rel.bu}</b> · {tagLabel(x.tag)} <Pill tone={BC_TONE[x.status]}>{x.status}</Pill></button>)}</div>}
     {b ? <BcDetail key={b.id} ctx={ctx} b={b} /> : <div className="rx-empty">No balance confirmation requests.</div>}
-    <Card title="All confirmations and certificates" tip="Every period the buyer asked you to confirm, with the outcome. A certificate is issued when you confirm the balance, or when the reconciliation is signed off.">
+    <Card className="rx-t-certs" title="All confirmations and certificates" tip="Every period the buyer asked you to confirm, with the outcome. A certificate is issued when you confirm the balance, or when the reconciliation is signed off.">
       <DataTable rows={list} cols={cols} rowKey={x => x.id} fileName="my-balance-confirmations" onRowClick={pickB} activeKey={b?.id} empty="No confirmations for these filters." pageSize={8} />
     </Card>
   </>;
@@ -165,12 +196,12 @@ function BcDetail({ ctx, b }: { ctx: Ctx; b: BcRec }) {
       <div className="rx-bc-badges"><Pill tone={certOf(ctx, b) ? 'green' : BC_TONE[b.status]}>{shown(b, certOf(ctx, b))}</Pill>{due && <span className={'rx-bc-due' + (due.startsWith('Overdue') ? ' late' : '')}>{due}{b.reminders.length > 0 && ` · reminder ${b.reminders.length} of 2 sent`}</span>}</div></div>
     <ol className="rx-bc-steps">{steps.map(([l, s], i) => <li key={l} className={s}><span>{s === 'done' ? '✓' : s === 'skip' ? '–' : i + 1}</span><b>{l}</b></li>)}</ol>
     <div className="rx-bc-grid">
-      <Card title={`Balance as per ${entityShort(st)}`}>
+      <Card className="rx-t-bal" title={`Balance as per ${entityShort(st)}`}>
         <div className="rx-bc-amt"><b>{money(b.balance, cur, 2)}</b><span>{ctx.isVendor ? `Receivable from ${entityShort(st)}` : `Payable to ${v.displayName}`}<small>Position as on {fmtDay(d.end)}</small></span></div>
         <dl className="rx-bc-meta"><div><dt>Reporting period</dt><dd>{fmtDay(d.start)} – {fmtDay(d.end)}</dd></div><div><dt>As-on date</dt><dd>{fmtDay(d.end)}</dd></div><div><dt>Currency</dt><dd>{cur}</dd></div><div><dt>Buyer entity</dt><dd>{entityOf(st).name}</dd></div><div><dt>Business unit</dt><dd>{st.rel.bu}</dd></div><div><dt>Vendor code</dt><dd>{st.rel.vendorCode}</dd></div></dl>
-        <button className="rw-btn" onClick={() => downloadLedger(ctx, b)}><Icon n="download" /> Download {entityShort(st)} ledger (XLS)</button>
+        <button className="rw-btn rx-t-dl" onClick={() => downloadLedger(ctx, b)}><Icon n="download" /> Download {entityShort(st)} ledger (XLS)</button>
       </Card>
-      <Card title={ctx.isVendor ? 'Your response' : 'Vendor response'}>
+      <Card className="rx-t-respcard" title={ctx.isVendor ? 'Your response' : 'Vendor response'}>
         {canRespond && <>
           <p className="rx-muted">Check the balance, period and currency, then confirm or disagree.</p>
           <div className="rx-bc-choice"><button type="button" className={'agree' + (pick === 'agree' ? ' on' : '')} aria-pressed={pick === 'agree'} onClick={() => setPick('agree')}>✓ I agree, confirm balance</button><button type="button" className={'disagree' + (pick === 'disagree' ? ' on' : '')} aria-pressed={pick === 'disagree'} onClick={() => setPick('disagree')}>✕ I disagree</button></div>
@@ -193,7 +224,7 @@ function BcDetail({ ctx, b }: { ctx: Ctx; b: BcRec }) {
             : <><p>{ctx.isVendor ? 'You chose to reconcile on your side. Upload your ledger when ready and the tool reconciles it.' : 'The vendor is reconciling on their side from our ledger.'}</p>{ctx.isVendor && <button className="rw-btn small lime" onClick={() => setUploading(true)}><Icon n="upload" /> Upload your ledger</button>}</>}</div>}
       </Card>
     </div>
-    <Card title="Activity"><ol className="rw-timeline">{[...b.log].reverse().map((l, i) => <li key={i}><Avatar name={l.by} /><div><p><b>{l.by}</b> · {l.what}</p><small>{l.at}</small></div></li>)}</ol></Card>
+    <Card className="rx-t-log" title="Activity"><ol className="rw-timeline">{[...b.log].reverse().map((l, i) => <li key={i}><Avatar name={l.by} /><div><p><b>{l.by}</b> · {l.what}</p><small>{l.at}</small></div></li>)}</ol></Card>
     {uploading && <UploadLedgerDrawer ctx={{ ...ctx, st, tag: b.tag }} onClose={() => setUploading(false)} onDone={() => ctx.updateBc(b.id, { status: 'Disputed', route: 'upload', respondedBy: b.respondedBy ?? ctx.user.name, respondedAt: b.respondedAt ?? ctx.at(), remarks: b.remarks || remarks.trim() }, 'Uploaded their ledger. Reconciliation started')} />}
   </div>;
 }
