@@ -1094,3 +1094,7 @@ a.rd-brand{color:inherit;text-decoration:none}
 .rx-tour-pop .rw-btn.ghost{color:#e8ede9;border-color:#3a4741}
 .rx-tour-pop :focus-visible{outline:2px solid var(--lime);outline-offset:2px}
 @media (prefers-reduced-motion: reduce){.rx-tour-spot{transition:none}}
+
+.rx-help{margin-left:auto;display:inline-flex;align-items:center;gap:6px;flex:none;border:1px solid #3a4741;background:transparent;color:#d3dbd6;border-radius:20px;padding:6px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.rx-help:hover{border-color:var(--lime);color:#fff}
+@media(max-width:1180px){.rx-help span{display:none}.rx-help{padding:6px 9px}}

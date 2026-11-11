@@ -10,6 +10,8 @@ import OpenItemsScreen from './OpenItems';
 import Balance from './Balance';
 import SettingsScreen from './Settings';
 import BalanceConfirm from './BalanceConfirm';
+import { Tour, useTour } from './tour';
+import { toursFor } from './tours';
 import './app.css';
 
 // Four screens; each sub-tab is a route of its own.
@@ -80,6 +82,9 @@ export default function ReconApp() {
     const held = heldTxnIds(st); return { open: open.filter(i => !held.has(i.txn.id)).length, balance: s.balanced ? 'ok' : 'bad' };
   }, [ws, route.relId, route.tag]);
   const period = st.periods.find(p => p.tag === route.tag)!; const bc = bcOf(ws, route.relId, route.tag);
+  // One guided tour per Reconciliation screen, worded for buyer or vendor. Help in the sub-tab bar replays it.
+  const isRecon = navOf(route.screen).id === 'recon';
+  const [tourOn, startTour, endTour, skipTour] = useTour(`${route.screen}-${user.vendorId ? 'vendor' : 'buyer'}`, isRecon);
   const dot = (x: RelState) => STATUS_TONE[status(x, currentPeriod(x).tag, ws.settings)];
 
   return <section className="rw rx" id="reconciliation-lab">
@@ -97,7 +102,8 @@ export default function ReconApp() {
       </div>
       <nav className="rx-nav" aria-label="Screens">{NAV.map(n => { const on = navOf(route.screen).id === n.id; return <a key={n.id} href={`#reconciliation-lab/${n.subs[0][0]}/${route.relId}/${route.tag}`} className={on ? 'on' : ''} aria-current={on ? 'page' : undefined}><Icon n={n.icon} />{n.label}</a>; })}</nav>
       {navOf(route.screen).subs.length > 1 && <nav className="rx-subnav" aria-label="Sub-tabs">{navOf(route.screen).subs.map(([id, l]) => <a key={id} href={`#reconciliation-lab/${id}/${route.relId}/${route.tag}`} className={route.screen === id ? 'on' : ''} aria-current={route.screen === id ? 'page' : undefined}>{l}
-        {id === 'open' && <em>{badge.open}</em>}{id === 'statement' && <em className={badge.balance === 'ok' ? 'ok' : 'warn'}>{badge.balance === 'ok' ? '✓' : '!'}</em>}</a>)}</nav>}
+        {id === 'open' && <em>{badge.open}</em>}{id === 'statement' && <em className={badge.balance === 'ok' ? 'ok' : 'warn'}>{badge.balance === 'ok' ? '✓' : '!'}</em>}</a>)}
+        {isRecon && <button type="button" className="rx-help" onClick={startTour} title="Replay the tutorial for this screen" aria-label="Help: replay the tutorial for this screen"><Icon n="info" /><span>Help</span></button>}</nav>}
     </div>
     <p className="rw-banner">Illustrative NXT Foundry demo · synthetic data, in-memory only. The buyer, vendors, people and every figure are fictional; the user switcher stands in for sign-in and permissions.</p>
     {user.vendorId && <p className="rx-vbar"><b>Vendor view · {vendorOf(st).displayName}.</b> You can see every screen for your own account. Statement responses are yours to give; matches, reversals and suggestions you make are sent to the buyer for review and only apply once approved.</p>}
@@ -120,6 +126,7 @@ export default function ReconApp() {
       <ol className="rw-timeline">{[...st.audit].reverse().map(a => <li key={a.id}><Avatar name={a.by} /><div><p><b>{a.by}</b> · {a.action} <span className="rx-tag">{a.periodTag}</span></p><p className="rx-muted">{a.detail}</p>
         {(a.before || a.after) && <p className="rx-muted">{a.before && <>Before: <code>{a.before}</code> </>}{a.after && <>After: <code>{a.after}</code></>}</p>}{a.reason && <blockquote>{a.reason}</blockquote>}<small>{a.at}</small></div></li>)}</ol>
     </Drawer>}
+    {tourOn && isRecon && <Tour key={route.screen} steps={toursFor(route.screen, !!user.vendorId)} onClose={endTour} onSkip={() => { skipTour(); toast('Tutorial skipped. Tutorials won’t open by themselves again; click Help anytime.'); }} />}
     <Toasts items={toasts} dismiss={id => setToasts(t => t.filter(x => x.id !== id))} />
   </section>;
 }

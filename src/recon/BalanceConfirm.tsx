@@ -114,9 +114,9 @@ function BuyerView({ ctx }: { ctx: Ctx }) {
   ];
   const tiles: [string, number, string, BcStatus | ''][] = [['In this cycle', all.length, '', ''], ['Confirmed & certified', count('Confirmed'), 'green', 'Confirmed'], ['Disputed → reconciliation', count('Disputed'), 'violet', 'Disputed'], ['Awaiting response', count('Awaiting response'), 'amber', 'Awaiting response'], ['Escalated', count('Escalated'), 'red', 'Escalated']];
   const vb = view ? ws.bcs.find(b => b.id === view) : undefined;
-  const [tour, startTour, endTour] = useTour('bc-buyer');
+  const [tour, startTour, endTour, skipTour] = useTour('bc-buyer');
   return <>
-    {tour && <Tour steps={BUYER_TOUR} onClose={endTour} onSkip={() => ctx.toast('Tutorial skipped. Click Help anytime to see it again.')} />}
+    {tour && <Tour steps={BUYER_TOUR} onClose={endTour} onSkip={() => { skipTour(); ctx.toast('Tutorial skipped. Tutorials won’t open by themselves again; click Help anytime.'); }} />}
     <PageHead title="Balance confirmation" actions={<HelpButton onClick={startTour} />}>Send each vendor our closing balance. If they agree, a confirmation certificate is issued and that period needs no reconciliation. If they don’t, they reconcile from our ledger or upload theirs and the tool reconciles it.</PageHead>
     <div className="rx-filters rx-bc-filters" role="group" aria-label="Filters">
       <label>As on<select className="rx-sel" value={asOf} onChange={e => setAsOf(e.target.value)}><option value="">All dates</option>{dates.map(d => <option key={d} value={String(d)}>{fmtDay(d)}</option>)}</select></label>
@@ -155,9 +155,9 @@ function VendorView({ ctx }: { ctx: Ctx }) {
     { key: 'st', label: 'Outcome', text: x => shown(x, certOf(ctx, x)), render: x => <Pill tone={certOf(ctx, x) ? 'green' : BC_TONE[x.status]}>{shown(x, certOf(ctx, x))}</Pill> },
     { key: 'cert', label: 'Certificate', noToggle: true, text: x => certOf(ctx, x)?.no ?? '', render: x => { const c = certOf(ctx, x); return <span className="rx-bc-acts"><button className="rw-btn small" onClick={e => { e.stopPropagation(); pickB(x); }}>Open</button>{c ? <button className="rw-btn small ghost" onClick={e => { e.stopPropagation(); downloadCert(ctx, x); }}><Icon n="download" /> {c.no}</button> : <span className="rx-muted">Not yet issued</span>}</span>; } },
   ];
-  const [tour, startTour, endTour] = useTour('bc-vendor');
+  const [tour, startTour, endTour, skipTour] = useTour('bc-vendor');
   return <>
-    {tour && <Tour steps={VENDOR_TOUR} onClose={endTour} onSkip={() => ctx.toast('Tutorial skipped. Click Help anytime to see it again.')} />}
+    {tour && <Tour steps={VENDOR_TOUR} onClose={endTour} onSkip={() => { skipTour(); ctx.toast('Tutorial skipped. Tutorials won’t open by themselves again; click Help anytime.'); }} />}
     <PageHead title="Balance confirmation" actions={<HelpButton onClick={startTour} />}>{BUYER.name} sends its closing balance for you to confirm. Agree and you receive a confirmation certificate; disagree and either reconcile from their ledger or upload yours. Certificates for every earlier period stay available below.</PageHead>
     <div className="rx-filters rx-bc-filters" role="group" aria-label="Filters">
       <label>As on<select className="rx-sel" value={asOf} onChange={e => setAsOf(e.target.value)}><option value="">All dates</option>{dates.map(d => <option key={d} value={String(d)}>{fmtDay(d)}</option>)}</select></label>
