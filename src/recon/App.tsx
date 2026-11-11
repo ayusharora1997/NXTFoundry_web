@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { manualMatch, reverseMatch, decideCandidate, status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
-import { initWorkspace, USERS, canApprove, now, type Workspace, type User, type VendorRequest } from './store';
+import { initWorkspace, USERS, canApprove, now, bcOf, type Workspace, type User, type VendorRequest, type BcRec } from './store';
 import { VENDORS, ENTITIES, tagLabel } from './ledger';
 import { Icon, Drawer, Picker, PeriodPicker, Toasts, Avatar, type Toast } from './ui';
 import Reconcile from './Reconcile';
@@ -9,6 +9,7 @@ import LedgerUpload from './LedgerUpload';
 import OpenItemsScreen from './OpenItems';
 import Balance from './Balance';
 import SettingsScreen from './Settings';
+import BalanceConfirm from './BalanceConfirm';
 import './app.css';
 
 // Four screens; each sub-tab is a route of its own.
@@ -28,6 +29,7 @@ export interface Ctx {
   stat: (st: RelState, tag: string) => WfStatus; label: (st: RelState) => string;
   isVendor: boolean; visible: RelState[]; requests: VendorRequest[];
   submit: (r: Pick<VendorRequest, 'relId' | 'tag' | 'kind' | 'ids' | 'refId' | 'force' | 'reason' | 'summary'>) => void; decide: (id: string, approve: boolean) => void;
+  updateBc: (id: string, patch: Partial<BcRec>, what: string) => void;
 }
 export const vendorOf = (st: RelState) => VENDORS.find(v => v.id === st.rel.vendorId)!;
 export const entityOf = (st: RelState) => ENTITIES.find(e => e.id === st.rel.entityId)!;
@@ -62,6 +64,7 @@ export default function ReconApp() {
     decide: (id, approve) => { const q = wsRef.current.requests.find(x => x.id === id); if (!q) return; const s0 = wsRef.current.states[q.relId]; const note = `${q.reason ? q.reason + ' · ' : ''}requested by ${q.by}, reviewed by ${user.name}`;
       if (approve) { const res = q.kind === 'match' ? manualMatch(s0, q.tag, q.ids, note, user.name, now(), q.force) : q.kind === 'reverse' ? reverseMatch(s0, q.refId, q.tag, note, user.name, now(), canApprove(user)) : decideCandidate(s0, q.refId, q.kind === 'confirm', user.name, now()); if (!res.ok) { toast(res.error, 'warn'); return; } const next = res.state; setWs(w => ({ ...w, states: { ...w.states, [q.relId]: next } })); }
       setWs(w => ({ ...w, requests: w.requests.map(x => x.id === id ? { ...x, status: approve ? 'approved' : 'rejected', decidedBy: user.name, decidedAt: now() } : x) })); toast(approve ? `${q.id} approved and applied` : `${q.id} rejected`); },
+    updateBc: (id, patch, what) => setWs(w => ({ ...w, bcs: w.bcs.map(b => b.id === id ? { ...b, ...patch, log: [...b.log, { at: now(), by: user.name, what }] } : b) })),
     run: (fn, okMsg, relId = route.relId) => { const r = fn(wsRef.current.states[relId]); if (!r.ok) { toast(r.error, 'warn'); return false; } const next = r.state; setWs(w => ({ ...w, states: { ...w.states, [relId]: next } })); if (okMsg) toast(okMsg); return true; },
   };
   const curStat = status(st, route.tag, ws.settings);
@@ -69,7 +72,7 @@ export default function ReconApp() {
     const open = openItems(st, route.tag, ws.settings); const s = statement(st, route.tag, ws.settings);
     const held = heldTxnIds(st); return { open: open.filter(i => !held.has(i.txn.id)).length, balance: s.balanced ? 'ok' : 'bad' };
   }, [ws, route.relId, route.tag]);
-  const period = st.periods.find(p => p.tag === route.tag)!;
+  const period = st.periods.find(p => p.tag === route.tag)!; const bc = bcOf(ws, route.relId, route.tag);
   const dot = (x: RelState) => STATUS_TONE[status(x, currentPeriod(x).tag, ws.settings)];
 
   return <section className="rw rx" id="reconciliation-lab">
@@ -93,7 +96,7 @@ export default function ReconApp() {
     {user.vendorId && <p className="rx-vbar"><b>Vendor view · {vendorOf(st).displayName}.</b> You can see every screen for your own account. Statement responses are yours to give; matches, reversals and suggestions you make are sent to the buyer for review and only apply once approved.</p>}
     {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <div className="rx-context">
       <div><b>{vendorOf(st).legalName}</b><span>{st.rel.vendorCode} · {entityOf(st).name} · {st.rel.bu} · {st.rel.currency} · {st.rel.frequency}</span></div>
-      <div className="rx-context-r"><span className={'rw-pill ' + STATUS_TONE[curStat]}>{curStat}</span><b>{tagLabel(route.tag)}</b>{period.version > 1 && <span>v{period.version}</span>}</div>
+      <div className="rx-context-r">{bc?.status === 'Confirmed' && <a className="rw-pill green" href={`#reconciliation-lab/confirm/${route.relId}/${route.tag}`} title={`Certificate ${bc.certNo}: vendor confirmed the balance on ${bc.respondedAt}`}>Balance confirmed · recon not required</a>}<span className={'rw-pill ' + STATUS_TONE[curStat]}>{curStat}</span><b>{tagLabel(route.tag)}</b>{period.version > 1 && <span>v{period.version}</span>}</div>
     </div>}
     <div className="rw-main">
       {route.screen === 'unmapped' && <Planned title="Unmapped credits" what="Credit and debit notes not yet tied to the invoice they adjust." />}
@@ -103,7 +106,7 @@ export default function ReconApp() {
       {route.screen === 'matched' && <Reconcile ctx={ctx} />}
       {route.screen === 'open' && <OpenItemsScreen ctx={ctx} />}
       {route.screen === 'statement' && <Balance ctx={ctx} />}
-      {route.screen === 'confirm' && <Planned title="Balance confirmation" what="Requesting, tracking and recording balance confirmations from vendors." />}
+      {route.screen === 'confirm' && <BalanceConfirm ctx={ctx} />}
       {route.screen === 'admin' && <SettingsScreen ctx={ctx} />}
     </div>
     {audit && <Drawer wide title="Audit log" sub={`${label(st)} · who did what, when, and why. Read-only.`} onClose={() => setAudit(false)}>

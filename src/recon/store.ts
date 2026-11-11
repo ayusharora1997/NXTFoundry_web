@@ -19,7 +19,17 @@ export const USERS: User[] = [
 export const canApprove = (u: User) => u.role === 'Approver' || u.role === 'Admin';
 /** Something a vendor user asked for. Nothing changes in the reconciliation until the buyer approves it. */
 export interface VendorRequest { id: string; relId: string; tag: string; kind: 'match' | 'reverse' | 'confirm' | 'reject'; ids: string[]; refId: string; force: boolean; reason: string; summary: string; by: string; at: string; status: 'pending' | 'approved' | 'rejected'; decidedBy?: string; decidedAt?: string }
-export interface Workspace { states: Record<string, RelState>; files: LedgerFile[]; truth: Record<string, string>; settings: Settings; userId: string; requests: VendorRequest[] }
+/**
+ * Balance confirmation (BC): the buyer's closing balance for a period, sent to the vendor to confirm.
+ * Agreed → a confirmation certificate is issued and that period needs no reconciliation (its open items stay as they are).
+ * Disagreed → the vendor either downloads the buyer's ledger and reconciles on their side, or uploads their own ledger
+ * and the tool reconciles it. Cadence: BC mail, reminder 1 after 7 days, reminder 2 after 14 days, then escalation.
+ */
+export type BcStatus = 'Not sent' | 'Awaiting response' | 'Escalated' | 'Confirmed' | 'Disputed';
+export interface BcLog { at: string; by: string; what: string }
+export interface BcRec { id: string; relId: string; tag: string; balance: number; sentAt?: string; dueMs?: number; reminders: string[]; status: BcStatus; route?: 'download' | 'upload'; remarks?: string; respondedBy?: string; respondedAt?: string; certNo?: string; log: BcLog[] }
+export const bcOf = (ws: Pick<Workspace, 'bcs'>, relId: string, tag: string) => ws.bcs.find(b => b.relId === relId && b.tag === tag);
+export interface Workspace { states: Record<string, RelState>; files: LedgerFile[]; truth: Record<string, string>; settings: Settings; userId: string; requests: VendorRequest[]; bcs: BcRec[] }
 
 const DAY = 86400000; const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export const stampAt = (ms: number, hhmm = '10:00') => { const d = new Date(ms); return `${String(d.getUTCDate()).padStart(2, '0')}-${MON[d.getUTCMonth()]}-${d.getUTCFullYear()} ${hhmm}`; };
@@ -94,7 +104,21 @@ export function initWorkspace(): Workspace {
     st = drive(st, base, defs[CURRENT[rel.id]].tag, TARGET[rel.id], rel.id !== 'R2');
     states[rel.id] = st;
   });
-  return { states, files, truth, settings: DEFAULT_SETTINGS, userId: 'u1', requests: [] };
+  return { states, files, truth, settings: DEFAULT_SETTINGS, userId: 'u1', requests: [], bcs: seedBcs(states, files) };
+}
+// One BC per relationship for its current period. Where the vendor ledger is already in, the vendor disagreed and uploaded it;
+// R1 is still waiting (reminder 1 sent) and R6's vendor confirmed the balance.
+function seedBcs(states: Record<string, RelState>, files: LedgerFile[]): BcRec[] {
+  return RELS.map((rel, i) => {
+    const st = states[rel.id]; const p = st.periods[st.periods.length - 1]; const def = periodsFor(rel).find(d => d.tag === p.tag)!;
+    const bf = files.find(f => f.relId === rel.id && f.periodTag === p.tag && f.side === 'B' && f.kind === 'period');
+    const t = (d: number, hh = '10:00') => stampAt(def.end + d * DAY, hh); const rep = VENDORS.find(v => v.id === rel.vendorId)!.contact.name;
+    const b: BcRec = { id: `BC-${p.tag}-${String(i + 1).padStart(3, '0')}`, relId: rel.id, tag: p.tag, balance: bf?.closing ?? p.closing.B ?? 0, sentAt: t(1, '09:00'), dueMs: def.end + 15 * DAY, reminders: [], status: 'Awaiting response', log: [{ at: t(1, '09:00'), by: 'Priya Nair', what: 'Balance confirmation sent' }] };
+    if (rel.id === 'R1') { b.reminders = [t(8, '09:00')]; b.log.push({ at: t(8, '09:00'), by: 'System', what: 'Reminder 1 sent' }); return b; }
+    if (rel.id === 'R6') { Object.assign(b, { status: 'Confirmed', respondedBy: rep, respondedAt: t(4, '12:30'), remarks: 'Balance agrees with our books.', certNo: `BCC-${p.tag}-${rel.id}` }); b.log.push({ at: t(4, '12:30'), by: rep, what: 'Agreed. Confirmation certificate issued' }); return b; }
+    Object.assign(b, { status: 'Disputed', route: 'upload', respondedBy: rep, respondedAt: t(5, '11:00'), remarks: 'Balance does not agree with our books. Ledger uploaded for reconciliation.' });
+    b.log.push({ at: t(5, '11:00'), by: rep, what: 'Disagreed and uploaded their ledger. Reconciliation started' }); return b;
+  });
 }
 /** Continue a period that has already been matched through review, sign-off and close. */
 function finishFrom(st: RelState, ws: Pick<Workspace, 'files' | 'truth' | 'settings'>, tag: string): RelState {

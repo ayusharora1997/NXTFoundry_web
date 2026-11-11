@@ -118,7 +118,7 @@ export default function LedgerUpload({ ctx }: { ctx: Ctx }) {
 // ---------- Upload ledger drawer: format, period, file, AI scrutiny, then reconciliation ----------
 interface Picked { name: string; rows: Record<string, string>[]; opening: number | null; closing: number | null; sample: boolean }
 
-function UploadLedgerDrawer({ ctx, onClose }: { ctx: Ctx; onClose: () => void }) {
+export function UploadLedgerDrawer({ ctx, onClose, onDone }: { ctx: Ctx; onClose: () => void; onDone?: () => void }) {
   const { st, tag, ws, run, at, select } = ctx;
   const [fmt, setFmt] = useState<'own' | 'std'>('own'); const [target, setTarget] = useState(tag); const [comment, setComment] = useState('');
   const [pick, setPick] = useState<Picked | null>(null); const [err, setErr] = useState(''); const [open, setOpen] = useState(''); const [close, setClose] = useState('');
@@ -149,7 +149,7 @@ function UploadLedgerDrawer({ ctx, onClose }: { ctx: Ctx; onClose: () => void })
   const obVar = prev && o !== null ? r2(o - prev.closing.V! ) : null;
   const push = () => {
     const f = file();
-    if (run(x => { const r = importFile(x, f, target, `${vendorOf(x).contact.name} (vendor)`, at()); return r.ok ? { ok: true, state: autoReconcile(r.state, ws, target, at()) } : r; }, `Ledger for ${tagLabel(target)} uploaded. Reconciliation started automatically.`)) { if (target !== tag) select(st.rel.id, target); onClose(); }
+    if (run(x => { const r = importFile(x, f, target, `${vendorOf(x).contact.name} (vendor)`, at()); return r.ok ? { ok: true, state: autoReconcile(r.state, ws, target, at()) } : r; }, `Ledger for ${tagLabel(target)} uploaded. Reconciliation started automatically.`)) { onDone?.(); if (target !== tag) select(st.rel.id, target); onClose(); }
   };
 
   return <Drawer wide title="Upload ledger" sub={`${vendorName} · ${st.rel.bu} · ${cur}`} onClose={onClose}>
