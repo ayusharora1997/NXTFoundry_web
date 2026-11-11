@@ -1071,3 +1071,8 @@ a.rd-brand{color:inherit;text-decoration:none}
 .rx-bc-tabs button{font:inherit;font-size:13px;display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer}
 .rx-bc-tabs button:hover{border-color:var(--ink)}
 .rx-bc-tabs button.on{border-color:var(--dark);box-shadow:inset 0 0 0 1px var(--dark);background:var(--lime-t)}
+
+.rx-bc-filters{align-items:flex-end;gap:10px}
+.rx-bc-filters label{display:inline-flex;flex-direction:column;gap:2px;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.rx-bc-closed{margin-top:4px}.rx-bc-closed .rw-btn{margin-right:6px}
+.rx-bc-tabs-l{align-self:center;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-right:2px}

@@ -109,7 +109,15 @@ export function initWorkspace(): Workspace {
 // One BC per relationship for its current period. Where the vendor ledger is already in, the vendor disagreed and uploaded it;
 // R1 is still waiting (reminder 1 sent) and R6's vendor confirmed the balance.
 function seedBcs(states: Record<string, RelState>, files: LedgerFile[]): BcRec[] {
-  return RELS.map((rel, i) => {
+  // Earlier periods: the vendor disagreed, uploaded their ledger, and the reconciliation was signed off and closed.
+  const past = RELS.flatMap(rel => states[rel.id].periods.slice(0, -1).map(p => {
+    const def = periodsFor(rel).find(d => d.tag === p.tag)!; const t = (d: number, hh = '10:00') => stampAt(def.end + d * DAY, hh); const rep = VENDORS.find(v => v.id === rel.vendorId)!.contact.name;
+    const bf = files.find(f => f.relId === rel.id && f.periodTag === p.tag && f.side === 'B' && f.kind === 'period');
+    const b: BcRec = { id: `BC-${p.tag}-${rel.id}`, relId: rel.id, tag: p.tag, balance: bf?.closing ?? p.closing.B ?? 0, sentAt: t(1, '09:00'), dueMs: def.end + 15 * DAY, reminders: [], status: 'Disputed', route: 'upload', respondedBy: rep, respondedAt: t(5, '11:00'), remarks: 'Balance does not agree with our books. Ledger uploaded for reconciliation.',
+      log: [{ at: t(1, '09:00'), by: 'Priya Nair', what: 'Balance confirmation sent' }, { at: t(5, '11:00'), by: rep, what: 'Disagreed and uploaded their ledger. Reconciliation started' }, { at: t(13, '10:30'), by: 'Arjun Mehta', what: 'Reconciliation signed off. Certificate issued' }] };
+    return b;
+  }));
+  return [...past, ...RELS.map((rel, i) => {
     const st = states[rel.id]; const p = st.periods[st.periods.length - 1]; const def = periodsFor(rel).find(d => d.tag === p.tag)!;
     const bf = files.find(f => f.relId === rel.id && f.periodTag === p.tag && f.side === 'B' && f.kind === 'period');
     const t = (d: number, hh = '10:00') => stampAt(def.end + d * DAY, hh); const rep = VENDORS.find(v => v.id === rel.vendorId)!.contact.name;
@@ -118,7 +126,7 @@ function seedBcs(states: Record<string, RelState>, files: LedgerFile[]): BcRec[]
     if (rel.id === 'R6') { Object.assign(b, { status: 'Confirmed', respondedBy: rep, respondedAt: t(4, '12:30'), remarks: 'Balance agrees with our books.', certNo: `BCC-${p.tag}-${rel.id}` }); b.log.push({ at: t(4, '12:30'), by: rep, what: 'Agreed. Confirmation certificate issued' }); return b; }
     Object.assign(b, { status: 'Disputed', route: 'upload', respondedBy: rep, respondedAt: t(5, '11:00'), remarks: 'Balance does not agree with our books. Ledger uploaded for reconciliation.' });
     b.log.push({ at: t(5, '11:00'), by: rep, what: 'Disagreed and uploaded their ledger. Reconciliation started' }); return b;
-  });
+  })];
 }
 /** Continue a period that has already been matched through review, sign-off and close. */
 function finishFrom(st: RelState, ws: Pick<Workspace, 'files' | 'truth' | 'settings'>, tag: string): RelState {

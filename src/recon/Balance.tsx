@@ -53,6 +53,12 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
     saveBlob(`${st.rel.vendorCode}_${st.rel.bu.replace(/\s/g, '')}_${tag}_reconciliation_v${s.version}.xlsx`, xlsx([{ name: 'Statement', widths: [48, 20, 20], rows: bridge }, ledger('B'), ledger('V'), ...SHOWN.map(annSheet), recSheet,
       { name: 'Sign-off', widths: [10, 12, 22, 22, 18, 50], rows: [['Version', 'Event', 'By', 'Vendor representative', 'At', 'Comments'], ...p.signoffs.map(x => [x.version, x.event, x.by, x.rep ?? '', x.at, x.comments])] }]));
   };
+  if (p.confirmed) return <>
+    <PageHead title="Reconciliation statement" />
+    <div className="rx-bc-cert rx-bc-closed"><Icon n="check" s={22} /><div><b>{tagLabel(tag)} was closed by balance confirmation · certificate {p.confirmed.certNo}</b>
+      <p>{p.confirmed.rep} confirmed our closing balance of {m(p.confirmed.balance)} on {p.confirmed.at}, so no reconciliation statement is needed for this period. Open items stay recorded as they are; {next ? `${tagLabel(next.tag)} opens from the confirmed balance and reconciles only its own entries.` : 'the next period opens from the confirmed balance.'}</p>
+      <button className="rw-btn small" onClick={() => go('confirm')}>View the confirmation</button>{next && st.periods.some(q => q.tag === next.tag) && <button className="rw-btn small lime" onClick={() => ctx.select(st.rel.id, next.tag)}>Go to {tagLabel(next.tag)}</button>}</div></div>
+  </>;
   return <>
     <PageHead title="Reconciliation statement" actions={<><button className="rw-btn" onClick={exportXlsx}><Icon n="download" /> Excel</button><button className="rw-btn" onClick={() => window.print()}><Icon n="file" /> PDF</button></>}>
       Starts from the closing balance per buyer and ends at the closing balance per vendor. The annexures are the unreconciled items, and together they equal the difference between the two closing balances. Anything left over is shown as unexplained, never absorbed.

@@ -81,7 +81,10 @@ export interface Period {
   tag: string; type: Frequency; label: string; start: number; end: number;
   imports: { B?: string; V?: string }; extraFiles: string[]; opening: { B: number | null; V: number | null }; closing: { B: number | null; V: number | null };
   prevClosing: { B: number; V: number } | null; phase: Phase; version: number; stages: Partial<Record<StageId, StageStat>>; signoffs: SignEvent[];
-  snapshot?: Statement; carriedIn: string[]; carriedOut: string[]; dates: { prepared?: string; shared?: string; vendorSignoff?: string; closed?: string };
+  snapshot?: Statement; carriedIn: string[]; carriedOut: string[];
+  /** Set when the vendor confirmed our closing balance: the period closed without a reconciliation. */
+  confirmed?: { certNo: string; balance: number; rep: string; at: string };
+  dates: { prepared?: string; shared?: string; vendorSignoff?: string; closed?: string };
 }
 export interface Audit { id: number; at: string; by: string; periodTag: string; action: string; detail: string; before?: string; after?: string; reason?: string }
 export interface RelState {
@@ -210,7 +213,9 @@ export function heldTxnIds(st: RelState): Set<string> { const s = new Set<string
 /** Open transactions available in a period: everything imported up to it, not in an active match, contra or settlement. */
 export function openPool(st: RelState, tag: string): Txn[] {
   const idx = periodIndex(st, tag); const closed = closedTxnIds(st); const order = new Map(st.periods.map((p, i) => [p.tag, i]));
-  return st.txns.filter(t => (order.get(t.importedIn) ?? 99) <= idx && !closed.has(t.id));
+  // A balance confirmation settles everything up to that period: later periods start from the agreed balance.
+  let floor = -1; st.periods.forEach((p, i) => { if (p.confirmed && i < idx) floor = i; });
+  return st.txns.filter(t => { const o = order.get(t.importedIn) ?? 99; return o <= idx && o > floor && !closed.has(t.id); });
 }
 const pendingIds = (st: RelState) => new Set(st.candidates.filter(c => c.status === 'pending').flatMap(c => [...c.buyerIds, ...c.vendorIds]));
 const sum = (xs: Txn[]) => r2(xs.reduce((s, t) => s + t.amount, 0));
@@ -583,6 +588,23 @@ export function closePeriod(st0: RelState, tag: string, next: PeriodDef | undefi
     st.periods.push(blankPeriod(next, { B: p.closing.B ?? 0, V: p.closing.V ?? 0 }, items.map(i => i.txn.id)));
   }
   log(st, by, at, tag, 'Period closed', `${items.length} open item(s) carried to ${next?.tag ?? '(next period not yet defined)'}; ${snap.matched} matches and ${snap.contras} contras preserved`);
+  return { ok: true, state: st };
+}
+
+/**
+ * Balance confirmation: the vendor agreed our closing balance, so this period needs no reconciliation. It closes as
+ * confirmed; its open items stay recorded where they are and are not carried forward. The next period opens from the
+ * confirmed balance on both sides, so only its own movements are reconciled.
+ */
+export function confirmBalance(st0: RelState, tag: string, balance: number, next: PeriodDef | undefined, certNo: string, rep: string, by: string, at: string): Result<RelState> {
+  const p0 = getPeriod(st0, tag); if (!p0) return fail('Unknown period');
+  if (periodIndex(st0, tag) !== st0.periods.length - 1) return fail('Only the latest period can be confirmed.');
+  if (p0.phase === 'closed') return fail('This period is already closed.');
+  const st = clone(st0); const p = getPeriod(st, tag)!;
+  p.phase = 'closed'; p.confirmed = { certNo, balance, rep, at }; p.dates.closed = at; p.dates.vendorSignoff = at;
+  p.signoffs.push({ version: p.version, event: 'closed', by, rep, at, comments: `Closed by balance confirmation ${certNo}. No reconciliation required` });
+  if (next) st.periods.push(blankPeriod(next, { B: p.closing.B ?? balance, V: balance }, []));
+  log(st, by, at, tag, 'Balance confirmed', `${rep} confirmed the closing balance of ${balance.toFixed(2)} (${certNo}); period closed without reconciliation${next ? `, ${next.tag} opens from the confirmed balance` : ''}`);
   return { ok: true, state: st };
 }
 

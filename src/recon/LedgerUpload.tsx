@@ -146,7 +146,9 @@ export function UploadLedgerDrawer({ ctx, onClose, onDone }: { ctx: Ctx; onClose
   const ready = !!pick && !blocked && o !== null && c !== null && !isNaN(o) && !isNaN(c);
   const file = (): LedgerFile => ({ id: pick!.sample && sample ? sample.id : `${st.rel.id}-V-${target}-UP${Date.now()}`, relId: st.rel.id, side: 'V', periodTag: target, kind: 'period', fileName: pick!.name, source: `Vendor upload${comment.trim() ? ` · ${comment.trim()}` : ''}`, availableAt: at().split(' ')[0], opening: o, closing: c, rows: pick!.rows });
   const pv = stage === 'review' && pick && ready ? previewFile(st, file(), target) : null;
-  const obVar = prev && o !== null ? r2(o - prev.closing.V! ) : null;
+  // After a balance confirmation the agreed balance is the vendor's previous closing.
+  const prevV = prev ? prev.confirmed?.balance ?? prev.closing.V : null; const prevWhat = prev?.confirmed ? `the balance confirmed for ${tagLabel(prev.tag)}` : prev ? `the vendor’s closing for ${tagLabel(prev.tag)}` : '';
+  const obVar = prevV !== null && prevV !== undefined && o !== null ? r2(o - prevV) : null;
   const push = () => {
     const f = file();
     if (run(x => { const r = importFile(x, f, target, `${vendorOf(x).contact.name} (vendor)`, at()); return r.ok ? { ok: true, state: autoReconcile(r.state, ws, target, at()) } : r; }, `Ledger for ${tagLabel(target)} uploaded. Reconciliation started automatically.`)) { onDone?.(); if (target !== tag) select(st.rel.id, target); onClose(); }
@@ -163,7 +165,7 @@ export function UploadLedgerDrawer({ ctx, onClose, onDone }: { ctx: Ctx; onClose
       <h4 className="rw-h4">Period this ledger is for · {tagLabel(target)}</h4>
       <PeriodCalendar tags={st.periods.map(x => x.tag)} value={target} quarterly={st.rel.frequency === 'Quarterly'} onPick={setTarget} />
       {blocked && <p className="rw-note warn">{blocked}</p>}
-      {!blocked && prev && <p className="rx-muted">The ledger’s opening balance will be checked against the vendor’s closing for {tagLabel(prev.tag)}: <b>{m(prev.closing.V)}</b>.</p>}
+      {!blocked && prev && <p className="rx-muted">The ledger’s opening balance will be checked against {prevWhat}: <b>{m(prevV)}</b>.</p>}
       <label className="rw-field"><span>Comments (optional)</span><textarea rows={2} value={comment} onChange={e => setComment(e.target.value)} placeholder="Any remark for this ledger" /></label>
       <h4 className="rw-h4">Attach file</h4>
       <label className="rw-drop"><input type="file" accept=".csv,.xls,.xlsx,.xlsb,text/csv" disabled={!!blocked} onChange={e => take(e.target.files?.[0])} /><Icon n="upload" s={24} /><b>{pick?.name ?? 'Click to upload'}</b><small>CSV in this demo · XLS, XLSX and XLSB in the full product · up to 50 MB</small></label>
@@ -181,7 +183,7 @@ export function UploadLedgerDrawer({ ctx, onClose, onDone }: { ctx: Ctx; onClose
       <p className="rw-note">AI scrutiny finished. Nothing has been pushed yet; check what was read, then send it to reconciliation.</p>
       {pv && <dl className="rw-dl four"><div><dt>Lines read</dt><dd>{pv.txns.length}</dd></div><div><dt>Opening per ledger</dt><dd>{m(o)}</dd></div><div><dt>Closing per ledger</dt><dd>{m(c)}</dd></div><div><dt>Opening + lines = closing</dt><dd className={pv.integrity ? 'rw-neg' : 'rw-ok'}>{pv.integrity ? signedMoney(pv.integrity, cur) : '✓ agrees'}</dd></div></dl>}
       <h4 className="rw-h4">Opening against previous closing</h4>
-      {prev ? <p className={'rw-note' + (obVar !== null && Math.abs(obVar) >= 0.005 ? ' warn' : '')}>{obVar !== null && Math.abs(obVar) < 0.005 ? <>✓ The opening {m(o)} equals the vendor’s closing for {tagLabel(prev.tag)}.</> : <>The opening {m(o)} is {m(obVar)} away from the vendor’s closing for {tagLabel(prev.tag)} ({m(prev.closing.V)}). Back-dated entries may explain it. You can still push the ledger; reconciliation will pause at the opening check until it is explained.</>}</p>
+      {prev ? <p className={'rw-note' + (obVar !== null && Math.abs(obVar) >= 0.005 ? ' warn' : '')}>{obVar !== null && Math.abs(obVar) < 0.005 ? <>✓ The opening {m(o)} equals {prevWhat}.</> : <>The opening {m(o)} is {m(obVar)} away from {prevWhat} ({m(prevV)}). Back-dated entries may explain it. You can still push the ledger; reconciliation will pause at the opening check until it is explained.</>}</p>
         : <p className="rx-muted">First reconciliation for this vendor: the opening position is agreed with the buyer’s opening once both ledgers are in.</p>}
       {fmt === 'own' && <><h4 className="rw-h4">How the columns were mapped</h4>
         <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th>Found in your file</th><th>Standard ledger field</th><th className="ar">Confidence</th></tr></thead><tbody>{OWN_MAP.map(([a, b, n]) => <tr key={a}><td>{a}</td><td>{b}</td><td className="ar">{n}%</td></tr>)}</tbody></table></div>

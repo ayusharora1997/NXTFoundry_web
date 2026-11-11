@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { manualMatch, reverseMatch, decideCandidate, status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
-import { initWorkspace, USERS, canApprove, now, bcOf, type Workspace, type User, type VendorRequest, type BcRec } from './store';
+import { confirmBalance, manualMatch, reverseMatch, decideCandidate, status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
+import { initWorkspace, USERS, canApprove, now, bcOf, nextDef, type Workspace, type User, type VendorRequest, type BcRec } from './store';
 import { VENDORS, ENTITIES, tagLabel } from './ledger';
 import { Icon, Drawer, Picker, PeriodPicker, Toasts, Avatar, type Toast } from './ui';
 import Reconcile from './Reconcile';
@@ -29,7 +29,7 @@ export interface Ctx {
   stat: (st: RelState, tag: string) => WfStatus; label: (st: RelState) => string;
   isVendor: boolean; visible: RelState[]; requests: VendorRequest[];
   submit: (r: Pick<VendorRequest, 'relId' | 'tag' | 'kind' | 'ids' | 'refId' | 'force' | 'reason' | 'summary'>) => void; decide: (id: string, approve: boolean) => void;
-  updateBc: (id: string, patch: Partial<BcRec>, what: string) => void;
+  updateBc: (id: string, patch: Partial<BcRec>, what: string) => void; confirmBc: (id: string, remarks: string) => boolean;
 }
 export const vendorOf = (st: RelState) => VENDORS.find(v => v.id === st.rel.vendorId)!;
 export const entityOf = (st: RelState) => ENTITIES.find(e => e.id === st.rel.entityId)!;
@@ -65,6 +65,13 @@ export default function ReconApp() {
       if (approve) { const res = q.kind === 'match' ? manualMatch(s0, q.tag, q.ids, note, user.name, now(), q.force) : q.kind === 'reverse' ? reverseMatch(s0, q.refId, q.tag, note, user.name, now(), canApprove(user)) : decideCandidate(s0, q.refId, q.kind === 'confirm', user.name, now()); if (!res.ok) { toast(res.error, 'warn'); return; } const next = res.state; setWs(w => ({ ...w, states: { ...w.states, [q.relId]: next } })); }
       setWs(w => ({ ...w, requests: w.requests.map(x => x.id === id ? { ...x, status: approve ? 'approved' : 'rejected', decidedBy: user.name, decidedAt: now() } : x) })); toast(approve ? `${q.id} approved and applied` : `${q.id} rejected`); },
     updateBc: (id, patch, what) => setWs(w => ({ ...w, bcs: w.bcs.map(b => b.id === id ? { ...b, ...patch, log: [...b.log, { at: now(), by: user.name, what }] } : b) })),
+    confirmBc: (id, remarks) => { const b = wsRef.current.bcs.find(x => x.id === id); if (!b) return false; const s0 = wsRef.current.states[b.relId]; const at = now(); const certNo = `BCC-${b.tag}-${b.relId}`; const nx = nextDef(s0.rel, b.tag);
+      const r = confirmBalance(s0, b.tag, b.balance, nx, certNo, user.name, user.name, at); if (!r.ok) { toast(r.error, 'warn'); return false; } const next = r.state;
+      // The next period's confirmation is queued (not sent) once our ledger for it is available.
+      const nf = nx && wsRef.current.files.find(f => f.relId === b.relId && f.periodTag === nx.tag && f.side === 'B' && f.kind === 'period');
+      const nb: BcRec | null = nx && nf && !wsRef.current.bcs.some(x => x.relId === b.relId && x.tag === nx.tag) ? { id: `BC-${nx.tag}-${b.relId}`, relId: b.relId, tag: nx.tag, balance: nf.closing ?? 0, reminders: [], status: 'Not sent', log: [{ at, by: 'System', what: `Queued after ${tagLabel(b.tag)} was confirmed` }] } : null;
+      setWs(w => ({ ...w, states: { ...w.states, [b.relId]: next }, bcs: [...w.bcs.map(x => x.id === id ? { ...x, status: 'Confirmed' as const, respondedBy: user.name, respondedAt: at, remarks, certNo, log: [...x.log, { at, by: user.name, what: `Agreed. Certificate ${certNo} issued; ${tagLabel(b.tag)} closed without reconciliation` }] } : x), ...(nb ? [nb] : [])] }));
+      return true; },
     run: (fn, okMsg, relId = route.relId) => { const r = fn(wsRef.current.states[relId]); if (!r.ok) { toast(r.error, 'warn'); return false; } const next = r.state; setWs(w => ({ ...w, states: { ...w.states, [relId]: next } })); if (okMsg) toast(okMsg); return true; },
   };
   const curStat = status(st, route.tag, ws.settings);

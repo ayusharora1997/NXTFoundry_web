@@ -3,7 +3,7 @@
 // annexures by originating period, sign-off and closure, and carry-forward across three or more periods.
 import {
   newRelState, importFile, gate, approveOpening, runStage, decideCandidate, manualMatch, reverseMatch, openItems, statement, prepare, share, vendorResponse,
-  finalSignoff, reopen, closePeriod, approveRounding, updateException, proposeAdjustment, decideAdjustment, closedTxnIds, status, noteMappings, mapNote, STAGES, DEFAULT_SETTINGS,
+  finalSignoff, reopen, closePeriod, confirmBalance, openPool, approveRounding, updateException, proposeAdjustment, decideAdjustment, closedTxnIds, status, noteMappings, mapNote, STAGES, DEFAULT_SETTINGS,
   type RelState, type LedgerFile, type Relationship, type PeriodDef, type Row,
 } from '../src/recon/cycle';
 import { initWorkspace, drive } from '../src/recon/store';
@@ -192,6 +192,12 @@ let R6 = ws.states.R6; const def6 = periodsFor(R6.rel);
 R6 = ok(closePeriod(R6, 'M092026', def6[4], S, 'Arjun Mehta', AT, true));
 R6 = drive(R6, ws, 'M102026', 'closed');
 check('R6: September closed, October run end to end and closed, November opened with carry-forward', R6.periods.length === 6 && R6.periods[4].phase === 'closed' && R6.periods[5].prevClosing !== null);
+// Balance confirmation: R1 September is confirmed without a reconciliation; October opens from the agreed balance.
+{ const R1 = ws.states.R1; const bal = R1.periods[3].closing.B!; const before = openPool(R1, 'M092026').length; const d1 = periodsFor(R1.rel);
+  const c = confirmBalance(R1, 'M092026', bal, d1[4], 'BCC-T', 'R. Iyer', 'R. Iyer', AT);
+  check('Balance confirmation closes the period and opens the next from the confirmed balance', c.ok && c.state.periods[3].phase === 'closed' && !!c.state.periods[3].confirmed && c.state.periods[4].prevClosing?.B === bal && c.state.periods[4].prevClosing?.V === bal);
+  check('Items up to a confirmed period stay recorded there and do not reach the next period', c.ok && before > 0 && openPool(c.state, 'M092026').length === before && openPool(c.state, 'M102026').length === 0);
+  check('A closed period cannot be confirmed again', c.ok && !confirmBalance(c.state, 'M092026', bal, d1[4], 'BCC-T', 'R. Iyer', 'R. Iyer', AT).ok); }
 check('Every relationship has a current period in the expected position', Object.entries(CURRENT).every(([r, i]) => ws.states[r].periods.length === i + 1));
 check('Generator is deterministic', JSON.stringify(generateAll().files.map(f => f.closing)) === JSON.stringify(generateAll().files.map(f => f.closing)));
 
