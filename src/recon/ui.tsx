@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { toCSV } from './engine';
 import { useAiEnabled } from './ai';
 import { tagLabel, TODAY } from './ledger';
@@ -12,6 +13,33 @@ export function AiChip({ label, hint, run, hideWhenLive }: { label: string; hint
   const on = useAiEnabled(); const live = on && !!run;
   const [open, setOpen] = useState(false);
   const [state, setState] = useState<{ busy?: boolean; out?: React.ReactNode; err?: string }>({});
+  const [pos, setPos] = useState<{ top: number; left: number; width: number; above: boolean } | null>(null);
+  const btn = useRef<HTMLButtonElement>(null); const pop = useRef<HTMLDivElement>(null);
+  const showing = open && !(live && state.busy);
+
+  // The panel is rendered at the top of the page (a portal) and placed next to the chip, so tables, cards and
+  // drawers with overflow:hidden can't clip it. Below the chip if there's room, otherwise above; kept on screen.
+  const place = () => {
+    const b = btn.current?.getBoundingClientRect(); if (!b) return;
+    const width = Math.min(live ? 380 : 280, window.innerWidth - 24);
+    const left = Math.max(12, Math.min(b.left, window.innerWidth - width - 12));
+    const h = pop.current?.offsetHeight ?? 0;
+    const above = h > 0 && b.bottom + 8 + h > window.innerHeight - 8 && b.top - 8 - h > 8;
+    setPos({ top: above ? b.top - 8 - h : b.bottom + 8, left, width, above });
+  };
+  React.useLayoutEffect(() => { if (showing) place(); }, [showing, state.out, state.err]);
+  useEffect(() => {
+    if (!showing) return;
+    const close = () => setOpen(false);
+    const away = (e: MouseEvent) => { const t = e.target as Node; if (!pop.current?.contains(t) && !btn.current?.contains(t)) close(); };
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { close(); btn.current?.focus(); } };
+    // Follow the chip while the page scrolls or resizes (browsers fire these at most once per frame).
+    const follow = () => place();
+    document.addEventListener('mousedown', away); document.addEventListener('keydown', key);
+    window.addEventListener('resize', follow); window.addEventListener('scroll', follow, true);
+    return () => { document.removeEventListener('mousedown', away); document.removeEventListener('keydown', key); window.removeEventListener('resize', follow); window.removeEventListener('scroll', follow, true); };
+  }, [showing]);
+
   if (hideWhenLive && on) return null;   // the live version of this chip appears elsewhere
   const click = async (e: React.MouseEvent) => {
     e.stopPropagation(); e.preventDefault();
@@ -20,16 +48,21 @@ export function AiChip({ label, hint, run, hideWhenLive }: { label: string; hint
     setOpen(true); setState({ busy: true });
     try { setState({ out: await run!() }); } catch (err) { setState({ err: err instanceof Error ? err.message : 'Something went wrong.' }); }
   };
+  const panel = showing && createPortal(
+    <div ref={pop} className={'ai-pop' + (live ? ' live' : '')} role="dialog" aria-label={label}
+      style={{ position: 'fixed', top: pos?.top ?? -9999, left: pos?.left ?? -9999, width: pos?.width, visibility: pos ? 'visible' : 'hidden' }}
+      onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
+      {!live ? <span><b>✦ AI sous-chef, in training.</b> {hint}</span> : <>
+        {state.err ? <span>{state.err}</span> : state.out}
+        <small>✦ AI-generated. Check it before relying on it.</small>
+        <button type="button" className="ai-pop-x" aria-label="Close" onClick={() => { setOpen(false); btn.current?.focus(); }}>×</button>
+      </>}
+    </div>, document.body);
   return <span className="ai-chip-wrap">
-    <button type="button" className={'ai-chip' + (live ? ' live' : '')} aria-expanded={open} onClick={click} disabled={state.busy}>
+    <button ref={btn} type="button" className={'ai-chip' + (live ? ' live' : '')} aria-expanded={showing} onClick={click} disabled={state.busy}>
       <span className="ai-spark" aria-hidden="true">✦</span>{state.busy ? 'Thinking…' : label}{!live && <em>in training</em>}
     </button>
-    {open && !live && <span className="ai-pop" role="status"><b>✦ AI sous-chef, in training.</b> {hint}</span>}
-    {open && live && !state.busy && <span className="ai-pop live" role="status">
-      {state.err ? <span>{state.err}</span> : state.out}
-      <small>✦ AI-generated. Check it before relying on it.</small>
-      <button type="button" className="ai-pop-x" aria-label="Close" onClick={e => { e.stopPropagation(); setOpen(false); }}>×</button>
-    </span>}
+    {panel}
   </span>;
 }
 

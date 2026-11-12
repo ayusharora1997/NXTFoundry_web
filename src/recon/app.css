@@ -1210,7 +1210,7 @@ a.rd-brand{color:inherit;text-decoration:none}
 .ai-chip em{font-style:normal;font-weight:500;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#9a86d6}
 .ai-spark{display:inline-block;color:#7c4dff;animation:ai-twinkle 2.4s ease-in-out infinite}
 @keyframes ai-twinkle{0%,100%{transform:scale(1) rotate(0);opacity:.85}50%{transform:scale(1.25) rotate(20deg);opacity:1}}
-.ai-pop{position:absolute;z-index:40;top:calc(100% + 6px);left:0;width:260px;padding:10px 12px;border-radius:10px;background:#1d1736;color:#ece8ff;font-size:12px;font-weight:400;line-height:1.45;white-space:normal;box-shadow:0 10px 30px rgba(20,10,60,.25)}
+.ai-pop{z-index:1000;padding:10px 12px;border-radius:10px;background:#1d1736;color:#ece8ff;font-size:12px;font-weight:400;line-height:1.45;white-space:normal;box-shadow:0 10px 30px rgba(20,10,60,.25)}
 .ai-pop b{color:#c9b8ff}
 @media (prefers-reduced-motion:reduce){.ai-spark{animation:none}}
 /* ✦ live AI chip and its result panel */
