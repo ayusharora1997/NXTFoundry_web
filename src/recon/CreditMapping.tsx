@@ -5,6 +5,7 @@ import { parseCSV } from './csv';
 import { toCSV } from './engine';
 import { creditItems, kindLabel, mappingOf, clears, docSign, type CItem, type CnSub, type CnDoc, type DocType } from './credit';
 import { AiChip, Card, DataTable, Drawer, Icon, Pill, Avatar, money, signedMoney, download, type Col } from './ui';
+import { askAi, blobUrlToBase64 } from './ai';
 import { PageHead, vendorOf, entityOf, type Ctx } from './App';
 import { Tour, useTour, card, type TourStep } from './tour';
 import { DocViewer, sheetPdf, type ViewDoc } from './DocViewer';
@@ -280,6 +281,20 @@ function LedgerDocDrawer({ ctx, id, items, onClose, onView }: { ctx: Ctx; id: st
   </Drawer>;
 }
 
+// ---------- AI: read an attached PDF and show what it says, for the user to check (never applied automatically) ----------
+type PdfFields = { documentType: string; number: string | null; date: string | null; supplierName: string | null; supplierGstin: string | null; buyerName: string | null; buyerGstin: string | null; againstDocument: string | null; taxableValue: number | null; cgst: number | null; sgst: number | null; igst: number | null; total: number | null; confidence: string };
+const inr = (n: number | null) => n === null ? '—' : n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+async function readPdf(url: string) {
+  const pdf = await blobUrlToBase64(url, 3 * 1048576);
+  const { fields: f, checks } = await askAi<{ fields: PdfFields; checks: { totalsAddUp: boolean | null } }>({ task: 'read-pdf', pdf });
+  const rows: [string, string][] = [['Document', f.documentType], ['Number', f.number ?? '—'], ['Date', f.date ?? '—'],
+    ['From', [f.supplierName, f.supplierGstin].filter(Boolean).join(' · ') || '—'], ['To', [f.buyerName, f.buyerGstin].filter(Boolean).join(' · ') || '—'],
+    ['Against', f.againstDocument ?? '—'], ['Taxable value', inr(f.taxableValue)], ['CGST / SGST / IGST', [f.cgst, f.sgst, f.igst].map(inr).join(' / ')], ['Total', inr(f.total)]];
+  return <span className="ai-fields"><table><tbody>{rows.map(([k, v]) => <tr key={k}><th>{k}</th><td>{v}</td></tr>)}</tbody></table>
+    <span className={'ai-check ' + (checks.totalsAddUp === false ? 'warn' : 'ok')}>{checks.totalsAddUp === null ? 'Totals not printed in full' : checks.totalsAddUp ? '✓ Taxable value + GST = total' : '⚠ Taxable value + GST doesn’t equal the total'} · confidence {f.confidence}</span>
+    <span className="ai-note">The PDF was sent to our AI provider to read it; we don’t store it.</span></span>;
+}
+
 // ---------- Attachment: drop or browse a PDF; shown as a file card once picked ----------
 const fmtSize = (b?: number) => b === undefined ? '' : b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(0)} KB` : `${(b / 1048576).toFixed(1)} MB`;
 function FileCard({ name, size, note, onClear, onView }: { name: string; size?: number; note: string; onClear?: () => void; onView?: () => void }) {
@@ -290,8 +305,8 @@ function FileCard({ name, size, note, onClear, onView }: { name: string; size?: 
 function Attach({ id, file, size, url, onPick, onClear, onView }: { id: string; file: string; size?: number; url?: string; onPick: (name: string, size: number, url: string) => void; onClear: () => void; onView: () => void }) {
   const [over, setOver] = useState(false); const [err, setErr] = useState('');
   const take = (f?: File) => { setErr(''); if (!f) return; if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { setErr('Attach it as a PDF.'); return; } if (f.size > 10 * 1048576) { setErr('The file is larger than 10 MB.'); return; } onPick(f.name, f.size, URL.createObjectURL(f)); };
-  if (file) return <FileCard name={file} size={size} note="Ready to submit" onClear={onClear} onView={url ? onView : undefined} />;
-  return <><AiChip label="Read this PDF" hint="Soon it will read the credit note number, date, amount and GST from the PDF and fill them in for you to check." /><label className={'rx-att-drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files?.[0]); }}>
+  if (file) return <><FileCard name={file} size={size} note="Ready to submit" onClear={onClear} onView={url ? onView : undefined} />{url && <AiChip label="Read this PDF" hint="Soon it will read the credit note number, date, amount and GST from the PDF and fill them in for you to check." run={() => readPdf(url)} />}</>;
+  return <><AiChip hideWhenLive label="Read this PDF" hint="Soon it will read the credit note number, date, amount and GST from the PDF and fill them in for you to check." /><label className={'rx-att-drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files?.[0]); }}>
     <input id={id} type="file" accept=".pdf,application/pdf" className="sr-only" onChange={e => { take(e.target.files?.[0]); e.currentTarget.value = ''; }} />
     <span className="rx-att-cloud" aria-hidden="true"><Icon n="upload" s={18} /></span><span><b>Drop the PDF here</b><small>or <u>browse your files</u> · PDF up to 10 MB</small></span></label>
     {err && <small className="rw-err">{err}</small>}</>;

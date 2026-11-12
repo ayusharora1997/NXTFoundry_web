@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toCSV } from './engine';
+import { useAiEnabled } from './ai';
 import { tagLabel, TODAY } from './ledger';
 
 // ---------- AI marker ----------
@@ -7,13 +8,28 @@ import { tagLabel, TODAY } from './ledger';
  * ✦ marks a spot where AI assists. Until that AI feature is switched on it is an honest teaser: a dimmed chip
  * that says "in training" and, when clicked, what the AI sous-chef will do here.
  */
-export function AiChip({ label, hint }: { label: string; hint: string }) {
+export function AiChip({ label, hint, run, hideWhenLive }: { label: string; hint: string; run?: () => Promise<React.ReactNode>; hideWhenLive?: boolean }) {
+  const on = useAiEnabled(); const live = on && !!run;
   const [open, setOpen] = useState(false);
+  const [state, setState] = useState<{ busy?: boolean; out?: React.ReactNode; err?: string }>({});
+  if (hideWhenLive && on) return null;   // the live version of this chip appears elsewhere
+  const click = async (e: React.MouseEvent) => {
+    e.stopPropagation(); e.preventDefault();
+    if (!live) { setOpen(o => !o); return; }
+    if (open && !state.busy) { setOpen(false); return; }
+    setOpen(true); setState({ busy: true });
+    try { setState({ out: await run!() }); } catch (err) { setState({ err: err instanceof Error ? err.message : 'Something went wrong.' }); }
+  };
   return <span className="ai-chip-wrap">
-    <button type="button" className="ai-chip" aria-expanded={open} onClick={e => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }}>
-      <span className="ai-spark" aria-hidden="true">✦</span>{label}<em>in training</em>
+    <button type="button" className={'ai-chip' + (live ? ' live' : '')} aria-expanded={open} onClick={click} disabled={state.busy}>
+      <span className="ai-spark" aria-hidden="true">✦</span>{state.busy ? 'Thinking…' : label}{!live && <em>in training</em>}
     </button>
-    {open && <span className="ai-pop" role="status"><b>✦ AI sous-chef, in training.</b> {hint}</span>}
+    {open && !live && <span className="ai-pop" role="status"><b>✦ AI sous-chef, in training.</b> {hint}</span>}
+    {open && live && !state.busy && <span className="ai-pop live" role="status">
+      {state.err ? <span>{state.err}</span> : state.out}
+      <small>✦ AI-generated. Check it before relying on it.</small>
+      <button type="button" className="ai-pop-x" aria-label="Close" onClick={e => { e.stopPropagation(); setOpen(false); }}>×</button>
+    </span>}
   </span>;
 }
 

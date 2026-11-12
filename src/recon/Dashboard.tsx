@@ -4,6 +4,7 @@ import { VENDORS, ENTITIES, tagLabel } from './ledger';
 import { annexSummary } from './annex';
 import { AiChip, Card, Collapsible, DataTable, Pill, money, signedMoney, short, type Col } from './ui';
 import { PageHead, STATUS_TONE, vendorOf, entityOf, type Ctx, type Screen } from './App';
+import { askAi } from './ai';
 
 // Where to go next for each status. Matching runs by itself once ledgers are in and openings validate.
 export const NEXT: Record<WfStatus, [string, Screen]> = {
@@ -54,9 +55,17 @@ export default function Dashboard({ ctx }: { ctx: Ctx }) {
     { key: 'u', label: 'Unexplained', align: 'right', text: r => r.s.unexplained === null ? '—' : money(r.s.unexplained, r.st.rel.currency), render: r => r.s.unexplained === null ? '—' : Math.abs(r.s.unexplained) < 0.005 ? <span className="rw-ok">✓ 0</span> : <span className="rw-neg">{money(r.s.unexplained, r.st.rel.currency)}</span> },
     { key: 'n', label: 'Next', noToggle: true, text: r => NEXT[r.status][0], render: r => <button className="rw-btn small" onClick={e => { e.stopPropagation(); go(NEXT[r.status][1], r.st.rel.id); }}>{NEXT[r.status][0]} →</button> },
   ];
+  // The engine's own figures, pre-formatted, are the only facts the AI may use (the server rejects any other number).
+  const explainGap = async (r: Row) => { const c = r.st.rel.currency;
+    const facts = [`Vendor: ${vendorOf(r.st).displayName}`, `Period: ${tagLabel(r.tag)}`,
+      `Buyer closing balance: ${money(r.s.buyerClosing, c)}`, `Vendor closing balance: ${money(r.s.vendorClosing, c)}`, `Difference: ${money(r.s.difference, c)}`,
+      ...r.ann.map(a => `Annexure ${a.n} (${a.name}): ${a.count} items, effect ${signedMoney(a.effect, c)}`),
+      `Adjustments: ${signedMoney(r.s.adjEffect, c)}`, `Unexplained difference: ${r.s.unexplained === null ? 'not yet known' : money(r.s.unexplained, c)}`].join('\n');
+    const { text } = await askAi<{ text: string }>({ task: 'explain', facts });
+    return <span>{text}</span>; };
   const expand = (r: Row) => { const c = r.st.rel.currency;
     return <div className="rx-dash-x">
-      <div className="rx-dash-sum"><div><span>Buyer closing</span><b>{money(r.s.buyerClosing, c)}</b></div><div><span>Vendor closing</span><b>{money(r.s.vendorClosing, c)}</b></div><div><span>Difference</span><b>{money(r.s.difference, c)}</b>{Math.abs(r.s.difference ?? 0) > 0.004 && <AiChip label="Explain this gap" hint="Soon it will explain in plain English why the two closing balances differ, using the matched and open items behind the number." />}</div><div><span>Open buyer items</span><b>{signedMoney(r.s.openB, c)}</b></div><div><span>Open vendor items</span><b>{signedMoney(-r.s.openV, c)}</b></div><div><span>Adjustments</span><b>{signedMoney(r.s.adjEffect, c)}</b></div></div>
+      <div className="rx-dash-sum"><div><span>Buyer closing</span><b>{money(r.s.buyerClosing, c)}</b></div><div><span>Vendor closing</span><b>{money(r.s.vendorClosing, c)}</b></div><div><span>Difference</span><b>{money(r.s.difference, c)}</b>{Math.abs(r.s.difference ?? 0) > 0.004 && <AiChip label="Explain this gap" hint="Soon it will explain in plain English why the two closing balances differ, using the matched and open items behind the number." run={() => explainGap(r)} />}</div><div><span>Open buyer items</span><b>{signedMoney(r.s.openB, c)}</b></div><div><span>Open vendor items</span><b>{signedMoney(-r.s.openV, c)}</b></div><div><span>Adjustments</span><b>{signedMoney(r.s.adjEffect, c)}</b></div></div>
       {r.ann.length ? <table className="rw-table compact"><thead><tr><th>Annexure</th><th>What it holds</th><th className="ar">Items</th><th className="ar">Effect on the bridge</th></tr></thead>
         <tbody>{r.ann.map(a => <tr key={a.n}><td><b>Annexure {a.n}</b></td><td>{a.name}</td><td className="ar">{a.count}</td><td className="ar"><b>{signedMoney(a.effect, c)}</b></td></tr>)}</tbody></table>
         : <p className="rx-muted">{r.status === 'Awaiting ledgers' ? 'No reconciliation yet: the vendor ledger for this period has not been uploaded.' : 'No open items. Nothing to annex.'}</p>}
