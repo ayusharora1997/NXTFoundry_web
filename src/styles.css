@@ -814,3 +814,14 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .heart{color:var(--lime)}
 .made-tr{opacity:.75}
 .coming-soon{min-height:calc(100vh - 82px - 260px)}
+/* What We Do: "The problems we are brought in for" as a compact list (no images) */
+.scope-list{margin-top:32px;border-top:1px solid var(--line)}
+.scope-row{display:grid;grid-template-columns:56px 1fr;gap:20px;align-items:start;padding:22px 0;border-bottom:1px solid var(--line)}
+.scope-num{color:var(--lime);font-size:13px;font-weight:700;letter-spacing:.08em;padding-top:5px;font-variant-numeric:tabular-nums}
+.scope-row h3{margin:0;font-size:20px;font-weight:600;letter-spacing:-.01em}
+.scope-items{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.scope-items>span{border:1px solid var(--line);padding:6px 10px;color:#c7d0c9;font-size:13px;line-height:1.35}
+.scope-items>.has-tool{display:inline-flex;align-items:center;flex-wrap:wrap;gap:10px;border-color:var(--lime);color:#f3f3ed;background:rgba(215,255,50,.06)}
+.scope-tool{display:inline-flex;align-items:center;gap:4px;color:var(--lime);font-size:12px;white-space:nowrap;padding-left:10px;border-left:1px solid rgba(215,255,50,.35)}
+.scope-tool:hover{text-decoration:underline}
+@media(max-width:800px){.scope-row{grid-template-columns:32px 1fr;gap:12px;padding:18px 0}.scope-row h3{font-size:18px}.scope-items>span{font-size:12.5px}}
