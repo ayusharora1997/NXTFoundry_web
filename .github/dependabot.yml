@@ -1,0 +1,16 @@
+# Weekly update PRs for npm packages and GitHub Actions. Versions in package.json are pinned exactly,
+# so nothing changes until one of these PRs is reviewed and merged (CI runs the tests on each).
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

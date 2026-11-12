@@ -136,7 +136,7 @@ export function UploadLedgerDrawer({ ctx, onClose, onDone }: { ctx: Ctx; onClose
 
   const useSample = () => { if (!sample) return; setPick({ name: sample.fileName, rows: sample.rows, opening: sample.opening, closing: sample.closing, sample: true }); setErr(''); };
   const take = async (f?: File) => {
-    setErr(''); if (!f) return;
+    setErr(''); if (!f) return; if (f.size > 50 * 1048576) { setErr('The file is larger than 50 MB.'); return; } 
     if (!/\.csv$/i.test(f.name)) { setErr(sample ? `This demo reads CSV files only. Use “${sample.fileName}”, the sample ledger received from ${vendorName}, to see the full flow.` : 'This demo reads CSV files only. In Excel use File → Save As → CSV UTF-8.'); return; }
     const parsed = parseCSV(await f.text()); const miss = STD_COLS.filter(c => !parsed.columns.includes(c));
     if (miss.length) { setErr(sample ? `This demo can only read the standard columns from a file you pick (missing: ${miss.join(', ')}). Use the sample ledger received from ${vendorName} to see the AI step on a vendor layout.` : `Missing columns: ${miss.join(', ')}. Download the standard format for the layout.`); return; }

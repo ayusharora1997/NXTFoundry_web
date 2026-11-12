@@ -33,6 +33,12 @@ export function normName(raw: string): string {
 export function toCSV(rows: Record<string, unknown>[]): string {
   if (!rows.length) return '';
   const cols = Object.keys(rows[0]);
-  const esc = (v: unknown) => { const s = v === null || v === undefined ? '' : String(v); return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+  const esc = (v: unknown) => {
+    let s = v === null || v === undefined ? '' : String(v);
+    // CSV formula injection (OWASP): text starting with = + - @ tab or CR would run as a formula when the file is
+    // opened in Excel or Sheets. Prefix such text with an apostrophe. Real numbers (e.g. -1500) are left untouched.
+    if (typeof v !== 'number' && /^[=+\-@\t\r]/.test(s) && !/^[+-]?\d[\d,]*(\.\d+)?$/.test(s)) s = "'" + s;
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+  };
   return [cols.join(','), ...rows.map(r => cols.map(c => esc(r[c])).join(','))].join('\n');
 }

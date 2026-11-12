@@ -13,7 +13,9 @@ const types = {
 };
 
 http.createServer((req, res) => {
-  let rel = decodeURIComponent(new URL(req.url, 'http://x').pathname);
+  let rel;
+  try { rel = decodeURIComponent(new URL(req.url, 'http://x').pathname); }
+  catch { res.writeHead(400).end('Bad request'); return; }   // malformed %-encoding must not crash the server
   if (rel.endsWith('/')) rel += 'index.html';
   const file = path.join(root, rel);
   if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }

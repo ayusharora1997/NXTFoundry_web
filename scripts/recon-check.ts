@@ -9,6 +9,7 @@ import {
 import { initWorkspace, drive, autoReconcile } from '../src/recon/store';
 import { annexOf } from '../src/recon/annex';
 import { RELS, periodsFor, generateAll, CURRENT } from '../src/recon/ledger';
+import { toCSV } from '../src/recon/engine';
 
 let failed = 0, passed = 0;
 const check = (name: string, ok: boolean, detail = '') => { if (ok) passed++; else failed++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${name}${detail ? '  — ' + detail : ''}`); };
@@ -222,6 +223,11 @@ check('R6: September closed, October run end to end and closed, November opened 
   st = runAll(st, t); const mm = st.matches.find(x => x.buyerIds.includes(dbn.id) && !x.reversed);
   check('Reconciliation closes the debit note against the credit note and the vendor debit together', !!mm && mm.vendorIds.length === 2 && Math.abs(mm.amountDiff) < 0.005); }
 check('Every relationship has a current period in the expected position', Object.entries(CURRENT).every(([r, i]) => ws.states[r].periods.length === i + 1));
+{ // CSV exports: text that a vendor controls must never run as a formula when the buyer opens the file.
+  const csv = toCSV([
+    { Narration: '=HYPERLINK("http://evil.example","Click")', A: '+1+1', B: '-2+3', C: '@SUM(1)', D: '\tx', Amount: -1500, Text: '-1500', Ref: 'INV-1', E: 'a,b' },
+  ]).split('\n')[1];
+  check('CSV export neutralises formula text from ledgers', csv === `"'=HYPERLINK(""http://evil.example"",""Click"")",'+1+1,'-2+3,'@SUM(1),'\tx,-1500,-1500,INV-1,"a,b"`, csv); }
 check('Generator is deterministic', JSON.stringify(generateAll().files.map(f => f.closing)) === JSON.stringify(generateAll().files.map(f => f.closing)));
 
 console.log(`\n${passed} passed, ${failed} failed`);
