@@ -825,3 +825,27 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .scope-tool{display:inline-flex;align-items:center;gap:4px;color:var(--lime);font-size:12px;white-space:nowrap;padding-left:10px;border-left:1px solid rgba(215,255,50,.35)}
 .scope-tool:hover{text-decoration:underline}
 @media(max-width:800px){.scope-row{grid-template-columns:32px 1fr;gap:12px;padding:18px 0}.scope-row h3{font-size:18px}.scope-items>span{font-size:12.5px}}
+/* Problem chips answered by a tool: live = solid lime + pulse; in the kitchen = dashed, in the product's status colour */
+.scope-items>.has-tool{border-style:dashed}
+.scope-items>.has-tool.k-live{border-style:solid;border-color:var(--lime);background:rgba(215,255,50,.06)}
+.scope-items>.has-tool.k-cooking,.scope-items>.has-tool.k-simmer{border-color:#7a6633;background:rgba(232,196,106,.04)}
+.scope-items>.has-tool.k-prep{border-color:#3d5a7a;background:rgba(159,199,255,.04)}
+.scope-items>.has-tool.k-menu{border-color:#5a4a7a;background:rgba(201,166,255,.04)}
+.k-cooking .scope-tool,.k-simmer .scope-tool{color:#e8c46a;border-left-color:rgba(232,196,106,.35)}
+.k-prep .scope-tool{color:#9fc7ff;border-left-color:rgba(159,199,255,.35)}
+.k-menu .scope-tool{color:#c9a6ff;border-left-color:rgba(201,166,255,.35)}
+.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--lime);margin-right:2px;box-shadow:0 0 0 0 rgba(215,255,50,.6);animation:live-ping 1.8s ease-out infinite}
+@keyframes live-ping{0%{box-shadow:0 0 0 0 rgba(215,255,50,.6)}70%{box-shadow:0 0 0 7px rgba(215,255,50,0)}100%{box-shadow:0 0 0 0 rgba(215,255,50,0)}}
+
+/* Coming-soon pages: bouncing dots, an indeterminate bar and rotating kitchen notes */
+.cs-dots{display:inline-flex;gap:.12em;margin-left:.06em;vertical-align:baseline}
+.cs-dots i{width:.14em;height:.14em;border-radius:50%;background:var(--lime);display:inline-block;animation:cs-bounce 1.2s ease-in-out infinite}
+.cs-dots i:nth-child(2){animation-delay:.15s}.cs-dots i:nth-child(3){animation-delay:.3s}
+@keyframes cs-bounce{0%,60%,100%{transform:translateY(0);opacity:.45}30%{transform:translateY(-.22em);opacity:1}}
+.cs-kitchen{margin-top:44px;max-width:420px}
+.cs-bar{position:relative;height:2px;background:var(--line);overflow:hidden}
+.cs-bar span{position:absolute;inset:0 auto 0 0;width:35%;background:var(--lime);animation:cs-slide 1.6s cubic-bezier(.6,0,.4,1) infinite}
+@keyframes cs-slide{0%{transform:translateX(-100%)}100%{transform:translateX(290%)}}
+.cs-line{margin:14px 0 0;color:var(--muted);font-size:14px;letter-spacing:.02em;animation:cs-fade .5s ease both}
+@keyframes cs-fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.live-dot,.cs-dots i,.cs-bar span,.cs-line{animation:none}.cs-bar span{width:100%;opacity:.35}}

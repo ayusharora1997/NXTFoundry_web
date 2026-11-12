@@ -52,12 +52,21 @@ const programmes:Programme[] = [
 ];
 const scopeAreas:[string,string,string[]][] = [
   ['01','Operations & Business Performance',['Execution that keeps slipping','Unclear ownership across teams','No weekly review rhythm','KPIs nobody acts on']],
-  ['02','Revenue & Financial Control',['Revenue that doesn’t reconcile','Vendor ledgers that don’t match yours','Channel and marketplace deductions','Weak approval and control points','A month-end close that drags']],
-  ['03','Procurement & Supply Chain',['Vendor terms nobody enforces','Purchases outside policy','Single-vendor dependence','Freight and landed-cost leakage']],
+  ['02','Revenue & Financial Control',['Vendor ledgers that don’t match yours','Customer balances that don’t match theirs','GST credit that doesn’t match GSTR-2B','Channel and marketplace deductions','Bank entries that don’t match the statement','Revenue that doesn’t reconcile','Weak approval and control points','A month-end close that drags']],
+  ['03','Procurement & Supply Chain',['Invoices checked by hand against POs','Vendor terms nobody enforces','Purchases outside policy','Single-vendor dependence','Freight and landed-cost leakage']],
   ['04','Inventory & Margin',['Cash tied up in slow stock','Margin erosion by product or channel','Stock records that don’t match the floor','Pricing without cost visibility']]
 ];
-// Problems we already have a working tool for: highlighted, with a single "view the tool" link.
-const scopeTools:Record<string,string> = {'Vendor ledgers that don’t match yours':'#reconciliation-lab'};
+// Problems one of our tools answers -> the tool (an id from `suite`). The live one links to the tool itself;
+// the ones still "in the kitchen" link to their product preview and show the same status as the product page.
+const scopeTools:Record<string,string> = {
+  'Vendor ledgers that don’t match yours':'products-vendor',
+  'Customer balances that don’t match theirs':'products-customer',
+  'GST credit that doesn’t match GSTR-2B':'products-gstr',
+  'Channel and marketplace deductions':'products-settlements',
+  'Bank entries that don’t match the statement':'products-bank',
+  'Invoices checked by hand against POs':'products-invoice',
+};
+const kitchenNote:Record<Exclude<Kind,'live'>,string> = {cooking:'Tool on the stove',simmer:'Add-on simmering',prep:'Prepping ingredients',menu:'Next on the menu'};
 const notDone = ['Run your finance, procurement, or operations team day to day. We build the system and train the people who run it','Produce decks. You get short written documents your team can actually use','Send a junior to do the work after a senior attends the first meeting. The people you meet are the people who do the work','Sell you software you don’t need. The fix comes first; a tool only if it earns its place','Take on work outside our expertise. If we can’t serve the problem well, we tell you upfront — and point you to someone who can'];
 const faqs = [
   ['What is your consulting fee?','Every programme is fixed-fee, scoped to your situation and agreed in writing before we start. There is no hourly billing. Get in touch and we’ll share the fee for the programme that fits after a first conversation.'],
@@ -82,7 +91,23 @@ type MenuItem=[string,string,string,string,string?];
 function NavMenu({title,items,all,close}:{title:string;items:MenuItem[];all:[string,string];close:()=>void}){return <div className="nav-menu" role="menu" aria-label={title}><span className="nav-menu-title">{title}</span><div className="nav-menu-grid">{items.map(([href,name,tag,line,kind])=><a key={href} href={href} role="menuitem" onClick={close} className={'nav-menu-item'+(kind?' '+kind:'')}><b>{name}</b><small>{line}</small><span className="nav-menu-tag">{kind==='live'&&<i/>}{tag}</span></a>)}</div><a className="nav-menu-all" href={all[0]} onClick={close}>{all[1]} <ArrowRight size={13}/></a></div>}
 function Header(){const [open,setOpen]=useState(false); return <header className="header"><Logo/><nav className={open?'open':''}>{nav.map(([label,id])=>{const menu=id==='solutions'?<NavMenu title="Service engagements" all={['#solutions','See all engagements']} items={programmes.map(p=>['#prog-'+p.id,p.name,p.tag,p.line] as MenuItem)} close={()=>setOpen(false)}/>:id==='products'?<NavMenu title="Products" all={['#products','See the product suite']} items={suite.map(([sid,,t,d,k,st])=>['#'+sid,t,st,d,k] as MenuItem)} close={()=>setOpen(false)}/>:null;
   return menu?<div className="nav-item" key={id}><a href={'#'+id} onClick={()=>setOpen(false)} aria-haspopup="true">{label}<span className="nav-caret" aria-hidden="true">▾</span></a>{menu}</div>:<a href={'#'+id} key={id} onClick={()=>setOpen(false)}>{label}</a>;})}</nav><a className="talk desktop" href="#contact">Let’s Talk <ArrowUpRight size={16}/></a><button className="menu" aria-label="Toggle menu" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></header>}
-function ComingSoon({label,id}:{label:string,id:string}){return <section className="page section coming-soon" id={id}><Label>{label}</Label><h1>We’re preparing something <em>for you.</em></h1><p className="page-lede">It will be posted here soon.</p></section>}
+function ScopeChip({problem}:{problem:string}){const id=scopeTools[problem];const tool=id?suite.find(t=>t[0]===id):undefined;
+  if(!tool)return <span>{problem}</span>;
+  const [,,name,,kind]=tool;
+  if(kind==='live')return <span className="has-tool k-live">{problem}<a className="scope-tool" href="#reconciliation-lab" target="_blank" rel="noopener" aria-label={`${name} is live: view the tool`}><i className="live-dot" aria-hidden="true"/>Live · We’ve a tool for this · View <ArrowUpRight size={12}/></a></span>;
+  return <span className={'has-tool k-'+kind}>{problem}<a className="scope-tool" href={'#'+id} title={name} aria-label={`${name}: ${kitchenNote[kind]}. See the preview`}>{kitchenNote[kind]} · Peek</a></span>}
+// "Coming soon" page with a little kitchen theatre while we write. Messages rotate; reduced-motion users get the first one, still.
+const COMING_LINES:Record<string,string[]> = {
+  INSIGHTS:['Sharpening pencils…','Arguing over a headline…','Checking the numbers twice…','Cutting the jargon…','Letting it simmer…','Almost ready to serve…'],
+  RESOURCES:['Polishing templates…','Testing checklists on real books…','Removing the fluff…','Tidying spreadsheet formulas…','Letting it simmer…','Almost ready to serve…'],
+};
+function ComingSoon({label,id}:{label:string,id:string}){const lines=COMING_LINES[label]||COMING_LINES.INSIGHTS;const [i,setI]=useState(0);
+  React.useEffect(()=>{if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;const t=setInterval(()=>setI(n=>(n+1)%lines.length),2400);return()=>clearInterval(t)},[lines]);
+  return <section className="page section coming-soon" id={id}><Label>{label}</Label>
+    <h1>We’re preparing something <em>for you</em><span className="cs-dots" aria-hidden="true"><i/><i/><i/></span></h1>
+    <p className="page-lede">It will be posted here soon.</p>
+    <div className="cs-kitchen" role="status" aria-live="polite"><div className="cs-bar" aria-hidden="true"><span/></div><p className="cs-line" key={i}>{lines[i]}</p></div>
+  </section>}
 function Label({children}:{children:React.ReactNode}){return <div className="eyebrow"><span className="dot"/>{children}</div>}
 
 function ArrowLink({children,href='#'}:{children:React.ReactNode,href?:string}){return <a className="arrow-link" href={href}>{children}<ArrowUpRight size={17}/></a>}
@@ -97,7 +122,7 @@ function FAQ(){const [open,setOpen]=useState<number|null>(null); return <div cla
 function Solutions(){return <section className="page section" id="solutions-page"><Label>WHAT WE DO</Label><h1>Management consulting for <em>growing businesses.</em></h1><p className="page-lede">Fixed-scope consulting and advisory programmes for owner-led and professionally managed businesses. Senior-led — the people you meet are the people who do the work. Based in Bengaluru, working across India.</p><figure className="page-figure"><img src="/images/diagnostic-whiteboard-v2.png" alt="Dark planning wall with process markers"/></figure>
 <div className="prog-path-band"><Label>HOW THE PROGRAMMES FIT TOGETHER</Label><ol className="prog-path">{programmePath.map(([t,id,d],i)=><li key={t}><a href={'#prog-'+id} onClick={jump('prog-'+id)}><span className="num">0{i+1}</span><h3>{t}</h3><p>{d}</p></a></li>)}</ol><p className="prog-path-note">Most clients move through in that order. You can stop at any point. <a href="#prog-custom" onClick={jump('prog-custom')}>Or a custom engagement</a> — if what you need doesn’t fit this sequence, we scope it with you before we begin.</p></div>
 <div className="prog-list-wrap">{programmes.map(p=><ProgrammeCard p={p} key={p.id}/>)}</div>
-<div className="scope-band"><Label>WHERE WE WORK</Label><h2>The problems we are <em>brought in for.</em></h2><div className="scope-list">{scopeAreas.map(([n,t,items])=><div className="scope-row" key={n}><span className="scope-num">{n}</span><div><h3>{t}</h3><div className="scope-items">{items.map(x=>scopeTools[x]?<span className="has-tool" key={x}>{x}<a className="scope-tool" href={scopeTools[x]} target="_blank" rel="noopener">We have a tool for this · View <ArrowUpRight size={12}/></a></span>:<span key={x}>{x}</span>)}</div></div></div>)}</div></div>
+<div className="scope-band"><Label>WHERE WE WORK</Label><h2>The problems we are <em>brought in for.</em></h2><div className="scope-list">{scopeAreas.map(([n,t,items])=><div className="scope-row" key={n}><span className="scope-num">{n}</span><div><h3>{t}</h3><div className="scope-items">{items.map(x=><ScopeChip key={x} problem={x}/>)}</div></div></div>)}</div></div>
 <div className="terms-band"><div><Label>HOW THE MONEY WORKS</Label><h2>One scope. <em>One agreed fee.</em></h2><p>Every programme is fixed-fee, agreed in writing before we start. No hourly billing, no scope creep, no surprise invoice at the end.</p><p>If you stop after the Diagnostic, that’s the whole engagement — no further obligation, no upsell conversation.</p></div><div><Label>WHAT WE DON’T DO</Label><ul className="dont-list">{notDone.map(x=><li key={x}>{x}</li>)}</ul></div></div>
 <div className="faq-band"><div><Label>COMMON QUESTIONS</Label><h2>Fees and <em>duration.</em></h2></div><FAQ/></div>
 <div className="lead-band"><div><Label>START HERE</Label><h2>Start with <em>half a day.</em></h2><p>Most clients begin with the Diagnostic. If that’s all you need, that is perfectly fine too.</p></div><div className="lead-action"><a className="button" href="#contact-form">Schedule an introductory call <ArrowUpRight size={17}/></a><p>A first conversation, not the Diagnostic. We’ll hear the situation and tell you honestly whether we can help.</p></div></div></section>}
