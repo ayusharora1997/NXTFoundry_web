@@ -34,7 +34,7 @@ export interface Ctx {
   isVendor: boolean; visible: RelState[]; requests: VendorRequest[];
   submit: (r: Pick<VendorRequest, 'relId' | 'tag' | 'kind' | 'ids' | 'refId' | 'force' | 'reason' | 'summary'>) => void; decide: (id: string, approve: boolean) => void;
   updateBc: (id: string, patch: Partial<BcRec>, what: string) => void; confirmBc: (id: string, remarks: string) => boolean;
-  submitCn: (buyerIds: string[], cn: CnDoc, via?: CnSub['via'], bulkId?: string) => string; decideCn: (id: string, action: 'accept' | 'reject' | 'reopen', reason?: string) => boolean; addBulk: (b: BulkReq) => void;
+  submitCn: (buyerIds: string[], cn: CnDoc, via?: CnSub['via'], bulkId?: string, group?: string) => string; decideCn: (id: string, action: 'accept' | 'reject' | 'reopen', reason?: string) => boolean; addBulk: (b: BulkReq) => void;
 }
 export const vendorOf = (st: RelState) => VENDORS.find(v => v.id === st.rel.vendorId)!;
 export const entityOf = (st: RelState) => ENTITIES.find(e => e.id === st.rel.entityId)!;
@@ -77,8 +77,8 @@ export default function ReconApp() {
       const nb: BcRec | null = nx && nf && !wsRef.current.bcs.some(x => x.relId === b.relId && x.tag === nx.tag) ? { id: `BC-${nx.tag}-${b.relId}`, relId: b.relId, tag: nx.tag, balance: nf.closing ?? 0, reminders: [], status: 'Not sent', log: [{ at, by: 'System', what: `Queued after ${tagLabel(b.tag)} was confirmed` }] } : null;
       setWs(w => ({ ...w, states: { ...w.states, [b.relId]: next }, bcs: [...w.bcs.map(x => x.id === id ? { ...x, status: 'Confirmed' as const, respondedBy: user.name, respondedAt: at, remarks, certNo, log: [...x.log, { at, by: user.name, what: `Agreed. Certificate ${certNo} issued; ${tagLabel(b.tag)} closed without reconciliation` }] } : x), ...(nb ? [nb] : [])] }));
       return true; },
-    submitCn: (buyerIds, cn, via = 'Form', bulkId) => { const id = `CNS-${String(wsRef.current.cns.length + 1).padStart(4, '0')}`; const at = now();
-      setWs(w => ({ ...w, cns: [...w.cns, { id, relId: route.relId, tag: route.tag, buyerIds, cn, status: 'Submitted', via, bulkId, by: user.name, at, log: [{ at, by: user.name, what: via === 'Buyer entry' ? `Entered ${cn.no} on the vendor’s behalf` : `Submitted ${cn.no}${bulkId ? ` through bulk upload ${bulkId}` : ''}` }] }] })); return id; },
+    submitCn: (buyerIds, cn, via = 'Form', bulkId, group) => { const id = `CNS-${String(wsRef.current.cns.length + 1).padStart(4, '0')}`; const at = now();
+      setWs(w => ({ ...w, cns: [...w.cns, { id, relId: route.relId, tag: route.tag, buyerIds, cn, status: 'Submitted', via, bulkId, group, by: user.name, at, log: [{ at, by: user.name, what: via === 'Buyer entry' ? `Entered ${cn.no} on the vendor’s behalf` : `Submitted ${cn.no}${bulkId ? ` through bulk upload ${bulkId}` : ''}` }] }] })); return id; },
     addBulk: b => setWs(w => ({ ...w, bulks: [...w.bulks, b] })),
     decideCn: (id, action, reason = '') => { const q = wsRef.current.cns.find(x => x.id === id); if (!q) return false; const at = now(); const s0 = wsRef.current.states[q.relId];
       if ((action === 'reject' || action === 'reopen') && !reason.trim()) { toast('Give a reason.', 'warn'); return false; }

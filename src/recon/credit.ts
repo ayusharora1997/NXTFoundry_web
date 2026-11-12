@@ -10,11 +10,11 @@ export const docSign = (d: DocType) => d === 'Credit note' ? -1 : 1;
 /** How much a document clears on the buyer's notes: credit notes and refunds clear, a vendor debit adds back. */
 export const clears = (c: Pick<CnDoc, 'docType' | 'total'>) => (c.docType === 'Vendor debit' ? -1 : 1) * c.total;
 export const docKind = (d?: DocType) => d === 'Vendor debit' ? 'vd' as const : d === 'Refund' ? 'refund' as const : 'cn' as const;
-export interface CnDoc { docType?: DocType; no: string; date: string; kind: 'Taxable' | 'Non-taxable'; taxable: number; cgst: number; sgst: number; igst: number; total: number; irn: string; file?: string; fileSize?: number }
+export interface CnDoc { docType?: DocType; no: string; date: string; kind: 'Taxable' | 'Non-taxable'; taxable: number; cgst: number; sgst: number; igst: number; total: number; irn: string; file?: string; fileSize?: number; /** In-memory link to the uploaded file, for viewing in the app. */ fileUrl?: string }
 export type CnStatus = 'Submitted' | 'Accepted' | 'Rejected' | 'Reopened';
 export interface CnLog { at: string; by: string; what: string }
 export interface CnSub {
-  id: string; relId: string; tag: string; buyerIds: string[]; cn: CnDoc; status: CnStatus; via: 'Form' | 'Bulk upload' | 'Buyer entry'; bulkId?: string;
+  id: string; relId: string; tag: string; buyerIds: string[]; cn: CnDoc; status: CnStatus; via: 'Form' | 'Bulk upload' | 'Buyer entry'; bulkId?: string; /** Documents submitted together in one window share a group. */ group?: string;
   by: string; at: string; reason?: string; decidedBy?: string; decidedAt?: string; alloc?: { id: string; amount: number }[]; log: CnLog[];
 }
 export interface BulkReq { id: string; relId: string; file: string; rows: number; subs: string[]; by: string; at: string }

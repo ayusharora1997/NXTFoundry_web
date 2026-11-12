@@ -15,6 +15,8 @@ export function download(name: string, text: string) {
 
 // ---------- Icons ----------
 const P: Record<string, React.ReactNode> = {
+  plus: <path d="M12 5v14M5 12h14" />,
+  eye: <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></>,
   upload: <><path d="M12 15V4" /><path d="m7 9 5-5 5 5" /><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" /></>,
   download: <><path d="M12 4v11" /><path d="m7 10 5 5 5-5" /><path d="M4 15v4a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-4" /></>,
   summary: <><rect x="4" y="4" width="16" height="16" rx="1" /><path d="M8 15v-3M12 15V9M16 15v-5" /></>,
