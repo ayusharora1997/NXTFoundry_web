@@ -9,7 +9,8 @@ Browser form ──POST /api/enquiry──▶ Vercel function (api/enquiry.ts) �
  same origin, JSON                  • Origin must be an allowed origin           • shared secret check
                                     • honeypot + fill-time check                 • validation + length limits (again)
                                     • validation + length limits                 • script lock (10 s max wait)
-                                    • visitor IP → keyed HMAC (raw IP dropped)   • duplicate check  (Submission Keys tab)
+                                    • trusted visitor IP → keyed HMAC            • ipHash must be a 43-char HMAC
+                                      (no valid IP → 503, fail closed)           • duplicate check  (Submission Keys tab)
                                     • adds shared secret (env var)               • per-IP / per-email limits (Submission Keys tab)
                                                                                  • email cap        (Notifications tab)
                                                                                  • writes enquiry → key → notification state
@@ -45,7 +46,7 @@ Browser form ──POST /api/enquiry──▶ Vercel function (api/enquiry.ts) �
 | Submission ID | Enquiry ID | Received at (IST) | IP hash | Email hash | Outcome |
 |---|---|---|---|---|---|
 
-- The IP hash is an HMAC-SHA-256 of the IP made with a key held only in Vercel. The raw IP is never stored, logged or sent to Google.
+- The IP hash is an HMAC-SHA-256 of the IP made with a key held only in Vercel, written as 43 base64url characters. The raw IP is never stored, logged or sent to Google. There is no shared fallback value: every stored row has a real visitor's hash.
 - The email hash is a SHA-256 of the address.
 - Outcome is `STORED` or `SPAM`.
 
@@ -71,7 +72,8 @@ Browser form ──POST /api/enquiry──▶ Vercel function (api/enquiry.ts) �
 |---|---|---|
 | Origin allowlist | Vercel | `Origin` must be present and equal to `https://nxtfoundry.in`, `https://www.nxtfoundry.in`, or an entry in `ENQUIRY_ALLOWED_ORIGINS`. This stops other websites posting through visitors' browsers. Scripts can fake it, so it is **not** treated as authentication. |
 | Shared secret | Vercel → Apps Script | Apps Script refuses any request without `ENQUIRY_SHARED_SECRET` (constant-time compare). It is never in browser code. |
-| Trusted client IP | Vercel | Read from `x-vercel-forwarded-for` / `x-real-ip`, which Vercel overwrites at its edge to prevent spoofing. `X-Forwarded-For` is never read. |
+| Trusted client IP (fail closed) | Vercel | Read only from `x-vercel-forwarded-for`, then `x-real-ip`. Vercel overwrites both at its edge to prevent spoofing; `X-Forwarded-For` is never read. The first entry must be a strict IPv4 address or a valid IPv6 literal. If neither header is present, or the value is malformed, the request is refused with **503** and the visitor sees the retry message. There is no shared "unknown" bucket, and the bad value is never logged. |
+| IP hash check (fail closed) | Apps Script | Independently refuses (`bad_request`) any request whose `ipHash` is missing or is not exactly 43 base64url characters, before anything is read or written. |
 | IP privacy | Vercel | The IP becomes HMAC-SHA-256 with `ENQUIRY_IP_HASH_KEY`. Only the hash leaves the function; the raw IP is never stored or logged. |
 | Per-IP limits | Apps Script | 5 stored enquiries per 10 min and 20 per 24 h, per IP hash. Counted from the Submission Keys tab under the lock, so they survive cache eviction. |
 | Per-email limit | Apps Script | 5 per hour per email address, from any IP. |
@@ -154,6 +156,7 @@ In Vercel, open **Project → Settings → Environment Variables**. Add these to
 - Delete any old `VITE_FORM_ENDPOINT`.
 - Env var changes apply only to new deployments.
 - If `APPS_SCRIPT_URL`, `ENQUIRY_SHARED_SECRET` or `ENQUIRY_IP_HASH_KEY` is missing, the form shows the retry message and Vercel logs name the missing variable.
+- No IP setting is needed. On Vercel the trusted IP headers are always present. Locally, `npm run dev` replaces any client-sent IP headers with the real connection address (`127.0.0.1` / `::1`), so local requests also pass the fail-closed check.
 
 ## 6. Testing
 
@@ -163,7 +166,7 @@ In Vercel, open **Project → Settings → Environment Variables**. Add these to
 npm run test:enquiry
 ```
 
-It covers valid enquiries, invalid input, spoofed requests (Origin, secret, `X-Forwarded-For`), rate-limit exhaustion, duplicate and parallel duplicate submissions, the email cap and its summary, failed notifications and retries, overlapping retry runs, schema mismatch, concurrent submissions, a busy lock, text preservation, the honeypot, IP privacy and the upstream response contract. The fake Sheets is a model of how Google converts values; `selfTestTextPreservation` (section 3, step 7) confirms the real behaviour.
+It covers valid enquiries, invalid input, spoofed requests (Origin, secret, `X-Forwarded-For`), missing or malformed visitor IPs (fail closed), malformed `ipHash` values sent straight to Apps Script, valid IPv4/IPv6/local addresses, rate-limit exhaustion, duplicate and parallel duplicate submissions, the email cap and its summary, failed notifications and retries, overlapping retry runs, schema mismatch, concurrent submissions, a busy lock, text preservation, the honeypot, IP privacy and the upstream response contract. The fake Sheets is a model of how Google converts values; `selfTestTextPreservation` (section 3, step 7) confirms the real behaviour.
 
 **Locally against real Google:**
 
@@ -192,6 +195,8 @@ It covers valid enquiries, invalid input, spoofed requests (Origin, secret, `X-F
 | **`UNCONFIRMED`** | Search the inbox for the Enquiry ID. If the email isn't there, reply by hand, or set State to `FAILED` to resend. |
 | **`SUPPRESSED`, or a summary email** | The cap was reached, which usually means a burst of spam. Review the rows, set unwanted ones to `SPAM`, and reply to real ones. |
 | **"Action needed: website enquiries are being refused"** | Someone changed a header or added an unnamed column. Restore the exact headers from section 1 (move any extra column after K and give it a header), then run `setup` to confirm. Visitors were shown the retry message and email address in the meantime. |
+| **Every visitor gets the retry message; Vercel logs `no valid client IP in trusted request headers`** | Requests are reaching the function without Vercel's IP headers, for example through a proxy or tunnel in front of Vercel that drops them. Remove that proxy or restore the headers. The refusal is deliberate (fail closed); nothing was stored. |
+| **Vercel logs `backend rejected the enquiry: bad_request`** | Something other than our function, or an out-of-date copy of it, is calling Apps Script without a valid `ipHash`. Check that `APPS_SCRIPT_URL` is used only by this project. |
 | **Visitors report "handling a lot of enquiries"** | The lock was busy for over 10 s, usually during a very slow Google moment or a flood. Check Apps Script → Executions. |
 | **Rotate the shared secret** | Set the new value in the Apps Script property and in Vercel, then redeploy Vercel. Submissions in between see the retry message, and nothing is lost. |
 | **Rotate the IP hash key** | Change `ENQUIRY_IP_HASH_KEY` and redeploy. Per-IP history starts afresh; nothing else changes. |
@@ -215,6 +220,7 @@ There's no n8n setup yet. Two supported ways to connect:
 
 1. Build an n8n Webhook (POST) that:
    - checks `secret`;
+   - rejects a missing or malformed `ipHash` (43 base64url characters), with no shared fallback;
    - checks duplicates on `submissionId`;
    - rate-limits on `ipHash`;
    - writes the same 11 columns as text;

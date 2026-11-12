@@ -6,7 +6,7 @@
  * (the raw IP never reaches this script).
  *
  *   POST body (JSON, sent as text/plain):
- *     { secret, submissionId, ipHash, spam?, source, name, email, phone, company, businessType, interest, message }
+ *     { secret, submissionId, ipHash (required, 43-char base64url HMAC), spam?, source, name, email, phone, company, businessType, interest, message }
  *   Response (always HTTP 200 — Apps Script cannot set status codes — so read "ok"):
  *     { ok: true,  enquiryId: "NXT-20261112-7KQ2MD" }
  *     { ok: false, error: "validation", fields: { email: true } }
@@ -81,6 +81,8 @@ var SCHEMAS = {
 
 var EMAIL_RE = /^[^\s@<>()[\],;:"\\]+@[^\s@<>()[\],;:"\\]+\.[^\s@<>()[\],;:"\\]{2,}$/;
 var ID_RE = /^NXT-\d{8}-[A-Z2-9]{6}$/;
+// HMAC-SHA-256 of the visitor IP made by the Vercel function: 32 bytes as unpadded base64url = 43 characters.
+var IP_HASH_RE = /^[A-Za-z0-9_-]{43}$/;
 
 function SchemaError(message) { this.name = 'SchemaError'; this.message = message; }
 
@@ -91,6 +93,8 @@ function doPost(e) {
     var payload = parseBody_(e);
     if (!payload) return respond_({ ok: false, error: 'bad_request' });
     if (!isAuthorized_(payload.secret)) return respond_({ ok: false, error: 'unauthorized' });
+    // Fail closed: no per-visitor rate limit is possible without a valid IP hash, so refuse. Never a shared bucket.
+    if (!isValidIpHash_(payload.ipHash)) return respond_({ ok: false, error: 'bad_request' });
 
     var result = validate_(payload);
     if (!result.ok) return respond_({ ok: false, error: 'validation', fields: result.fields });
@@ -127,6 +131,10 @@ function parseBody_(e) {
     var data = JSON.parse(e.postData.contents);
     return data && typeof data === 'object' && !Array.isArray(data) ? data : null;
   } catch (_) { return null; }
+}
+
+function isValidIpHash_(h) {
+  return typeof h === 'string' && IP_HASH_RE.test(h);
 }
 
 function isAuthorized_(secret) {
@@ -170,7 +178,7 @@ function validate_(p) {
   out.email = out.email.toLowerCase();
   out.source = out.source || CONFIG.DEFAULT_SOURCE;
   out.submissionId = typeof p.submissionId === 'string' && /^[A-Za-z0-9-]{8,64}$/.test(p.submissionId) ? p.submissionId : '';
-  out.ipHash = typeof p.ipHash === 'string' && /^[A-Za-z0-9_-]{16,128}$/.test(p.ipHash) ? p.ipHash : 'unknown';
+  out.ipHash = p.ipHash;   // already checked by isValidIpHash_ in doPost
   out.spam = p.spam === 'honeypot';
   return { ok: true, enquiry: out };
 }
@@ -601,11 +609,16 @@ function selfTestTextPreservation() {
 function testSubmission() {
   var secret = PropertiesService.getScriptProperties().getProperty('ENQUIRY_SHARED_SECRET');
   var res = doPost({ postData: { contents: JSON.stringify({
-    secret: secret, submissionId: Utilities.getUuid(), ipHash: 'editor-test-0000000', source: 'Apps Script editor test',
+    secret: secret, submissionId: Utilities.getUuid(), ipHash: editorTestIpHash_(), source: 'Apps Script editor test',
     name: 'Test Person', email: CONFIG.DEFAULT_NOTIFY_EMAIL, phone: '+91 98765 43210', company: 'Test Co',
     businessType: 'Other', interest: 'Not sure yet', message: 'Test enquiry from the Apps Script editor. Safe to delete.'
   }) } });
   console.log(res.getContent());
+}
+
+/** A well-formed stand-in hash for editor tests (not derived from any IP). */
+function editorTestIpHash_() {
+  return Utilities.base64EncodeWebSafe(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, 'editor-test')).replace(/=+$/, '');
 }
 
 function respond_(obj) {

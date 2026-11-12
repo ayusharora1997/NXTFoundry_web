@@ -135,6 +135,7 @@ function makeWorld({ mailFails = false } = {}) {
     Utilities: {
       formatDate, getUuid: () => nodeCrypto.randomUUID(), DigestAlgorithm: { SHA_256: 'sha256' },
       computeDigest: (_, s) => [...nodeCrypto.createHash('sha256').update(s).digest()].map(b => b > 127 ? b - 256 : b),
+      base64EncodeWebSafe: bytes => Buffer.from(bytes.map(b => (b + 256) % 256)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
     },
   };
   vm.createContext(ctx);
@@ -170,14 +171,15 @@ const { POST } = await import(pathToFileURL(process.env.ENQUIRY_API_PATH || path
 let n = 0;
 const valid = (over = {}) => ({ name: 'Asha Rao', email: `asha${++n}@example.com`, phone: '', company: 'Rao Traders', businessType: 'Other', interest: 'Not sure yet',
   message: 'Our vendor ledgers never match.', submissionId: nodeCrypto.randomUUID(), elapsedMs: 9000, ...over });
-async function call(body, { origin = ORIGIN, ip = '203.0.113.7', headers = {}, contentType = 'application/json' } = {}) {
+async function call(body, { origin = ORIGIN, ip = '203.0.113.7', ipHeader = 'x-real-ip', headers = {}, contentType = 'application/json' } = {}) {
   const h = { 'content-type': contentType, ...headers };
   if (origin !== null) h.origin = origin;
-  if (ip !== null) h['x-real-ip'] = ip;
+  if (ip !== null) h[ipHeader] = ip;
   const res = await POST(new Request('https://nxtfoundry.in/api/enquiry', { method: 'POST', headers: h, body: typeof body === 'string' ? body : JSON.stringify(body) }));
   return { status: res.status, body: await res.json() };
 }
 const ID_RE = /^NXT-\d{8}-[A-Z2-9]{6}$/;
+const GOOD_HASH = nodeCrypto.createHmac('sha256', 'k').update('192.0.2.1').digest('base64url');   // 43 chars
 const ENQ = 'Website Enquiries', KEYS = 'Submission Keys', NOTES = 'Notifications';
 const state = id => (world.rows(NOTES).find(r => r[0] === id) || [])[1];
 
@@ -213,8 +215,8 @@ test('invalid input is rejected and nothing is stored', async () => {
   eq((await call('x'.repeat(20001))).status, 413);
   eq((await call(valid({ elapsedMs: 300 }))).body.error, 'too_fast');
   eq(world.rows(ENQ).length, 0); eq(upstreamBodies.length, 0, 'nothing forwarded');
-  eq(world.doPost({ secret: SECRET, name: 'x', email: 'bad', company: 'c', message: 'm' }).error, 'validation', 'Apps Script validates on its own');
-  eq(world.doPost({ secret: SECRET, name: 'x', email: 'a@b.co', company: 'c', message: 'm'.repeat(5001) }).error, 'validation');
+  eq(world.doPost({ secret: SECRET, ipHash: GOOD_HASH, name: 'x', email: 'bad', company: 'c', message: 'm' }).error, 'validation', 'Apps Script validates on its own');
+  eq(world.doPost({ secret: SECRET, ipHash: GOOD_HASH, name: 'x', email: 'a@b.co', company: 'c', message: 'm'.repeat(5001) }).error, 'validation');
 });
 
 test('spoofed requests: origin, secret and client IP headers', async () => {
@@ -378,6 +380,47 @@ test('privacy: raw IPs never stored, logged or forwarded', async () => {
   for (const ip of ips) ok(!everything.includes(ip), 'found raw IP ' + ip);
   const hashes = world.rows(KEYS).map(r => r[3]);
   ok(hashes.every(h => /^[A-Za-z0-9_-]{43}$/.test(h)) && hashes[0] !== hashes[1], 'HMAC hashes stored');
+});
+
+test('fail closed: missing or malformed visitor IP is refused before anything is forwarded', async () => {
+  const r = await call(valid(), { ip: null });
+  eq([r.status, r.body.error], [503, 'unavailable'], 'no trusted IP header');
+  const bad = ['', '   ', 'unknown', 'not-an-ip', '999.1.1.1', '1.2.3', '1.2.3.4.5', '01.2.3.4', '1.2.3.4 ; drop', 'abc::xyz',
+    '2001:db8::1::2', '::ffff:999.1.1.1', '[2001:db8::1]', 'localhost', '1.2.3.4/24', 'x'.repeat(60)];
+  for (const ip of bad) {
+    eq((await call(valid(), { ip })).status, 503, 'x-real-ip ' + JSON.stringify(ip));
+    eq((await call(valid(), { ip, ipHeader: 'x-vercel-forwarded-for' })).status, 503, 'x-vercel-forwarded-for ' + JSON.stringify(ip));
+  }
+  eq((await call(valid(), { ip: null, headers: { 'x-forwarded-for': '203.0.113.5' } })).status, 503, 'untrusted X-Forwarded-For is not a fallback');
+  // Vercel's own header wins over x-real-ip; a bad first entry is not rescued by a later one.
+  eq((await call(valid(), { ip: 'garbage', headers: { 'x-vercel-forwarded-for': '203.0.113.8' } })).status, 200, 'x-vercel-forwarded-for used');
+  eq((await call(valid(), { ip: null, headers: { 'x-vercel-forwarded-for': 'garbage, 203.0.113.9' } })).status, 503);
+  eq(upstreamBodies.length, 1, 'only the valid request reached Apps Script');
+  ok(!upstreamBodies.some(b => /"ipHash":"(unknown|)"/.test(b)), 'never a shared or empty hash');
+  ok(consoleOut.some(l => l.includes('no valid client IP')) && !consoleOut.some(l => l.includes('999.1.1.1') || l.includes('not-an-ip')), 'logged without the value');
+  eq(world.rows(ENQ).length, 1);
+});
+
+test('valid visitor IPs: IPv4, IPv6, IPv4-mapped and local dev addresses all work', async () => {
+  const goodIps = ['203.0.113.10', '2001:db8::10', '::ffff:203.0.113.11', '127.0.0.1', '::1', '::ffff:127.0.0.1', 'fe80::1'];
+  for (const ip of goodIps) eq((await call(valid(), { ip })).status, 200, ip);
+  eq((await call(valid(), { ip: '2001:db8::12', ipHeader: 'x-vercel-forwarded-for' })).status, 200, 'production header');
+  const hashes = world.rows(KEYS).map(r => r[3]);
+  eq(hashes.length, goodIps.length + 1); ok(hashes.every(h => /^[A-Za-z0-9_-]{43}$/.test(h)), 'all 43-char hashes');
+  eq(new Set(hashes).size, hashes.length, 'distinct visitors get distinct hashes');
+});
+
+test('Apps Script independently rejects a missing or malformed ipHash', async () => {
+  const bad = [undefined, null, '', 'unknown', 'short', GOOD_HASH + '=', GOOD_HASH + 'A', GOOD_HASH.slice(1), GOOD_HASH.slice(0, 42) + '+',
+    GOOD_HASH.slice(0, 42) + '/', 'A'.repeat(42) + ' ', 12345, ['x'], { h: GOOD_HASH }];
+  for (const ipHash of bad) {
+    const b = { ...valid(), secret: SECRET }; if (ipHash !== undefined) b.ipHash = ipHash;
+    eq(world.doPost(b).error, 'bad_request', 'ipHash ' + JSON.stringify(ipHash));
+  }
+  eq(world.rows(ENQ).length, 0, 'nothing stored'); eq(world.rows(KEYS).length, 0);
+  eq(world.doPost({ ...valid(), secret: SECRET, ipHash: GOOD_HASH }).ok, true, 'a well-formed hash is accepted');
+  world.ctx.testSubmission();
+  ok(world.logs.some(l => l.includes('"ok":true')), 'editor testSubmission uses a valid stand-in hash');
 });
 
 test('upstream contract: success only with ok, 2xx and a well-formed ID', async () => {

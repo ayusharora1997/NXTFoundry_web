@@ -70,9 +70,18 @@ function allowedOrigins(): string[] {
  * so a client cannot spoof them; x-forwarded-for is never read. (In local dev, scripts/enquiry-dev.mjs strips
  * any client-sent copies and sets x-real-ip from the socket.)
  */
-function clientIp(request: Request): string {
-  const v = request.headers.get('x-vercel-forwarded-for') || request.headers.get('x-real-ip') || '';
-  return v.split(',')[0].trim();
+export function clientIp(request: Request): string | null {
+  const v = request.headers.get('x-vercel-forwarded-for') ?? request.headers.get('x-real-ip');
+  if (v === null) return null;
+  const ip = v.split(',')[0].trim();
+  return isIpAddress(ip) ? ip : null;
+}
+
+/** Strict IPv4 (four 0-255 octets, no leading zeros) or a valid IPv6 literal. */
+export function isIpAddress(s: string): boolean {
+  if (/^(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)(\.(25[0-5]|2[0-4]\d|1\d\d|[1-9]?\d)){3}$/.test(s)) return true;
+  if (!s.includes(':') || !/^[0-9A-Fa-f:.]{2,45}$/.test(s)) return false;
+  try { return new URL(`http://[${s}]/`).hostname.length > 2 } catch { return false }   // URL parser validates IPv6
 }
 
 async function hmacIp(ip: string, key: string): Promise<string> {
@@ -129,9 +138,14 @@ export async function POST(request: Request): Promise<Response> {
     console.error('[enquiry] missing env var(s):', [!url && 'APPS_SCRIPT_URL', !secret && 'ENQUIRY_SHARED_SECRET', !ipKey && 'ENQUIRY_IP_HASH_KEY'].filter(Boolean).join(', '));
     return reply(503, { ok: false, error: 'unavailable' });
   }
+  // Fail closed: without a trusted, well-formed visitor IP there is no per-visitor rate limit, so refuse
+  // rather than fall back to a shared bucket. The value itself is never logged.
   const ip = clientIp(request);
-  if (!ip) console.warn('[enquiry] no client IP in request metadata; using the shared "unknown" rate-limit bucket');
-  const ipHash = ip ? await hmacIp(ip, ipKey) : 'unknown';
+  if (!ip) {
+    console.error('[enquiry] no valid client IP in trusted request headers; refused');
+    return reply(503, { ok: false, error: 'unavailable' });
+  }
+  const ipHash = await hmacIp(ip, ipKey);
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
