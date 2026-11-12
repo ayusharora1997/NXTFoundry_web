@@ -1,0 +1,24 @@
+# Build, tests and dependency audit on every push and pull request. Vercel deploys main independently;
+# a red check here is the signal to roll back in Vercel or fix forward.
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm run test:enquiry
+      - run: npm run test:recon
+      - run: npm audit --audit-level=high
