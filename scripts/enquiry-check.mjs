@@ -88,7 +88,7 @@ class FakeRange {
 function makeWorld({ mailFails = false } = {}) {
   const world = {
     sheets: new Map(), mails: [], logs: [], props: new Map([['ENQUIRY_SHARED_SECRET', SECRET]]), cache: new Map(),
-    lock: { held: false, external: false }, writesOutsideLock: [], mailFails,
+    lock: { held: false, external: false }, writesOutsideLock: [], mailFails, quota: 1500,
     recordWrite(sheet) { if (!this.lock.held && sheet.name !== 'Notifications') this.writesOutsideLock.push(sheet.name); },
     newProtection(sheet, type) {
       const p = { type, desc: '', warn: false, setDescription(d) { this.desc = d; return this; }, setWarningOnly(w) { this.warn = w; return this; }, getDescription() { return this.desc; } };
@@ -125,11 +125,11 @@ function makeWorld({ mailFails = false } = {}) {
     LockService: { getScriptLock: () => lockObj },
     MailApp: {
       sendEmail(m) {
-        if (world.mailFails) throw new Error('Service invoked too many times for one day: email.');
-        world.mails.push(m);
+        if (world.mailFails || world.quota <= 0) throw new Error('Service invoked too many times for one day: email.');
+        world.quota--; world.mails.push(m);
         if (world.onSend) { const f = world.onSend; world.onSend = null; f(); }
       },
-      getRemainingDailyQuota: () => 1500,
+      getRemainingDailyQuota: () => world.quota,
     },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: s => ({ setMimeType() { return this; }, getContent: () => s }) },
     Utilities: {
@@ -167,6 +167,7 @@ function setEnv(over = {}) {
   for (const [k, v] of Object.entries(over)) if (v === undefined) delete process.env[k];
 }
 const { POST } = await import(pathToFileURL(process.env.ENQUIRY_API_PATH || path.join(root, 'api/enquiry.ts')).href);
+const { composePhone, COUNTRIES } = await import(pathToFileURL(path.join(root, 'src/countries.ts')).href);
 
 let n = 0;
 const valid = (over = {}) => ({ name: 'Asha Rao', email: `asha${++n}@example.com`, phone: '', company: 'Rao Traders', businessType: 'Other', interest: 'Not sure yet',
@@ -279,6 +280,19 @@ test('lock busy: visitor gets a retry message, nothing half-written', async () =
   world.lock.external = true;
   const r = await call(valid());
   eq([r.status, r.body.error], [503, 'busy']); eq(world.rows(ENQ).length, 0); eq(world.mails.length, 0);
+});
+
+test("email cap follows Google's real daily quota (e.g. a 100/day account), keeping a reserve", async () => {
+  world.quota = 12;                                   // reserve is 10
+  const ids = [];
+  for (let i = 0; i < 4; i++) { const r = await call(valid(), { ip: `198.20.0.${i + 1}` }); eq(r.status, 200); ids.push(r.body.enquiryId); }
+  eq(world.rows(ENQ).length, 4, 'every enquiry stored');
+  eq(ids.map(state), ['SENT', 'SENT', 'SUPPRESSED', 'SUPPRESSED'], 'stops at the reserve, before Google refuses');
+  eq(world.quota, 10);
+  world.ctx.processNotifications();
+  eq(world.mails.length, 3, 'the summary still goes out from the reserve'); eq(ids.slice(2).map(state), ['SUMMARISED', 'SUMMARISED']);
+  world.quota = 0; world.ctx.processNotifications();  // nothing pending, nothing attempted
+  eq(world.mails.length, 3);
 });
 
 test('email cap: enquiries still stored, extra notifications SUPPRESSED, one summary later', async () => {
@@ -421,6 +435,24 @@ test('Apps Script independently rejects a missing or malformed ipHash', async ()
   eq(world.doPost({ ...valid(), secret: SECRET, ipHash: GOOD_HASH }).ok, true, 'a well-formed hash is accepted');
   world.ctx.testSubmission();
   ok(world.logs.some(l => l.includes('"ok":true')), 'editor testSubmission uses a valid stand-in hash');
+});
+
+test('phone country picker: composed numbers are international and accepted end to end', async () => {
+  const cases = [
+    ['in', '98765 43210', '+91 98765 43210'], ['in', '080 4000 1234', '+91 80 4000 1234'], ['gb', '07700 900123', '+44 7700 900123'],
+    ['us', '(415) 555-0132', '+1 (415) 555-0132'], ['jm', '555 0123', '+1 876 555 0123'], ['it', '06 1234 5678', '+39 06 1234 5678'],
+    ['in', '+44 20 7946 0958', '+44 20 7946 0958'], ['in', '', ''], ['in', '   ', ''],
+  ];
+  for (const [iso, typed, want] of cases) eq(composePhone(iso, typed), want, iso + ' ' + JSON.stringify(typed));
+  ok(COUNTRIES.length >= 240 && new Set(COUNTRIES.map(c => c.iso)).size === COUNTRIES.length, 'country list complete and unique');
+  for (const [i, [iso, typed, want]] of cases.filter(c => c[2]).entries()) {
+    const r = await call(valid({ phone: composePhone(iso, typed) }), { ip: `203.0.113.${120 + i}` });
+    eq(r.status, 200, want);
+  }
+  eq(world.rows(ENQ).map(r => r[4]), cases.filter(c => c[2]).map(c => c[2]), 'stored exactly, leading + kept as text');
+  // Longest dial code + longest national number the form allows still fits the 25-character limit.
+  const longest = Math.max(...COUNTRIES.map(c => c.dial.length));
+  ok(('+' + 'x'.repeat(longest) + ' ').length + (25 - 2 - longest) <= 25, 'maxLength arithmetic');
 });
 
 test('upstream contract: success only with ok, 2xx and a well-formed ID', async () => {

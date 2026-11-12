@@ -77,7 +77,7 @@ Browser form ──POST /api/enquiry──▶ Vercel function (api/enquiry.ts) �
 | IP privacy | Vercel | The IP becomes HMAC-SHA-256 with `ENQUIRY_IP_HASH_KEY`. Only the hash leaves the function; the raw IP is never stored or logged. |
 | Per-IP limits | Apps Script | 5 stored enquiries per 10 min and 20 per 24 h, per IP hash. Counted from the Submission Keys tab under the lock, so they survive cache eviction. |
 | Per-email limit | Apps Script | 5 per hour per email address, from any IP. |
-| Email cap | Apps Script | 30 notification emails an hour and 200 a day, counted under the lock. Above it, enquiries are still stored and marked `SUPPRESSED`. Google Workspace allows 1,500 recipients a day (2,000 within our domain). |
+| Email cap | Apps Script | 30 notification emails an hour and 200 a day, counted under the lock, **and** never past Google’s real remaining daily quota: individual emails stop while 10 or fewer remain, keeping those for the summary and alert emails. The quota depends on the account; a new or trial Workspace account may get only 100 a day (`setup` prints it). Above any of these limits, enquiries are still stored and marked `SUPPRESSED`. |
 | Honeypot | Browser + Vercel | Hidden field `nxt_hp_2f9` labelled "Leave this field empty", with password-manager ignore hints. A hit is stored as `SPAM`, not emailed. |
 | Fill time | Vercel | Under 2.5 s is refused with "press send again". The browser reports the time, so it only stops naive bots; the limits above do the real work. |
 | Validation | Both | Required fields, email format, phone (optional, 7–15 digits), and length limits (name 100, email 254, phone 25, company 150, business type 80, interest 100, message 5,000). Both sides refuse rather than cut values short, and remove control characters. |
@@ -100,6 +100,8 @@ Each step gives up before the one above it, so the visitor always gets a real an
 ## 3. Create the sheet and the script
 
 Do this signed in to the Google Workspace account that should own the data and send the email.
+
+> **Choose the sending account carefully.** Notification emails are sent *from* the account that deploys the script. If that account is also the recipient (for example the script runs as you@ and `NOTIFY_EMAIL` is also you@), Gmail files the messages under **All Mail / Sent**, not the Inbox. For production, deploy from an account that is **not** the recipient (for example a dedicated `website@nxtfoundry.in` sending to `hello@nxtfoundry.in`), or make sure hello@ is its own mailbox or Google Group rather than an alias of the deploying account.
 
 1. Create a Google Sheet, for example **NXT Foundry — Website Enquiries**. You don't need to add tabs; the script creates them. If you do create them, the headers must match section 1 exactly.
 2. In the sheet, open **Extensions → Apps Script** and rename the project `NXT Foundry Enquiries`.
@@ -193,6 +195,8 @@ It covers valid enquiries, invalid input, spoofed requests (Origin, secret, `X-F
 | **`FAILED` notifications** | Usually the Gmail daily quota. Nothing to do: the daily trigger resends them. To hurry it, run `processNotifications`. |
 | **`GAVE_UP`** | The enquiry is in the sheet; reply from Gmail by hand. Optionally set State back to `FAILED` (Attempts `0`) to retry. |
 | **`UNCONFIRMED`** | Search the inbox for the Enquiry ID. If the email isn't there, reply by hand, or set State to `FAILED` to resend. |
+| **A refused request shows as "Completed" in Apps Script → Executions** | That is expected. `doPost` catches the error and returns a safe reply, so Google marks the run Completed. Click the run to see its log; the reason is the line starting `doPost failed:` (for example a header mismatch). |
+| **Notification emails arrive in All Mail but not the Inbox** | The script is emailing the account it runs as (see the note in section 3). Search `subject:"New enquiry"`, add a Gmail filter with a label, or deploy production from a different account. |
 | **`SUPPRESSED`, or a summary email** | The cap was reached, which usually means a burst of spam. Review the rows, set unwanted ones to `SPAM`, and reply to real ones. |
 | **"Action needed: website enquiries are being refused"** | Someone changed a header or added an unnamed column. Restore the exact headers from section 1 (move any extra column after K and give it a header), then run `setup` to confirm. Visitors were shown the retry message and email address in the meantime. |
 | **Every visitor gets the retry message; Vercel logs `no valid client IP in trusted request headers`** | Requests are reaching the function without Vercel's IP headers, for example through a proxy or tunnel in front of Vercel that drops them. Remove that proxy or restore the headers. The refusal is deliberate (fail closed); nothing was stored. |

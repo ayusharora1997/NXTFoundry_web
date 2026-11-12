@@ -45,9 +45,13 @@ var CONFIG = {
   EMAIL_LIMIT: 5,     EMAIL_WINDOW_MS: 60 * 60 * 1000,
 
   // Overall email notification cap. Above it enquiries are still stored, marked SUPPRESSED,
-  // and listed in one summary email by processNotifications(). Workspace allows 1,500-2,000 a day.
+  // and listed in one summary email by processNotifications(). The cap also follows Google's real
+  // remaining daily quota, which varies by account (new or trial Workspace accounts get 100 a day,
+  // established ones 1,500-2,000): individual emails stop while MAIL_QUOTA_RESERVE or fewer remain,
+  // keeping those for the summary and the schema alert.
   EMAIL_CAP_HOUR: 30,
   EMAIL_CAP_DAY: 200,
+  MAIL_QUOTA_RESERVE: 10,
 
   // Notification retries (processNotifications, run daily by a time trigger).
   MAX_ATTEMPTS: 5,
@@ -231,6 +235,12 @@ function intake_(q) {
   return { id: id, enquiry: q, timestamp: now, sendNow: state === 'SENDING' };
 }
 
+/** True when Google's remaining daily email quota is at or below the reserve. If the quota can't be read, don't block. */
+function mailQuotaLow_() {
+  try { return MailApp.getRemainingDailyQuota() <= CONFIG.MAIL_QUOTA_RESERVE; }
+  catch (err) { console.warn('Could not read mail quota: ' + err); return false; }
+}
+
 function emailCapReached_(notes, nowMs) {
   var hour = 0, day = 0;
   readRecent_(notes, SCHEMAS.notifications.headers.length).forEach(function (r) {
@@ -241,7 +251,7 @@ function emailCapReached_(notes, nowMs) {
     if (nowMs - t < 60 * 60 * 1000) hour++;
     if (nowMs - t < 24 * 60 * 60 * 1000) day++;
   });
-  return hour >= CONFIG.EMAIL_CAP_HOUR || day >= CONFIG.EMAIL_CAP_DAY;
+  return hour >= CONFIG.EMAIL_CAP_HOUR || day >= CONFIG.EMAIL_CAP_DAY || mailQuotaLow_();
 }
 
 /* ================================================================== sheets */
@@ -498,7 +508,7 @@ function sendSummary_(notes, enquiries) {
       to: notifyAddress_(),
       name: 'NXT Foundry Website',
       subject: ids.length + ' website enquir' + (ids.length === 1 ? 'y' : 'ies') + ' stored without an individual email',
-      body: 'The hourly or daily email cap was reached, so these enquiries were stored in the sheet without ' +
+      body: 'The email cap was reached (hourly or daily limit, or Google’s daily email quota running low), so these enquiries were stored in the sheet without ' +
             'their own notification. Each is in "Website Enquiries" with its details:\n\n' + lines.join('\n')
     });
     withLock_(function () { ids.forEach(function (id) { setNotification_(notes, id, 'SUMMARISED', null, ''); }); });
