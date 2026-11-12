@@ -24,11 +24,15 @@
  * Script properties (Project Settings -> Script properties):
  *   ENQUIRY_SHARED_SECRET  required  same value as the Vercel env var of the same name
  *   NOTIFY_EMAIL           optional  defaults to hello@nxtfoundry.in
+ *   SEND_AS                optional  "From" address, defaults to hello@nxtfoundry.in (Gmail service only; must be a
+ *                                    verified "Send mail as" alias of the account running the script)
  *   SPREADSHEET_ID         optional  only if this script is NOT bound to the enquiries spreadsheet
  */
 
 var CONFIG = {
   DEFAULT_NOTIFY_EMAIL: 'hello@nxtfoundry.in',
+  DEFAULT_SEND_AS: 'hello@nxtfoundry.in',   // must be a verified "Send mail as" alias of the account running the script
+  SENDER_NAME: 'NXT Foundry Website',
   DEFAULT_SOURCE: 'Website contact form',
   ID_PREFIX: 'NXT',
   TZ: 'Asia/Kolkata',
@@ -397,14 +401,81 @@ function sendEnquiryEmail_(id, timestamp, q) {
     }).join('') + '</table><p style="font:14px Arial,sans-serif;white-space:pre-wrap;margin-top:16px">' +
     esc_(q.message) + '</p><p style="font:12px Arial,sans-serif;color:#888">Reply to this email to answer ' +
     esc_(q.name) + ' directly.</p>';
-  MailApp.sendEmail({
+  sendMail_({
     to: notifyAddress_(),
     replyTo: q.email,   // validated by validate_(); a single address, no list separators possible
-    name: 'NXT Foundry Website',
     subject: 'New enquiry ' + id + ' — ' + q.name + ' (' + q.company + ')',
     body: text,
     htmlBody: html
   });
+}
+
+/* ------------------------------------------------------------------ sending */
+
+function sendAsAddress_() {
+  return PropertiesService.getScriptProperties().getProperty('SEND_AS') || CONFIG.DEFAULT_SEND_AS;
+}
+
+/**
+ * Sends one notification email. Returns 'gmail' or 'mailapp'.
+ *
+ * With the Gmail advanced service enabled (appsscript.json + Services panel) it sends through the Gmail API using
+ * only the gmail.send permission, From "NXT Foundry Website <SEND_AS>" (default hello@nxtfoundry.in). Gmail sends it
+ * from that address when it is a verified "Send mail as" alias of the account running the script; if it is not,
+ * Gmail itself replaces it with the account's own address, so the email still goes out.
+ * Without the Gmail service it falls back to MailApp, which always sends from the account running the script.
+ */
+function sendMail_(m) {
+  [m.to, m.replyTo].forEach(function (a) {
+    if (a !== undefined && !EMAIL_RE.test(a)) throw new Error('refusing to send: invalid address');
+  });
+  if (typeof Gmail !== 'undefined' && Gmail.Users && Gmail.Users.Messages) {
+    var from = sendAsAddress_();
+    if (!EMAIL_RE.test(from)) throw new Error('refusing to send: invalid SEND_AS address');
+    Gmail.Users.Messages.send({ raw: Utilities.base64EncodeWebSafe(buildMime_(from, m), Utilities.Charset.UTF_8) }, 'me');
+    return 'gmail';
+  }
+  var opts = { to: m.to, name: CONFIG.SENDER_NAME, subject: m.subject, body: m.body };
+  if (m.htmlBody) opts.htmlBody = m.htmlBody;
+  if (m.replyTo) opts.replyTo = m.replyTo;
+  MailApp.sendEmail(opts);
+  return 'mailapp';
+}
+
+/**
+ * RFC 5322 message. Every header value is either a validated address or an RFC 2047 encoded-word (base64), and the
+ * bodies are base64 too, so nothing a visitor types can add or break a header line.
+ */
+function buildMime_(from, m) {
+  var boundary = 'nxt_' + Utilities.getUuid().replace(/-/g, '');
+  var head = [
+    'From: ' + encodeWord_(CONFIG.SENDER_NAME) + ' <' + from + '>',
+    'To: ' + m.to,
+    m.replyTo ? 'Reply-To: ' + m.replyTo : null,
+    'Subject: ' + encodeWord_(m.subject),
+    'MIME-Version: 1.0'
+  ].filter(function (h) { return h !== null; });
+  var part = function (type, text) {
+    return 'Content-Type: ' + type + '; charset=UTF-8\r\nContent-Transfer-Encoding: base64\r\n\r\n' + b64Lines_(text);
+  };
+  if (!m.htmlBody) return head.join('\r\n') + '\r\n' + part('text/plain', m.body) + '\r\n';
+  return head.join('\r\n') + '\r\nContent-Type: multipart/alternative; boundary="' + boundary + '"\r\n\r\n' +
+    '--' + boundary + '\r\n' + part('text/plain', m.body) + '\r\n' +
+    '--' + boundary + '\r\n' + part('text/html', m.htmlBody) + '\r\n' +
+    '--' + boundary + '--\r\n';
+}
+
+/** UTF-8 encoded-words, split so each stays short and no character is cut in half. */
+function encodeWord_(s) {
+  var chars = Array.from(String(s)), words = [];
+  for (var i = 0; i < chars.length; i += 15) {
+    words.push('=?UTF-8?B?' + Utilities.base64Encode(chars.slice(i, i + 15).join(''), Utilities.Charset.UTF_8) + '?=');
+  }
+  return words.join('\r\n ') || '""';
+}
+
+function b64Lines_(text) {
+  return Utilities.base64Encode(String(text), Utilities.Charset.UTF_8).replace(/(.{76})/g, '$1\r\n');
 }
 
 function esc_(s) {
@@ -417,9 +488,8 @@ function alertSchemaProblem_(detail) {
     var cache = CacheService.getScriptCache();
     if (cache.get('schema-alert')) return;
     cache.put('schema-alert', '1', 60 * 60);
-    MailApp.sendEmail({
+    sendMail_({
       to: notifyAddress_(),
-      name: 'NXT Foundry Website',
       subject: 'Action needed: website enquiries are being refused',
       body: 'The enquiry backend refused to write because a sheet does not have the expected columns:\n\n' + detail +
             '\n\nVisitors are being asked to try again or email us. Put the header row back exactly as documented ' +
@@ -504,9 +574,8 @@ function sendSummary_(notes, enquiries) {
     return q ? id + ' — ' + q.name + ', ' + q.company + ' <' + q.email + '>' : id;
   });
   try {
-    MailApp.sendEmail({
+    sendMail_({
       to: notifyAddress_(),
-      name: 'NXT Foundry Website',
       subject: ids.length + ' website enquir' + (ids.length === 1 ? 'y' : 'ies') + ' stored without an individual email',
       body: 'The email cap was reached (hourly or daily limit, or Google’s daily email quota running low), so these enquiries were stored in the sheet without ' +
             'their own notification. Each is in "Website Enquiries" with its details:\n\n' + lines.join('\n')

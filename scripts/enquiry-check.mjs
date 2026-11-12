@@ -85,7 +85,25 @@ class FakeRange {
   }
 }
 
-function makeWorld({ mailFails = false } = {}) {
+// Decodes what the code hands to Gmail.Users.Messages.send, so tests check the real headers and bodies.
+function parseMime(raw) {
+  const text = Buffer.from(raw.replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8');
+  const headBlock = text.slice(0, text.indexOf('\r\n\r\n'));
+  const headers = {};
+  for (const line of headBlock.replace(/\r\n[ \t]/g, ' ').split('\r\n')) {
+    const i = line.indexOf(':'); headers[line.slice(0, i)] = line.slice(i + 1).trim();
+  }
+  // RFC 2047: whitespace between two encoded-words is dropped; other whitespace is kept.
+  const words = v => v.replace(/\?=\s+(?==\?UTF-8\?B\?)/g, '?=').replace(/=\?UTF-8\?B\?([^?]*)\?=/g, (_, b) => Buffer.from(b, 'base64').toString('utf8'));
+  const part = type => {
+    const m = new RegExp('Content-Type: ' + type + '; charset=UTF-8\\r\\nContent-Transfer-Encoding: base64\\r\\n\\r\\n([A-Za-z0-9+/=\\r\\n]+)').exec(text);
+    return m ? Buffer.from(m[1].replace(/\r\n/g, ''), 'base64').toString('utf8') : undefined;
+  };
+  return { headerNames: Object.keys(headers), from: words(headers.From), to: headers.To, replyTo: headers['Reply-To'],
+    subject: words(headers.Subject), body: part('text/plain'), htmlBody: part('text/html'), rawHeaders: headBlock };
+}
+
+function makeWorld({ mailFails = false, gmail = true } = {}) {
   const world = {
     sheets: new Map(), mails: [], logs: [], props: new Map([['ENQUIRY_SHARED_SECRET', SECRET]]), cache: new Map(),
     lock: { held: false, external: false }, writesOutsideLock: [], mailFails, quota: 1500,
@@ -113,6 +131,11 @@ function makeWorld({ mailFails = false } = {}) {
     return pattern.replace(/'([^']*)'|yyyy|MMM|MM|dd|d|HH|mm|ss/g, (m, lit) => lit !== undefined ? lit : String(tok[m]));
   };
   const log = level => (...a) => world.logs.push(level + ': ' + a.join(' '));
+  const deliverMail = m => {
+    if (world.mailFails || world.quota <= 0) throw new Error('Service invoked too many times for one day: email.');
+    world.quota--; world.mails.push(m);
+    if (world.onSend) { const f = world.onSend; world.onSend = null; f(); }
+  };
   const ctx = {
     console: { log: log('log'), warn: log('warn'), error: log('error') },
     SpreadsheetApp: {
@@ -124,18 +147,22 @@ function makeWorld({ mailFails = false } = {}) {
     CacheService: { getScriptCache: () => ({ get: k => world.cache.get(k) ?? null, put: (k, v) => world.cache.set(k, v) }) },
     LockService: { getScriptLock: () => lockObj },
     MailApp: {
-      sendEmail(m) {
-        if (world.mailFails || world.quota <= 0) throw new Error('Service invoked too many times for one day: email.');
-        world.quota--; world.mails.push(m);
-        if (world.onSend) { const f = world.onSend; world.onSend = null; f(); }
-      },
+      sendEmail(m) { deliverMail({ ...m, via: 'mailapp' }); },
       getRemainingDailyQuota: () => world.quota,
     },
+    Gmail: gmail ? { Users: { Messages: { send(resource, userId) {
+      if (userId !== 'me' || typeof resource?.raw !== 'string') throw new Error('bad Gmail.send call');
+      deliverMail({ ...parseMime(resource.raw), via: 'gmail' });
+      return { id: 'msg' };
+    } } } } : undefined,
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: s => ({ setMimeType() { return this; }, getContent: () => s }) },
     Utilities: {
       formatDate, getUuid: () => nodeCrypto.randomUUID(), DigestAlgorithm: { SHA_256: 'sha256' },
       computeDigest: (_, s) => [...nodeCrypto.createHash('sha256').update(s).digest()].map(b => b > 127 ? b - 256 : b),
-      base64EncodeWebSafe: bytes => Buffer.from(bytes.map(b => (b + 256) % 256)).toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
+      Charset: { UTF_8: 'UTF-8' },
+      base64Encode: s => Buffer.from(String(s), 'utf8').toString('base64'),
+      base64EncodeWebSafe: v => (typeof v === 'string' ? Buffer.from(v, 'utf8') : Buffer.from(v.map(b => (b + 256) % 256)))
+        .toString('base64').replace(/\+/g, '-').replace(/\//g, '_'),
     },
   };
   vm.createContext(ctx);
@@ -453,6 +480,47 @@ test('phone country picker: composed numbers are international and accepted end 
   // Longest dial code + longest national number the form allows still fits the 25-character limit.
   const longest = Math.max(...COUNTRIES.map(c => c.dial.length));
   ok(('+' + 'x'.repeat(longest) + ' ').length + (25 - 2 - longest) <= 25, 'maxLength arithmetic');
+});
+
+test('notification email: sent via Gmail as hello@ with reply-to the visitor; headers cannot be injected', async () => {
+  const b = valid({ name: 'Zoë Ångström-Ñúñez', company: 'Ünïcode & Co <script>', email: 'zoe@example.com' });
+  const r = await call(b);
+  eq(r.status, 200); eq(world.mails.length, 1);
+  const m = world.mails[0];
+  eq([m.via, m.from, m.to, m.replyTo], ['gmail', 'NXT Foundry Website <hello@nxtfoundry.in>', 'hello@nxtfoundry.in', 'zoe@example.com']);
+  eq(m.subject, `New enquiry ${r.body.enquiryId} — Zoë Ångström-Ñúñez (Ünïcode & Co <script>)`, 'unicode subject intact');
+  eq(m.headerNames, ['From', 'To', 'Reply-To', 'Subject', 'MIME-Version', 'Content-Type'], 'only our headers');
+  ok(m.htmlBody.includes('&lt;script&gt;') && !m.htmlBody.includes('<script>'), 'HTML escaped');
+  ok(m.body.includes(b.message), 'plain-text body');
+  ok(m.rawHeaders.split('\r\n').every(l => l.length <= 998 && /^[ -~]*$/.test(l)), 'header lines ASCII and within limits');
+  // A long, all-unicode subject is split into short encoded-words without breaking characters.
+  const long = '名'.repeat(100);
+  const r2 = await call(valid({ name: long }), { ip: '203.0.113.140' });
+  const m2 = world.mails[1];
+  eq(m2.subject, `New enquiry ${r2.body.enquiryId} — ${long} (Rao Traders)`);
+  ok((m2.rawHeaders.match(/=\?UTF-8\?B\?[^?]*\?=/g) || []).every(w => w.length <= 75), 'encoded-words <= 75 chars');
+});
+
+test('notification email: SEND_AS can be changed; an invalid one fails safely and keeps the enquiry', async () => {
+  world.props.set('SEND_AS', 'support@nxtfoundry.in');
+  await call(valid());
+  eq(world.mails[0].from, 'NXT Foundry Website <support@nxtfoundry.in>');
+  world.props.set('SEND_AS', 'not an address\r\nBcc: x@evil.example');
+  const r = await call(valid(), { ip: '203.0.113.141' });
+  eq(r.status, 200, 'visitor still gets success'); eq(state(r.body.enquiryId), 'FAILED'); eq(world.mails.length, 1, 'nothing sent');
+  eq(world.rows(ENQ).length, 2, 'enquiry stored');
+  world.props.delete('SEND_AS'); world.props.set('NOTIFY_EMAIL', 'not-an-email');   // live test 5
+  const r3 = await call(valid(), { ip: '203.0.113.142' });
+  eq(r3.status, 200); eq(state(r3.body.enquiryId), 'FAILED'); eq(world.mails.length, 1, 'never sent to a bad recipient');
+});
+
+test('notification email: without the Gmail service it falls back to MailApp (from the script account)', async () => {
+  world = makeWorld({ gmail: false });
+  const r = await call(valid({ email: 'fallback@example.com' }));
+  eq(r.status, 200); eq(world.mails.length, 1);
+  const m = world.mails[0];
+  eq([m.via, m.name, m.to, m.replyTo], ['mailapp', 'NXT Foundry Website', 'hello@nxtfoundry.in', 'fallback@example.com']);
+  eq(state(r.body.enquiryId), 'SENT');
 });
 
 test('upstream contract: success only with ok, 2xx and a well-formed ID', async () => {

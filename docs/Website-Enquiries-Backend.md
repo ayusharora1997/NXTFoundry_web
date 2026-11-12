@@ -82,7 +82,7 @@ Browser form ──POST /api/enquiry──▶ Vercel function (api/enquiry.ts) �
 | Fill time | Vercel | Under 2.5 s is refused with "press send again". The browser reports the time, so it only stops naive bots; the limits above do the real work. |
 | Validation | Both | Required fields, email format, phone (optional, 7–15 digits), and length limits (name 100, email 254, phone 25, company 150, business type 80, interest 100, message 5,000). Both sides refuse rather than cut values short, and remove control characters. |
 | Formula and type safety | Apps Script | Cells starting with `= + - @`, tab or CR get Sheets' quote prefix. Every other cell is set to plain-text format before writing. |
-| Email safety | Apps Script | The recipient is fixed (`NOTIFY_EMAIL` or hello@nxtfoundry.in). Reply-to is one validated address that can't contain list separators. The HTML body is escaped. |
+| Email safety | Apps Script | Notifications go to a fixed recipient (`NOTIFY_EMAIL`, default hello@nxtfoundry.in), sent **from `NXT Foundry Website <hello@nxtfoundry.in>`** through the Gmail API with only the **send** permission (`gmail.send`), so the script can never read or delete mail. Reply-to is the visitor’s validated address. Every recipient and sender address is validated before sending, and visitor text appears only inside base64-encoded subject words and bodies, so it cannot add or change headers. The HTML body is escaped. If the Gmail service is not enabled, mail falls back to `MailApp`, sent from the account running the script. |
 | Duplicates | Apps Script | Each form attempt has a `submissionId`, kept across retries. It is looked up in Submission Keys under the lock, so a retry returns the original ID. |
 | Concurrency | Apps Script | Every intake, and every retry claim, runs under the script lock. The email is sent after the lock is released. |
 | Safe errors | Both | Visitors only see generic messages. Details go to Vercel logs (`[enquiry]`, never field values or IPs) and Apps Script → Executions. |
@@ -101,7 +101,7 @@ Each step gives up before the one above it, so the visitor always gets a real an
 
 Do this signed in to the Google Workspace account that should own the data and send the email.
 
-> **Choose the sending account carefully.** Notification emails are sent *from* the account that deploys the script. If that account is also the recipient (for example the script runs as you@ and `NOTIFY_EMAIL` is also you@), Gmail files the messages under **All Mail / Sent**, not the Inbox. For production, deploy from an account that is **not** the recipient (for example a dedicated `website@nxtfoundry.in` sending to `hello@nxtfoundry.in`), or make sure hello@ is its own mailbox or Google Group rather than an alias of the deploying account.
+> **Sender and inbox.** The script runs as the account that deploys it, but emails are sent **from hello@** (setting `SEND_AS`), provided hello@ is a verified **Send mail as** address of that account (Gmail → Settings → Accounts). If it is not, Gmail sends from the account’s own address instead. If the recipient is the same mailbox as the sender (for example hello@ is an alias of the deploying account), Gmail files notifications under **All Mail**, not the Inbox; use a Gmail filter with a label, or deploy from a separate account.
 
 1. Create a Google Sheet, for example **NXT Foundry — Website Enquiries**. You don't need to add tabs; the script creates them. If you do create them, the headers must match section 1 exactly.
 2. In the sheet, open **Extensions → Apps Script** and rename the project `NXT Foundry Enquiries`.
@@ -113,7 +113,8 @@ Do this signed in to the Google Workspace account that should own the data and s
      node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
      ```
    - `NOTIFY_EMAIL` (optional): only if enquiries should go somewhere other than hello@nxtfoundry.in.
-6. Run **`setup`** and approve the permissions (Sheets and send email). It:
+   - `SEND_AS` (optional): the "From" address, if not hello@nxtfoundry.in. It must be a verified Send mail as address.
+6. Run **`setup`** and approve the permissions: Google Sheets, **"Send email on your behalf"** (Gmail, send only) and "Send email as you" (fallback). The Gmail service is switched on by `appsscript.json`, and it appears under **Services** in the editor. `setup`:
    - creates the three tabs;
    - checks every header row (it never rewrites one);
    - adds the Status dropdown;
@@ -213,6 +214,7 @@ It covers valid enquiries, invalid input, spoofed requests (Origin, secret, `X-F
 | **`GAVE_UP`** | The enquiry is in the sheet; reply from Gmail by hand. Optionally set State back to `FAILED` (Attempts `0`) to retry. |
 | **`UNCONFIRMED`** | Search the inbox for the Enquiry ID. If the email isn't there, reply by hand, or set State to `FAILED` to resend. |
 | **A refused request shows as "Completed" in Apps Script → Executions** | That is expected. `doPost` catches the error and returns a safe reply, so Google marks the run Completed. Click the run to see its log; the reason is the line starting `doPost failed:` (for example a header mismatch). |
+| **Notification emails come from the account address instead of hello@** | Either hello@ is not a verified **Send mail as** address of the account running the script (Gmail → Settings → Accounts), or the Gmail service is not enabled. Check that `appsscript.json` matches the repo and that **Services** lists Gmail, then deploy a **New version**. |
 | **Notification emails arrive in All Mail but not the Inbox** | The script is emailing the account it runs as (see the note in section 3). Search `subject:"New enquiry"`, add a Gmail filter with a label, or deploy production from a different account. |
 | **`SUPPRESSED`, or a summary email** | The cap was reached, which usually means a burst of spam. Review the rows, set unwanted ones to `SPAM`, and reply to real ones. |
 | **"Action needed: website enquiries are being refused"** | Someone changed a header or added an unnamed column. Restore the exact headers from section 1 (move any extra column after K and give it a header), then run `setup` to confirm. Visitors were shown the retry message and email address in the meantime. |
