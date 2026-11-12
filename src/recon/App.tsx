@@ -78,7 +78,7 @@ export default function ReconApp() {
       setWs(w => ({ ...w, states: { ...w.states, [b.relId]: next }, bcs: [...w.bcs.map(x => x.id === id ? { ...x, status: 'Confirmed' as const, respondedBy: user.name, respondedAt: at, remarks, certNo, log: [...x.log, { at, by: user.name, what: `Agreed. Certificate ${certNo} issued; ${tagLabel(b.tag)} closed without reconciliation` }] } : x), ...(nb ? [nb] : [])] }));
       return true; },
     submitCn: (buyerIds, cn, via = 'Form', bulkId) => { const id = `CNS-${String(wsRef.current.cns.length + 1).padStart(4, '0')}`; const at = now();
-      setWs(w => ({ ...w, cns: [...w.cns, { id, relId: route.relId, tag: route.tag, buyerIds, cn, status: 'Submitted', via, bulkId, by: user.name, at, log: [{ at, by: user.name, what: `Submitted ${cn.no}${bulkId ? ` through bulk upload ${bulkId}` : ''}` }] }] })); return id; },
+      setWs(w => ({ ...w, cns: [...w.cns, { id, relId: route.relId, tag: route.tag, buyerIds, cn, status: 'Submitted', via, bulkId, by: user.name, at, log: [{ at, by: user.name, what: via === 'Buyer entry' ? `Entered ${cn.no} on the vendor’s behalf` : `Submitted ${cn.no}${bulkId ? ` through bulk upload ${bulkId}` : ''}` }] }] })); return id; },
     addBulk: b => setWs(w => ({ ...w, bulks: [...w.bulks, b] })),
     decideCn: (id, action, reason = '') => { const q = wsRef.current.cns.find(x => x.id === id); if (!q) return false; const at = now(); const s0 = wsRef.current.states[q.relId];
       if ((action === 'reject' || action === 'reopen') && !reason.trim()) { toast('Give a reason.', 'warn'); return false; }

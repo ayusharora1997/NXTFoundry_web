@@ -19,7 +19,7 @@ const TOUR = (vendor: boolean): TourStep[] => [
   { target: '.rx-cm-help', title: 'Credit Mapping in a minute', body: vendor ? 'Your customer has raised debit notes on you (claims, short supply, rate differences). Give the credit note for each one here. Skip anytime; Help brings this back.' : 'Debit notes we raised, and credit notes we booked, waiting for the vendor’s credit note. The vendor submits; you accept, reject or reopen. Skip anytime; Help brings this back.' },
   { target: '.rx-cm-tiles', title: 'Where everything stands', body: 'Open, waiting for review, rejected, and mapped (either already in the vendor’s ledger, or agreed here and waiting for it). Click a tile to open that list.' },
   { target: '.rx-cm-tabs', title: vendor ? 'Your lists' : 'The review lists', body: vendor ? <><b>Open</b> needs a credit note. <b>Submitted</b> is with the buyer. <b>Rejected</b> came back with a reason. <b>Mapped</b> is done. <b>Bulk upload</b> takes many at once.</> : <><b>Awaiting review</b> is what the vendor submitted. <b>Open</b> still needs a credit note. <b>Rejected</b> went back with a reason. <b>Mapped</b> is done.</>, before: () => document.querySelector<HTMLButtonElement>(`.rx-cm-tabs button[data-tab="${vendor ? 'open' : 'sub'}"]`)?.click() },
-  { target: card(vendor ? 'Open debit notes' : 'Credit notes awaiting your review'), title: vendor ? 'Select, then map' : 'Review each credit note', body: vendor ? 'Tick one or more debit notes and click Map credit note. One credit note can cover several debit notes; a debit note can take several credit notes until nothing is left.' : 'Open one to see the credit note, the debit notes it covers and the difference. Accept to agree it; reject with a reason so the vendor can correct it.' },
+  { target: card(vendor ? 'Open debit notes' : 'Credit notes awaiting your review'), title: vendor ? 'Select, then map' : 'Review each credit note', body: vendor ? 'Tick one or more debit notes and click Map credit note. One credit note can cover several debit notes; a debit note can take several credit notes until nothing is left.' : 'Open one to see the credit note, the debit notes it covers and the difference. Accept to agree it; reject with a reason so the vendor can correct it. Got a credit note by email? Map it yourself from Open; it is accepted at once.' },
   { target: '.rx-cm-source', title: 'The vendor’s ledger decides', body: <>An accepted credit note is <b>agreed</b>, not reconciled. It shows on the statement as its own line until the same credit note appears in the vendor’s ledger; then reconciliation matches it automatically.</>, before: () => document.querySelector<HTMLButtonElement>('.rx-cm-tabs button[data-tab="map"]')?.click() },
   { target: '.rx-cm-help', title: 'Need it again?', body: 'Click Help anytime to replay this tutorial.' },
 ];
@@ -60,7 +60,7 @@ export default function CreditMapping({ ctx }: { ctx: Ctx }) {
     { key: 'st', label: 'Status', text: i => i.state, render: i => <Pill tone={STATE_TONE[i.state]}>{i.state === 'Rejected' ? 'Last credit note rejected' : i.state}</Pill> },
   ];
   const subCols = (actions: (s: CnSub) => React.ReactNode): Col<CnSub>[] => [
-    { key: 'id', label: 'Request', text: s => s.id, render: s => <><b className="rx-mono">{s.id}</b>{s.via === 'Bulk upload' && <><br /><small className="rx-muted">Bulk · {s.bulkId}</small></>}</> },
+    { key: 'id', label: 'Request', text: s => s.id, render: s => <><b className="rx-mono">{s.id}</b>{s.via === 'Bulk upload' && <><br /><small className="rx-muted">Bulk · {s.bulkId}</small></>}{s.via === 'Buyer entry' && <><br /><small className="rx-muted">Entered by buyer</small></>}</> },
     { key: 'cn', label: 'Credit note', text: s => s.cn.no, render: s => <><b className="rx-mono">{s.cn.no}</b><br /><small className="rx-muted">{s.cn.date} · {s.cn.kind}</small></> },
     { key: 'tx', label: 'Taxable', align: 'right', text: s => String(s.cn.taxable), render: s => m(s.cn.taxable) },
     { key: 'gst', label: 'GST', align: 'right', text: s => String(s.cn.cgst + s.cn.sgst + s.cn.igst), render: s => m(r2(s.cn.cgst + s.cn.sgst + s.cn.igst)) },
@@ -95,8 +95,8 @@ export default function CreditMapping({ ctx }: { ctx: Ctx }) {
 
     {tab === 'open' && <Card title={vendor ? 'Open debit notes' : 'Open: waiting for the vendor’s credit note'} tip="Debit notes we raised and credit notes we booked that no credit note in the vendor’s ledger, or agreed here, covers yet.">
       <DataTable rows={open} cols={openCols} rowKey={i => i.t.id} fileName="credit-mapping-open" empty="Nothing open. Every note has a credit note."
-        selectable={vendor} selected={sel} onSelect={setSel}
-        toolbar={vendor ? <span className="rx-cm-bar"><span>{sel.length ? <>Selected {sel.length} · open <b>{m(sumIds(items, sel))}</b></> : 'Tick the debit notes one credit note covers'}</span><button className="rw-btn lime" disabled={!sel.length} onClick={() => setForm({ ids: sel })}><Icon n="file" /> Map credit note</button></span> : <span className="rx-muted">Waiting for {vName} to submit credit notes.</span>} />
+        selectable selected={sel} onSelect={setSel}
+        toolbar={<span className="rx-cm-bar"><span>{sel.length ? <>Selected {sel.length} · open <b>{m(sumIds(items, sel))}</b></> : vendor ? 'Tick the debit notes one credit note covers' : `Waiting for ${vName}, or tick notes to map a credit note you received`}</span><button className="rw-btn lime" disabled={!sel.length} onClick={() => setForm({ ids: sel })}><Icon n="file" /> Map credit note</button></span>} />
     </Card>}
     {tab === 'sub' && <Card title={vendor ? 'Submitted to the buyer' : 'Credit notes awaiting your review'} tip={vendor ? 'The buyer accepts or rejects each one. Nothing changes in reconciliation until it is accepted.' : 'Accept to agree the credit note; reject with a reason so the vendor can correct it.'}>
       <DataTable rows={submitted} cols={subCols(s => <button className={'rw-btn small' + (vendor ? ' ghost' : ' lime')} onClick={e => { e.stopPropagation(); setView(s.id); }}>{vendor ? 'View' : 'Review'}</button>)} rowKey={s => s.id} fileName="credit-notes-submitted" onRowClick={s => setView(s.id)} empty={vendor ? 'Nothing waiting with the buyer.' : 'Nothing to review.'} />
@@ -110,7 +110,7 @@ export default function CreditMapping({ ctx }: { ctx: Ctx }) {
     </Card>}
     {tab === 'bulk' && <Bulk ctx={ctx} open={open} onDone={() => pickTab('sub')} />}
 
-    {form && <MapDrawer ctx={ctx} items={items.filter(i => form.ids.includes(i.t.id))} prefill={form.prefill} onClose={() => setForm(null)} onDone={() => { setForm(null); setSel([]); pickTab('sub'); }} />}
+    {form && <MapDrawer ctx={ctx} items={items.filter(i => form.ids.includes(i.t.id))} prefill={form.prefill} onClose={() => setForm(null)} onDone={full => { setForm(null); setSel([]); pickTab(vendor ? 'sub' : full ? 'map' : 'open'); }} />}
     {viewSub && <SubDrawer ctx={ctx} sub={viewSub} items={items} onClose={() => setView(null)} onResubmit={() => { const s = viewSub; setView(null); resub(s); }} />}
   </>;
 }
@@ -119,12 +119,13 @@ const s0Label = (t: Tab) => t === 'rej' ? 'Rejected by' : 'Submitted by';
 // ---------- Vendor: give a credit note against one or more notes ----------
 const isoToDay = (iso: string) => { const ms = Date.parse(iso + 'T00:00:00Z'); return isNaN(ms) ? '' : fmtDay(ms); };
 const dayToIso = (d: string) => { const ms = Date.parse(d.replace(/-/g, ' ') + ' UTC'); return isNaN(ms) ? '' : new Date(ms).toISOString().slice(0, 10); };
-function MapDrawer({ ctx, items, prefill, onClose, onDone }: { ctx: Ctx; items: CItem[]; prefill?: CnDoc; onClose: () => void; onDone: () => void }) {
+function MapDrawer({ ctx, items, prefill, onClose, onDone }: { ctx: Ctx; items: CItem[]; prefill?: CnDoc; onClose: () => void; onDone: (full: boolean) => void }) {
+  const vendor = ctx.isVendor;
   const cur = ctx.st.rel.currency; const m = (n: number) => money(n, cur, 2);
   const openAmt = r2(items.reduce((a, i) => a + i.diff, 0));
   const [no, setNo] = useState(prefill?.no ?? ''); const [date, setDate] = useState(prefill ? dayToIso(prefill.date) : '');
   const [kind, setKind] = useState<CnDoc['kind']>(prefill?.kind ?? 'Taxable'); const [inter, setInter] = useState(!!prefill?.igst);
-  const [taxable, setTaxable] = useState(prefill ? String(prefill.taxable) : ''); const [rate, setRate] = useState('18'); const [irn, setIrn] = useState(prefill?.irn ?? ''); const [file, setFile] = useState(prefill?.file ?? '');
+  const [taxable, setTaxable] = useState(prefill ? String(prefill.taxable) : ''); const [rate, setRate] = useState('18'); const [irn, setIrn] = useState(prefill?.irn ?? ''); const [file, setFile] = useState(prefill?.file ?? ''); const [size, setSize] = useState<number | undefined>(prefill?.fileSize);
   const tx = Number(taxable) || 0; const gstAmt = kind === 'Taxable' ? r2(tx * (Number(rate) || 0) / 100) : 0;
   const cgst = inter ? 0 : r2(gstAmt / 2), sgst = inter ? 0 : r2(gstAmt - r2(gstAmt / 2)), igst = inter ? gstAmt : 0; const total = r2(tx + gstAmt);
   const diff = r2(openAmt - total);
@@ -132,8 +133,11 @@ function MapDrawer({ ctx, items, prefill, onClose, onDone }: { ctx: Ctx; items: 
   const mapping = items.length > 1 ? 'Many-to-one' : items[0]?.agreed ? 'One-to-many' : 'One-to-one';
   const ok = no.trim() && date && total > 0 && !dupe && items.length > 0;
   const fillOpen = () => { setTaxable(String(kind === 'Taxable' ? r2(openAmt / (1 + (Number(rate) || 0) / 100)) : openAmt)); };
-  const submit = () => { ctx.submitCn(items.map(i => i.t.id), { no: no.trim(), date: isoToDay(date), kind, taxable: tx, cgst, sgst, igst, total, irn: kind === 'Taxable' ? irn.trim() : '', file: file || undefined }); ctx.toast(`${no.trim()} sent to the buyer for review`); onDone(); };
-  return <Drawer title="Map a credit note" sub={`${items.length} note${items.length === 1 ? '' : 's'} · ${mapping}`} onClose={onClose}>
+  // A vendor's credit note goes to the buyer for review; one the buyer enters (received by email, say) is accepted at once.
+  const submit = () => { const doc: CnDoc = { no: no.trim(), date: isoToDay(date), kind, taxable: tx, cgst, sgst, igst, total, irn: kind === 'Taxable' ? irn.trim() : '', file: file || undefined, fileSize: file ? size : undefined };
+    if (vendor) { ctx.submitCn(items.map(i => i.t.id), doc); ctx.toast(`${doc.no} sent to the buyer for review`); onDone(false); return; }
+    const id = ctx.submitCn(items.map(i => i.t.id), doc, 'Buyer entry'); if (ctx.decideCn(id, 'accept')) onDone(Math.abs(diff) < 0.005); };
+  return <Drawer title="Map a credit note" sub={`${items.length} note${items.length === 1 ? '' : 's'} · ${mapping}${vendor ? '' : ' · entered on the vendor’s behalf'}`} onClose={onClose}>
     <div className="rx-cm-sel">{items.map(i => <div key={i.t.id}><span className="rx-mono">{i.t.docNo}</span><small>{kindLabel(i.kind)}</small><b>{m(i.diff)}</b></div>)}</div>
     <div className="rx-cm-form">
       <label className="rw-field">Credit note number<input id="cm-no" value={no} onChange={e => setNo(e.target.value)} placeholder="e.g. CN/KAV/9012" />{dupe && <small className="rw-err">This credit note number is already submitted or accepted.</small>}</label>
@@ -145,7 +149,7 @@ function MapDrawer({ ctx, items, prefill, onClose, onDone }: { ctx: Ctx; items: 
         <div className="rw-field">Supply<div className="rw-seg"><button type="button" className={!inter ? 'on' : ''} onClick={() => setInter(false)}>Within state (CGST + SGST)</button><button type="button" className={inter ? 'on' : ''} onClick={() => setInter(true)}>Inter-state (IGST)</button></div></div>
         <label className="rw-field">IRN (e-invoice)<input id="cm-irn" value={irn} onChange={e => setIrn(e.target.value)} placeholder="Optional" /></label>
       </>}
-      <label className="rw-field">Credit note copy (PDF)<input id="cm-file" type="file" accept=".pdf,application/pdf" onChange={e => setFile(e.target.files?.[0]?.name ?? '')} />{file && <small className="rx-muted">{file}</small>}</label>
+      <div className="rw-field rx-cm-att">Credit note copy<Attach file={file} size={size} onPick={(n, s) => { setFile(n); setSize(s); }} onClear={() => { setFile(''); setSize(undefined); }} /></div>
     </div>
     <dl className="rx-cm-sum">
       <div><dt>Open on selected notes</dt><dd>{m(openAmt)}</dd></div>
@@ -153,8 +157,9 @@ function MapDrawer({ ctx, items, prefill, onClose, onDone }: { ctx: Ctx; items: 
       <div><dt>Credit note total</dt><dd>{m(total)}</dd></div>
       <div className={Math.abs(diff) < 0.005 ? 'ok' : 'bad'}><dt>Difference</dt><dd>{m(diff)}</dd></div>
     </dl>
-    <p className="rw-note">{!total ? 'Enter the credit note value.' : Math.abs(diff) < 0.005 ? 'Covers the notes exactly. Once the buyer accepts, they move to Mapped.' : diff > 0 ? `${m(diff)} stays open. If the buyer accepts, the notes show as partly mapped until another credit note covers the rest.` : `The credit note is ${m(-diff)} more than what is open. The buyer is likely to reject it.`}</p>
-    <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={onClose}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!ok} onClick={submit}>Submit to buyer</button></div>
+    <p className="rw-note">{!total ? 'Enter the credit note value.' : Math.abs(diff) < 0.005 ? (vendor ? 'Covers the notes exactly. Once the buyer accepts, they move to Mapped.' : 'Covers the notes exactly. They move to Mapped as agreed, until the credit note appears in the vendor’s ledger.') : diff > 0 ? `${m(diff)} stays open. ${vendor ? 'If the buyer accepts, the notes show' : 'The notes show'} as partly mapped until another credit note covers the rest.` : `The credit note is ${m(-diff)} more than what is open.${vendor ? ' The buyer is likely to reject it.' : ' Only the open amount is agreed.'}`}</p>
+    {!vendor && <p className="rx-muted rx-cm-behalf">Accepted as soon as you map it, and recorded as entered by {ctx.user.name} on the vendor’s behalf.</p>}
+    <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={onClose}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!ok} onClick={submit}>{vendor ? 'Submit to buyer' : 'Map and accept'}</button></div>
   </Drawer>;
 }
 
@@ -171,8 +176,10 @@ function SubDrawer({ ctx, sub, items, onClose, onResubmit }: { ctx: Ctx; sub: Cn
       <div><dt>Date</dt><dd>{sub.cn.date}</dd></div><div><dt>Type</dt><dd>{sub.cn.kind}</dd></div>
       <div><dt>Taxable value</dt><dd>{m(sub.cn.taxable)}</dd></div><div><dt>GST</dt><dd>{sub.cn.igst ? `IGST ${m(sub.cn.igst)}` : sub.cn.cgst ? `CGST ${m(sub.cn.cgst)} · SGST ${m(sub.cn.sgst)}` : '—'}</dd></div>
       <div><dt>Credit note total</dt><dd><b>{m(sub.cn.total)}</b></dd></div><div><dt>IRN</dt><dd className="rx-mono">{sub.cn.irn || '—'}</dd></div>
-      <div><dt>Copy</dt><dd>{sub.cn.file ? <span className="rx-cm-file"><Icon n="file" s={14} /> {sub.cn.file}</span> : '—'}</dd></div><div><dt>Submitted</dt><dd>{sub.by} · {sub.at}</dd></div>
+      <div><dt>{sub.via === 'Buyer entry' ? 'Entered' : 'Submitted'}</dt><dd>{sub.by} · {sub.at}</dd></div>
     </dl>
+    <h4 className="rw-h4">Credit note copy</h4>
+    {sub.cn.file ? <FileCard name={sub.cn.file} size={sub.cn.fileSize} note={`Attached by ${sub.by}`} /> : <p className="rx-muted">No copy attached.</p>}
     <h4 className="rw-h4">Against</h4>
     <div className="rx-cm-sel">{rows.map(i => <div key={i.t.id}><span className="rx-mono">{i.t.docNo}</span><small>{kindLabel(i.kind)} · {m(i.amount)}</small><b>{i.state === 'Mapped' ? <Pill tone="green">Mapped</Pill> : m(i.diff)}</b></div>)}</div>
     {sub.status === 'Submitted' && <p className={'rw-note' + (Math.abs(diff) < 0.005 ? '' : ' warn')}>Open {m(openAmt)} against a credit note of {m(sub.cn.total)}: difference {m(diff)}. {Math.abs(diff) < 0.005 ? 'Accepting maps these notes fully.' : diff > 0 ? 'Accepting maps them partly; the rest stays open.' : 'The credit note is more than what is open.'}</p>}
@@ -188,6 +195,22 @@ function SubDrawer({ ctx, sub, items, onClose, onResubmit }: { ctx: Ctx; sub: Cn
       {vendor && sub.status === 'Rejected' && <button className="rw-btn lime" onClick={onResubmit}>Correct and resubmit</button>}
     </div>
   </Drawer>;
+}
+
+// ---------- Attachment: drop or browse a PDF; shown as a file card once picked ----------
+const fmtSize = (b?: number) => b === undefined ? '' : b < 1024 ? `${b} B` : b < 1048576 ? `${(b / 1024).toFixed(0)} KB` : `${(b / 1048576).toFixed(1)} MB`;
+function FileCard({ name, size, note, onClear }: { name: string; size?: number; note: string; onClear?: () => void }) {
+  return <div className="rx-att-file"><span className="rx-att-ic" aria-hidden="true">PDF</span><div><b title={name}>{name}</b><small>{[fmtSize(size), note].filter(Boolean).join(' · ')}</small></div>
+    {onClear && <button type="button" onClick={onClear} aria-label={`Remove ${name}`} title="Remove"><Icon n="x" s={14} /></button>}</div>;
+}
+function Attach({ file, size, onPick, onClear }: { file: string; size?: number; onPick: (name: string, size: number) => void; onClear: () => void }) {
+  const [over, setOver] = useState(false); const [err, setErr] = useState('');
+  const take = (f?: File) => { setErr(''); if (!f) return; if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { setErr('Attach the credit note as a PDF.'); return; } if (f.size > 10 * 1048576) { setErr('The file is larger than 10 MB.'); return; } onPick(f.name, f.size); };
+  if (file) return <FileCard name={file} size={size} note="Ready to submit" onClear={onClear} />;
+  return <><label className={'rx-att-drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files?.[0]); }}>
+    <input id="cm-file" type="file" accept=".pdf,application/pdf" className="sr-only" onChange={e => { take(e.target.files?.[0]); e.currentTarget.value = ''; }} />
+    <span className="rx-att-cloud" aria-hidden="true"><Icon n="upload" s={18} /></span><span><b>Drop the credit note PDF here</b><small>or <u>browse your files</u> · PDF up to 10 MB</small></span></label>
+    {err && <small className="rw-err">{err}</small>}</>;
 }
 
 // ---------- Bulk upload ----------

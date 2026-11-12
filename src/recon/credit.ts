@@ -4,11 +4,11 @@
 // the note once that credit note number appears in it.
 import { FAMILY, closedTxnIds, periodIndex, r2, type RelState, type Txn, type MatchRec } from './cycle';
 
-export interface CnDoc { no: string; date: string; kind: 'Taxable' | 'Non-taxable'; taxable: number; cgst: number; sgst: number; igst: number; total: number; irn: string; file?: string }
+export interface CnDoc { no: string; date: string; kind: 'Taxable' | 'Non-taxable'; taxable: number; cgst: number; sgst: number; igst: number; total: number; irn: string; file?: string; fileSize?: number }
 export type CnStatus = 'Submitted' | 'Accepted' | 'Rejected' | 'Reopened';
 export interface CnLog { at: string; by: string; what: string }
 export interface CnSub {
-  id: string; relId: string; tag: string; buyerIds: string[]; cn: CnDoc; status: CnStatus; via: 'Form' | 'Bulk upload'; bulkId?: string;
+  id: string; relId: string; tag: string; buyerIds: string[]; cn: CnDoc; status: CnStatus; via: 'Form' | 'Bulk upload' | 'Buyer entry'; bulkId?: string;
   by: string; at: string; reason?: string; decidedBy?: string; decidedAt?: string; alloc?: { id: string; amount: number }[]; log: CnLog[];
 }
 export interface BulkReq { id: string; relId: string; file: string; rows: number; subs: string[]; by: string; at: string }

@@ -1128,3 +1128,23 @@ a.rd-brand{color:inherit;text-decoration:none}
 .rx-cnag{display:inline-block;margin-left:6px;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;background:var(--violet-t,#efeafd);color:var(--violet);text-decoration:none;white-space:nowrap}
 .rx-cnag:hover{text-decoration:underline}
 @media(max-width:700px){.rx-cm-form,.rx-cm-dl{grid-template-columns:1fr}.rx-cm-sum{grid-template-columns:1fr 1fr}}
+
+/* Credit note attachment */
+.rx-cm-att{grid-column:1/-1}
+.rx-att-drop{display:flex;align-items:center;gap:12px;padding:14px 16px;border:1.5px dashed #c9d1c4;border-radius:10px;background:linear-gradient(180deg,var(--card),var(--bg2));cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;font-weight:400}
+.rx-att-drop:hover{border-color:var(--ink)}
+.rx-att-drop.over{border-color:var(--lime);background:var(--lime-t);box-shadow:0 0 0 3px rgba(215,255,50,.25)}
+.rx-att-drop:focus-within{outline:2px solid var(--ink);outline-offset:2px}
+.rx-att-drop b{display:block;font-size:13.5px;color:var(--ink)}
+.rx-att-drop small{font-size:12px;color:var(--muted)}
+.rx-att-drop u{text-decoration-color:var(--lime);text-decoration-thickness:2px;text-underline-offset:2px;color:var(--ink)}
+.rx-att-cloud{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--dark);color:var(--lime)}
+.rx-att-file{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--card);box-shadow:0 1px 2px rgba(0,0,0,.04);font-weight:400}
+.rx-att-file>div{min-width:0;flex:1}
+.rx-att-file b{display:block;font-size:13.5px;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rx-att-file small{font-size:12px;color:var(--muted)}
+.rx-att-ic{flex:none;width:36px;height:42px;border-radius:4px 10px 4px 4px;background:#e5484d;color:#fff;font-size:10px;font-weight:800;letter-spacing:.04em;display:grid;place-items:end center;padding-bottom:6px;position:relative}
+.rx-att-ic::after{content:"";position:absolute;top:0;right:0;width:10px;height:10px;background:rgba(255,255,255,.35);border-bottom-left-radius:4px}
+.rx-att-file button{flex:none;border:0;background:var(--bg2);border-radius:50%;width:28px;height:28px;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.rx-att-file button:hover{background:#e1e4dc}
+.rx-cm-behalf{font-size:12.5px;margin:-4px 0 10px}
