@@ -142,6 +142,8 @@ Do this signed in to the Google Workspace account that should own the data and s
 
    A run guard stops two runs overlapping. You can also run it by hand.
 5. **After any later code change:** open **Deploy → Manage deployments**, click ✏️, choose **Version: New version** and click **Deploy**. This keeps the same URL; "New deployment" would create a new one.
+6. **Archived deployments stop working.** If you archive a deployment and create a new one, its URL changes: update `APPS_SCRIPT_URL` (in Vercel and in `.env.prodcheck.local`) to the new **active** deployment's Web app URL.
+7. **Check "Who has access" really says "Anyone".** On Workspace it often defaults to "Anyone within nxtfoundry.in", and "Anyone with Google account" looks similar. Both make Google answer with a sign-in page, which the website reports as "unavailable". A URL of the form `/a/macros/nxtfoundry.in/…` is a sign that access is domain-restricted.
 
 ## 5. Vercel environment variables
 
@@ -157,6 +159,21 @@ In Vercel, open **Project → Settings → Environment Variables**. Add these to
 - None of these has a `VITE_` prefix, so none reaches the browser.
 - Delete any old `VITE_FORM_ENDPOINT`.
 - Env var changes apply only to new deployments.
+
+**Generating and checking the production values without exposing them.** Never paste these values into chat or a ticket.
+
+1. Run this once. It writes a git-ignored file with two newly generated keys, and prints no values:
+   ```bash
+   node scripts/make-test-env.mjs .env.prodcheck.local
+   ```
+2. Copy `ENQUIRY_SHARED_SECRET` from that file into the production script's Script properties.
+3. Paste the production `/exec` URL into the file.
+4. Run:
+   ```bash
+   node scripts/check-test-env.mjs .env.prodcheck.local
+   ```
+   It checks the deployment is reachable anonymously and that the secret matches, using a probe that is refused before any write. It also confirms that neither the URL nor any secret is reused from the TEST `.env.local`.
+5. Copy the three values from the file into Vercel. Vite never loads this file.
 - If `APPS_SCRIPT_URL`, `ENQUIRY_SHARED_SECRET` or `ENQUIRY_IP_HASH_KEY` is missing, the form shows the retry message and Vercel logs name the missing variable.
 - No IP setting is needed. On Vercel the trusted IP headers are always present. Locally, `npm run dev` replaces any client-sent IP headers with the real connection address (`127.0.0.1` / `::1`), so local requests also pass the fail-closed check.
 

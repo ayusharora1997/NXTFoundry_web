@@ -2,6 +2,8 @@ node_modules/
 dist/
 .env
 .env.local
+# Any other local env file, e.g. .env.prodcheck.local (production values for scripts/check-test-env.mjs)
+.env.*.local
 offline
 .claude/
 
