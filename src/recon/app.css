@@ -1148,3 +1148,13 @@ a.rd-brand{color:inherit;text-decoration:none}
 .rx-att-file button{flex:none;border:0;background:var(--bg2);border-radius:50%;width:28px;height:28px;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
 .rx-att-file button:hover{background:#e1e4dc}
 .rx-cm-behalf{font-size:12.5px;margin:-4px 0 10px}
+
+.rx-cm-doc{margin-bottom:12px}
+.rx-cm-docs-pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:4px}
+.rx-cm-docs-pick button{font:inherit;text-align:left;display:flex;flex-direction:column;gap:3px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--card);cursor:pointer;font-weight:400}
+.rx-cm-docs-pick button b{font-size:13px;display:flex;justify-content:space-between;align-items:center}
+.rx-cm-docs-pick button small{font-size:11.5px;color:var(--muted);line-height:1.35}
+.rx-cm-docs-pick button.on{border-color:var(--dark);box-shadow:inset 0 0 0 1px var(--dark);background:var(--lime-t)}
+.rx-cm-sign{font-size:12px;font-weight:800;width:20px;height:20px;border-radius:50%;display:grid;place-items:center}
+.rx-cm-sign.neg{background:#fde8e4;color:var(--red)}.rx-cm-sign.pos{background:#e6f3e8;color:#2f8a4c}
+@media(max-width:560px){.rx-cm-docs-pick{grid-template-columns:1fr}}

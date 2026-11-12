@@ -3,8 +3,8 @@ import { fmtDay, r2 } from './cycle';
 import { tagLabel } from './ledger';
 import { parseCSV } from './csv';
 import { toCSV } from './engine';
-import { creditItems, kindLabel, mappingOf, type CItem, type CnSub, type CnDoc } from './credit';
-import { Card, DataTable, Drawer, Icon, Pill, Avatar, money, download, type Col } from './ui';
+import { creditItems, kindLabel, mappingOf, clears, docSign, type CItem, type CnSub, type CnDoc, type DocType } from './credit';
+import { Card, DataTable, Drawer, Icon, Pill, Avatar, money, signedMoney, download, type Col } from './ui';
 import { PageHead, vendorOf, type Ctx } from './App';
 import { Tour, useTour, card, type TourStep } from './tour';
 
@@ -12,7 +12,9 @@ import { Tour, useTour, card, type TourStep } from './tour';
 // the buyer (L2) accepts, rejects or reopens them. Accepted credit notes are agreements: the vendor's ledger stays the
 // source of truth, and reconciliation matches the note once that credit note number appears in it.
 type Tab = 'open' | 'sub' | 'rej' | 'map' | 'bulk';
-const STATE_TONE: Record<string, string> = { Open: 'grey', 'Partly mapped': 'amber', Submitted: 'blue', Rejected: 'red', Mapped: 'green' };
+const STATE_TONE: Record<string, string> = { Open: 'grey', 'Partly mapped': 'amber', 'Over-credited': 'red', Submitted: 'blue', Rejected: 'red', Mapped: 'green' };
+const DOCS: DocType[] = ['Credit note', 'Vendor debit', 'Refund'];
+const docOf = (c: CnDoc): DocType => c.docType ?? 'Credit note';
 const sumIds = (items: CItem[], ids: string[]) => r2(items.filter(i => ids.includes(i.t.id)).reduce((a, i) => a + i.diff, 0));
 
 const TOUR = (vendor: boolean): TourStep[] => [
@@ -31,7 +33,7 @@ export default function CreditMapping({ ctx }: { ctx: Ctx }) {
   const [tab, setTab] = useState<Tab>(vendor ? 'open' : 'sub'); const [sel, setSel] = useState<string[]>([]);
   const [form, setForm] = useState<{ ids: string[]; prefill?: CnDoc } | null>(null); const [view, setView] = useState<string | null>(null);
   const [tour, startTour, endTour, skipTour] = useTour(`credit-${vendor ? 'vendor' : 'buyer'}`);
-  const open = items.filter(i => i.state === 'Open' || i.state === 'Partly mapped' || i.state === 'Rejected');
+  const open = items.filter(i => i.state === 'Open' || i.state === 'Partly mapped' || i.state === 'Over-credited' || i.state === 'Rejected');
   const submitted = subs.filter(s => s.status === 'Submitted'); // A rejected credit note drops off the list once a later one is submitted for the same notes.
   const rejected = subs.filter(s => s.status === 'Rejected' && !subs.some((o, k) => k > subs.indexOf(s) && o.status !== 'Rejected' && o.buyerIds.some(id => s.buyerIds.includes(id))));
   const mapped = items.filter(i => i.state === 'Mapped');
@@ -57,17 +59,17 @@ export default function CreditMapping({ ctx }: { ctx: Ctx }) {
     { key: 'amt', label: 'Amount', align: 'right', text: i => String(i.amount), sort: i => i.amount, render: i => m(i.amount), total: r => <b>{m(r.reduce((a, i) => a + i.amount, 0))}</b> },
     { key: 'ag', label: 'Agreed', align: 'right', text: i => String(i.agreed), render: i => i.agreed ? m(i.agreed) : <span className="rx-muted">—</span> },
     { key: 'diff', label: 'Difference', align: 'right', text: i => String(i.diff), sort: i => i.diff, render: i => <b>{m(i.diff)}</b>, total: r => <b>{m(r.reduce((a, i) => a + i.diff, 0))}</b> },
-    { key: 'st', label: 'Status', text: i => i.state, render: i => <Pill tone={STATE_TONE[i.state]}>{i.state === 'Rejected' ? 'Last credit note rejected' : i.state}</Pill> },
+    { key: 'st', label: 'Status', text: i => i.state, render: i => <Pill tone={STATE_TONE[i.state]}>{i.state === 'Rejected' ? 'Last document rejected' : i.state === 'Over-credited' ? `Over-credited by ${m(-i.diff)}` : i.state}</Pill> },
   ];
   const subCols = (actions: (s: CnSub) => React.ReactNode): Col<CnSub>[] => [
     { key: 'id', label: 'Request', text: s => s.id, render: s => <><b className="rx-mono">{s.id}</b>{s.via === 'Bulk upload' && <><br /><small className="rx-muted">Bulk · {s.bulkId}</small></>}{s.via === 'Buyer entry' && <><br /><small className="rx-muted">Entered by buyer</small></>}</> },
-    { key: 'cn', label: 'Credit note', text: s => s.cn.no, render: s => <><b className="rx-mono">{s.cn.no}</b><br /><small className="rx-muted">{s.cn.date} · {s.cn.kind}</small></> },
+    { key: 'cn', label: 'Document', text: s => `${docOf(s.cn)} ${s.cn.no}`, render: s => <><b className="rx-mono">{s.cn.no}</b><br /><small className="rx-muted">{docOf(s.cn)} · {s.cn.date}{docOf(s.cn) !== 'Refund' ? ` · ${s.cn.kind}` : ''}</small></> },
     { key: 'tx', label: 'Taxable', align: 'right', text: s => String(s.cn.taxable), render: s => m(s.cn.taxable) },
     { key: 'gst', label: 'GST', align: 'right', text: s => String(s.cn.cgst + s.cn.sgst + s.cn.igst), render: s => m(r2(s.cn.cgst + s.cn.sgst + s.cn.igst)) },
-    { key: 'tot', label: 'CN total', align: 'right', text: s => String(s.cn.total), render: s => <b>{m(s.cn.total)}</b> },
+    { key: 'tot', label: 'Amount', sub: 'vendor books', align: 'right', text: s => String(docSign(docOf(s.cn)) * s.cn.total), render: s => <b>{signedMoney(docSign(docOf(s.cn)) * s.cn.total, cur)}</b> },
     { key: 'notes', label: 'Against', text: s => docs(s.buyerIds).join(', '), render: s => <span className="rx-mono rx-cm-docs">{docs(s.buyerIds).join(', ')}</span> },
     { key: 'type', label: 'Mapping', text: s => mappingOf(s) },
-    { key: 'diff', label: 'Difference', align: 'right', text: s => String(r2(sumIds(items, s.buyerIds) - s.cn.total)), render: s => { const d = r2(sumIds(items, s.buyerIds) - s.cn.total); return s.status === 'Submitted' ? <b className={Math.abs(d) < 0.005 ? 'rw-ok' : 'rw-neg'}>{m(d)}</b> : <span className="rx-muted">—</span>; } },
+    { key: 'diff', label: 'Difference', align: 'right', text: s => String(r2(sumIds(items, s.buyerIds) - clears(s.cn))), render: s => { const d = r2(sumIds(items, s.buyerIds) - clears(s.cn)); return s.status === 'Submitted' ? <b className={Math.abs(d) < 0.005 ? 'rw-ok' : 'rw-neg'}>{m(d)}</b> : <span className="rx-muted">—</span>; } },
     { key: 'by', label: s0Label(tab), text: s => `${s.by} ${s.at}`, render: s => tab === 'rej' ? <><span>{s.decidedBy}</span><br /><small className="rx-muted">{s.decidedAt}</small></> : <><span>{s.by}</span><br /><small className="rx-muted">{s.at}</small></> },
     { key: 'act', label: '', noToggle: true, text: () => '', render: s => <span className="rx-bc-acts">{actions(s)}</span> },
   ];
@@ -123,41 +125,46 @@ function MapDrawer({ ctx, items, prefill, onClose, onDone }: { ctx: Ctx; items: 
   const vendor = ctx.isVendor;
   const cur = ctx.st.rel.currency; const m = (n: number) => money(n, cur, 2);
   const openAmt = r2(items.reduce((a, i) => a + i.diff, 0));
+  const [doc, setDoc] = useState<DocType>(prefill?.docType ?? (items.some(i => i.diff < -0.005) ? 'Vendor debit' : 'Credit note')); const refund = doc === 'Refund';
   const [no, setNo] = useState(prefill?.no ?? ''); const [date, setDate] = useState(prefill ? dayToIso(prefill.date) : '');
   const [kind, setKind] = useState<CnDoc['kind']>(prefill?.kind ?? 'Taxable'); const [inter, setInter] = useState(!!prefill?.igst);
   const [taxable, setTaxable] = useState(prefill ? String(prefill.taxable) : ''); const [rate, setRate] = useState('18'); const [irn, setIrn] = useState(prefill?.irn ?? ''); const [file, setFile] = useState(prefill?.file ?? ''); const [size, setSize] = useState<number | undefined>(prefill?.fileSize);
-  const tx = Number(taxable) || 0; const gstAmt = kind === 'Taxable' ? r2(tx * (Number(rate) || 0) / 100) : 0;
+  const tx = Number(taxable) || 0; const gstAmt = kind === 'Taxable' && !refund ? r2(tx * (Number(rate) || 0) / 100) : 0;
   const cgst = inter ? 0 : r2(gstAmt / 2), sgst = inter ? 0 : r2(gstAmt - r2(gstAmt / 2)), igst = inter ? gstAmt : 0; const total = r2(tx + gstAmt);
-  const diff = r2(openAmt - total);
+  const effect = doc === 'Vendor debit' ? -total : total; const diff = r2(openAmt - effect);
   const dupe = ctx.ws.cns.some(s => s.relId === ctx.st.rel.id && s.cn.no.trim().toUpperCase() === no.trim().toUpperCase() && (s.status === 'Submitted' || s.status === 'Accepted'));
   const mapping = items.length > 1 ? 'Many-to-one' : items[0]?.agreed ? 'One-to-many' : 'One-to-one';
   const ok = no.trim() && date && total > 0 && !dupe && items.length > 0;
-  const fillOpen = () => { setTaxable(String(kind === 'Taxable' ? r2(openAmt / (1 + (Number(rate) || 0) / 100)) : openAmt)); };
+  const need = Math.abs(openAmt); const fillOpen = () => { setTaxable(String(kind === 'Taxable' && !refund ? r2(need / (1 + (Number(rate) || 0) / 100)) : need)); };
   // A vendor's credit note goes to the buyer for review; one the buyer enters (received by email, say) is accepted at once.
-  const submit = () => { const doc: CnDoc = { no: no.trim(), date: isoToDay(date), kind, taxable: tx, cgst, sgst, igst, total, irn: kind === 'Taxable' ? irn.trim() : '', file: file || undefined, fileSize: file ? size : undefined };
-    if (vendor) { ctx.submitCn(items.map(i => i.t.id), doc); ctx.toast(`${doc.no} sent to the buyer for review`); onDone(false); return; }
-    const id = ctx.submitCn(items.map(i => i.t.id), doc, 'Buyer entry'); if (ctx.decideCn(id, 'accept')) onDone(Math.abs(diff) < 0.005); };
-  return <Drawer title="Map a credit note" sub={`${items.length} note${items.length === 1 ? '' : 's'} · ${mapping}${vendor ? '' : ' · entered on the vendor’s behalf'}`} onClose={onClose}>
+  const submit = () => { const d: CnDoc = { docType: doc, no: no.trim(), date: isoToDay(date), kind: refund ? 'Non-taxable' : kind, taxable: tx, cgst, sgst, igst, total, irn: kind === 'Taxable' && !refund ? irn.trim() : '', file: file || undefined, fileSize: file ? size : undefined };
+    if (vendor) { ctx.submitCn(items.map(i => i.t.id), d); ctx.toast(`${doc} ${d.no} sent to the buyer for review`); onDone(false); return; }
+    const id = ctx.submitCn(items.map(i => i.t.id), d, 'Buyer entry'); if (ctx.decideCn(id, 'accept')) onDone(Math.abs(diff) < 0.005); };
+  return <Drawer title={`Map a ${doc.toLowerCase()}`} sub={`${items.length} note${items.length === 1 ? '' : 's'} · ${mapping}${vendor ? '' : ' · entered on the vendor’s behalf'}`} onClose={onClose}>
     <div className="rx-cm-sel">{items.map(i => <div key={i.t.id}><span className="rx-mono">{i.t.docNo}</span><small>{kindLabel(i.kind)}</small><b>{m(i.diff)}</b></div>)}</div>
+    <div className="rw-field rx-cm-doc">Document
+      <div className="rx-cm-docs-pick" role="radiogroup" aria-label="Document type">{DOCS.map(k => <button key={k} type="button" role="radio" aria-checked={doc === k} className={doc === k ? 'on' : ''} onClick={() => setDoc(k)}>
+        <b>{k} <span className={'rx-cm-sign ' + (docSign(k) < 0 ? 'neg' : 'pos')}>{docSign(k) < 0 ? '−' : '+'}</span></b>
+        <small>{k === 'Credit note' ? 'Clears the debit note. Matches credit notes in reconciliation.' : k === 'Vendor debit' ? 'Adds back, e.g. reversing an excess credit note. Matches debits.' : 'Settled in cash. Matches the payment received entry.'}</small></button>)}</div></div>
     <div className="rx-cm-form">
-      <label className="rw-field">Credit note number<input id="cm-no" value={no} onChange={e => setNo(e.target.value)} placeholder="e.g. CN/KAV/9012" />{dupe && <small className="rw-err">This credit note number is already submitted or accepted.</small>}</label>
-      <label className="rw-field">Credit note date<input id="cm-date" type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
-      <div className="rw-field">Type<div className="rw-seg">{(['Taxable', 'Non-taxable'] as const).map(k => <button key={k} type="button" className={kind === k ? 'on' : ''} aria-pressed={kind === k} onClick={() => setKind(k)}>{k}</button>)}</div></div>
-      <label className="rw-field">Taxable value<input id="cm-tx" inputMode="decimal" value={taxable} onChange={e => setTaxable(e.target.value.replace(/[^\d.]/g, ''))} placeholder="0.00" /><button type="button" className="rw-link" onClick={fillOpen}>Use the open amount</button></label>
-      {kind === 'Taxable' && <>
+      <label className="rw-field">{refund ? 'Refund reference (UTR)' : `${doc} number`}<input id="cm-no" value={no} onChange={e => setNo(e.target.value)} placeholder={refund ? 'e.g. UTR4100123' : doc === 'Vendor debit' ? 'e.g. VD/KAV/0042' : 'e.g. CN/KAV/9012'} />{dupe && <small className="rw-err">This number is already submitted or accepted.</small>}</label>
+      <label className="rw-field">{refund ? 'Refund date' : `${doc} date`}<input id="cm-date" type="date" value={date} onChange={e => setDate(e.target.value)} /></label>
+      {!refund && <div className="rw-field">Type<div className="rw-seg">{(['Taxable', 'Non-taxable'] as const).map(k => <button key={k} type="button" className={kind === k ? 'on' : ''} aria-pressed={kind === k} onClick={() => setKind(k)}>{k}</button>)}</div></div>}
+      <label className="rw-field">{refund ? 'Refund amount' : 'Taxable value'}<input id="cm-tx" inputMode="decimal" value={taxable} onChange={e => setTaxable(e.target.value.replace(/[^\d.]/g, ''))} placeholder="0.00" /><button type="button" className="rw-link" onClick={fillOpen}>{openAmt < 0 ? 'Use the over-credited amount' : 'Use the open amount'}</button></label>
+      {kind === 'Taxable' && !refund && <>
         <label className="rw-field">GST rate (%)<select id="cm-rate" className="rx-sel" value={rate} onChange={e => setRate(e.target.value)}>{['5', '12', '18', '28'].map(r => <option key={r}>{r}</option>)}</select></label>
         <div className="rw-field">Supply<div className="rw-seg"><button type="button" className={!inter ? 'on' : ''} onClick={() => setInter(false)}>Within state (CGST + SGST)</button><button type="button" className={inter ? 'on' : ''} onClick={() => setInter(true)}>Inter-state (IGST)</button></div></div>
         <label className="rw-field">IRN (e-invoice)<input id="cm-irn" value={irn} onChange={e => setIrn(e.target.value)} placeholder="Optional" /></label>
       </>}
-      <div className="rw-field rx-cm-att">Credit note copy<Attach file={file} size={size} onPick={(n, s) => { setFile(n); setSize(s); }} onClear={() => { setFile(''); setSize(undefined); }} /></div>
+      <div className="rw-field rx-cm-att">{refund ? 'Bank advice or refund proof' : `${doc} copy`}<Attach file={file} size={size} onPick={(n, s) => { setFile(n); setSize(s); }} onClear={() => { setFile(''); setSize(undefined); }} /></div>
     </div>
     <dl className="rx-cm-sum">
       <div><dt>Open on selected notes</dt><dd>{m(openAmt)}</dd></div>
-      {kind === 'Taxable' && <div><dt>{inter ? 'IGST' : 'CGST + SGST'}</dt><dd>{inter ? m(igst) : `${m(cgst)} + ${m(sgst)}`}</dd></div>}
-      <div><dt>Credit note total</dt><dd>{m(total)}</dd></div>
+      {kind === 'Taxable' && !refund && <div><dt>{inter ? 'IGST' : 'CGST + SGST'}</dt><dd>{inter ? m(igst) : `${m(cgst)} + ${m(sgst)}`}</dd></div>}
+      <div><dt>{doc} (vendor books)</dt><dd>{signedMoney(docSign(doc) * total, cur)}</dd></div>
       <div className={Math.abs(diff) < 0.005 ? 'ok' : 'bad'}><dt>Difference</dt><dd>{m(diff)}</dd></div>
     </dl>
-    <p className="rw-note">{!total ? 'Enter the credit note value.' : Math.abs(diff) < 0.005 ? (vendor ? 'Covers the notes exactly. Once the buyer accepts, they move to Mapped.' : 'Covers the notes exactly. They move to Mapped as agreed, until the credit note appears in the vendor’s ledger.') : diff > 0 ? `${m(diff)} stays open. ${vendor ? 'If the buyer accepts, the notes show' : 'The notes show'} as partly mapped until another credit note covers the rest.` : `The credit note is ${m(-diff)} more than what is open.${vendor ? ' The buyer is likely to reject it.' : ' Only the open amount is agreed.'}`}</p>
+    <p className="rw-note">{!total ? 'Enter the amount.' : Math.abs(diff) < 0.005 ? (vendor ? 'Brings the difference to zero. Once the buyer accepts, the notes move to Mapped.' : 'Brings the difference to zero. The notes move to Mapped as agreed, until the document appears in the vendor’s ledger.') : diff > 0 ? `${m(diff)} stays open. ${vendor ? 'If the buyer accepts, the notes show' : 'The notes show'} as partly mapped until another document covers the rest.` : `This leaves the notes over-credited by ${m(-diff)}. A vendor debit for that amount brings it back to zero.`}{refund ? ' For a refund, the buyer reverses the note in its books (credit note reversal) and accounts the refund as payment received; the refund then reconciles with that payment.' : ''}</p>
     {!vendor && <p className="rx-muted rx-cm-behalf">Accepted as soon as you map it, and recorded as entered by {ctx.user.name} on the vendor’s behalf.</p>}
     <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={onClose}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!ok} onClick={submit}>{vendor ? 'Submit to buyer' : 'Map and accept'}</button></div>
   </Drawer>;
@@ -168,21 +175,21 @@ function SubDrawer({ ctx, sub, items, onClose, onResubmit }: { ctx: Ctx; sub: Cn
   const cur = ctx.st.rel.currency; const m = (n: number) => money(n, cur, 2); const vendor = ctx.isVendor;
   const [reason, setReason] = useState('');
   const rows = sub.buyerIds.map(id => items.find(i => i.t.id === id)).filter((x): x is CItem => !!x);
-  const openAmt = r2(rows.reduce((a, i) => a + i.diff, 0)); const diff = r2(openAmt - sub.cn.total);
+  const openAmt = r2(rows.reduce((a, i) => a + i.diff, 0)); const diff = r2(openAmt - clears(sub.cn)); const dt = docOf(sub.cn);
   const inLedger = rows.some(i => i.source === 'Vendor ledger');
   const act = (a: 'accept' | 'reject' | 'reopen') => { if (ctx.decideCn(sub.id, a, reason)) onClose(); };
-  return <Drawer title={`${sub.cn.no} · ${sub.id}`} sub={`${sub.status} · ${mappingOf(sub)} · ${sub.via}`} onClose={onClose}>
+  return <Drawer title={`${dt} ${sub.cn.no}`} sub={`${sub.id} · ${sub.status} · ${mappingOf(sub)} · ${sub.via}`} onClose={onClose}>
     <dl className="rx-cm-dl">
-      <div><dt>Date</dt><dd>{sub.cn.date}</dd></div><div><dt>Type</dt><dd>{sub.cn.kind}</dd></div>
+      <div><dt>Date</dt><dd>{sub.cn.date}</dd></div><div><dt>Document</dt><dd>{dt}{dt !== 'Refund' ? ` · ${sub.cn.kind}` : ''}</dd></div>
       <div><dt>Taxable value</dt><dd>{m(sub.cn.taxable)}</dd></div><div><dt>GST</dt><dd>{sub.cn.igst ? `IGST ${m(sub.cn.igst)}` : sub.cn.cgst ? `CGST ${m(sub.cn.cgst)} · SGST ${m(sub.cn.sgst)}` : '—'}</dd></div>
-      <div><dt>Credit note total</dt><dd><b>{m(sub.cn.total)}</b></dd></div><div><dt>IRN</dt><dd className="rx-mono">{sub.cn.irn || '—'}</dd></div>
+      <div><dt>Amount (vendor books)</dt><dd><b>{signedMoney(docSign(dt) * sub.cn.total, cur)}</b></dd></div><div><dt>IRN</dt><dd className="rx-mono">{sub.cn.irn || '—'}</dd></div>
       <div><dt>{sub.via === 'Buyer entry' ? 'Entered' : 'Submitted'}</dt><dd>{sub.by} · {sub.at}</dd></div>
     </dl>
-    <h4 className="rw-h4">Credit note copy</h4>
+    <h4 className="rw-h4">{dt === 'Refund' ? 'Refund proof' : `${dt} copy`}</h4>
     {sub.cn.file ? <FileCard name={sub.cn.file} size={sub.cn.fileSize} note={`Attached by ${sub.by}`} /> : <p className="rx-muted">No copy attached.</p>}
     <h4 className="rw-h4">Against</h4>
     <div className="rx-cm-sel">{rows.map(i => <div key={i.t.id}><span className="rx-mono">{i.t.docNo}</span><small>{kindLabel(i.kind)} · {m(i.amount)}</small><b>{i.state === 'Mapped' ? <Pill tone="green">Mapped</Pill> : m(i.diff)}</b></div>)}</div>
-    {sub.status === 'Submitted' && <p className={'rw-note' + (Math.abs(diff) < 0.005 ? '' : ' warn')}>Open {m(openAmt)} against a credit note of {m(sub.cn.total)}: difference {m(diff)}. {Math.abs(diff) < 0.005 ? 'Accepting maps these notes fully.' : diff > 0 ? 'Accepting maps them partly; the rest stays open.' : 'The credit note is more than what is open.'}</p>}
+    {sub.status === 'Submitted' && <p className={'rw-note' + (Math.abs(diff) < 0.005 ? '' : ' warn')}>Open {m(openAmt)}; this {dt.toLowerCase()} {dt === 'Vendor debit' ? 'adds back' : 'clears'} {m(sub.cn.total)}: difference {m(diff)}. {Math.abs(diff) < 0.005 ? 'Accepting maps these notes fully.' : diff > 0 ? 'Accepting maps them partly; the rest stays open.' : `Accepting leaves them over-credited by ${m(-diff)}; a vendor debit can bring it back.`}</p>}
     {sub.reason && <blockquote className="rx-cm-reason"><b>{sub.status === 'Rejected' ? 'Rejected' : 'Reason'}:</b> {sub.reason}</blockquote>}
     {!vendor && sub.status !== 'Reopened' && (sub.status !== 'Accepted' || !inLedger) && <label className="rw-field">Reason {sub.status === 'Submitted' ? '(required to reject)' : '(required)'}<textarea id="cm-reason" rows={2} value={reason} onChange={e => setReason(e.target.value)} placeholder={sub.status === 'Submitted' ? 'e.g. GST charged on a non-taxable claim' : 'Why this needs another look'} /></label>}
     {!vendor && sub.status === 'Accepted' && inLedger && <p className="rw-note">This credit note is already in the vendor’s ledger and reconciled, so it cannot be reopened here. Reverse the match in Reconciled Transactions if it is wrong.</p>}
@@ -205,28 +212,28 @@ function FileCard({ name, size, note, onClear }: { name: string; size?: number; 
 }
 function Attach({ file, size, onPick, onClear }: { file: string; size?: number; onPick: (name: string, size: number) => void; onClear: () => void }) {
   const [over, setOver] = useState(false); const [err, setErr] = useState('');
-  const take = (f?: File) => { setErr(''); if (!f) return; if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { setErr('Attach the credit note as a PDF.'); return; } if (f.size > 10 * 1048576) { setErr('The file is larger than 10 MB.'); return; } onPick(f.name, f.size); };
+  const take = (f?: File) => { setErr(''); if (!f) return; if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { setErr('Attach it as a PDF.'); return; } if (f.size > 10 * 1048576) { setErr('The file is larger than 10 MB.'); return; } onPick(f.name, f.size); };
   if (file) return <FileCard name={file} size={size} note="Ready to submit" onClear={onClear} />;
   return <><label className={'rx-att-drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files?.[0]); }}>
     <input id="cm-file" type="file" accept=".pdf,application/pdf" className="sr-only" onChange={e => { take(e.target.files?.[0]); e.currentTarget.value = ''; }} />
-    <span className="rx-att-cloud" aria-hidden="true"><Icon n="upload" s={18} /></span><span><b>Drop the credit note PDF here</b><small>or <u>browse your files</u> · PDF up to 10 MB</small></span></label>
+    <span className="rx-att-cloud" aria-hidden="true"><Icon n="upload" s={18} /></span><span><b>Drop the PDF here</b><small>or <u>browse your files</u> · PDF up to 10 MB</small></span></label>
     {err && <small className="rw-err">{err}</small>}</>;
 }
 
 // ---------- Bulk upload ----------
-const COLS = ['Note No', 'Note Type', 'Open Amount', 'CN No', 'CN Date (YYYY-MM-DD)', 'CN Type', 'Taxable Value', 'CGST', 'SGST', 'IGST', 'IRN'];
+const COLS = ['Note No', 'Note Type', 'Open Amount', 'Document', 'CN No', 'CN Date (YYYY-MM-DD)', 'CN Type', 'Taxable Value', 'CGST', 'SGST', 'IGST', 'IRN'];
 interface BRow { line: number; note: string; cn: string; total: number; err: string; ids: string[]; doc?: CnDoc }
 function Bulk({ ctx, open, onDone }: { ctx: Ctx; open: CItem[]; onDone: () => void }) {
   const cur = ctx.st.rel.currency; const m = (n: number) => money(n, cur, 2); const vendor = ctx.isVendor;
   const [rows, setRows] = useState<BRow[] | null>(null); const [fileName, setFileName] = useState(''); const [err, setErr] = useState('');
   const history = ctx.ws.bulks.filter(b => b.relId === ctx.st.rel.id);
-  const template = () => download(`${ctx.st.rel.vendorCode}_credit-note-template.csv`, toCSV(open.map(i => ({ 'Note No': i.t.docNo, 'Note Type': kindLabel(i.kind), 'Open Amount': i.diff.toFixed(2), 'CN No': '', 'CN Date (YYYY-MM-DD)': '', 'CN Type': 'Taxable', 'Taxable Value': '', 'CGST': '', 'SGST': '', 'IGST': '', 'IRN': '' }))));
+  const template = () => download(`${ctx.st.rel.vendorCode}_credit-note-template.csv`, toCSV(open.map(i => ({ 'Note No': i.t.docNo, 'Note Type': kindLabel(i.kind), 'Open Amount': i.diff.toFixed(2), 'Document': i.diff < 0 ? 'Vendor debit' : 'Credit note', 'CN No': '', 'CN Date (YYYY-MM-DD)': '', 'CN Type': 'Taxable', 'Taxable Value': '', 'CGST': '', 'SGST': '', 'IGST': '', 'IRN': '' }))));
   const check = (raw: Record<string, string>[]): BRow[] => raw.map((r, k) => {
     const note = (r['Note No'] ?? '').trim(); const it = open.find(i => i.t.docNo.toUpperCase() === note.toUpperCase()); const cn = (r['CN No'] ?? '').trim();
     const n = (c: string) => Number(String(r[c] ?? '').replace(/,/g, '')) || 0; const tx = n('Taxable Value'), c1 = n('CGST'), s1 = n('SGST'), i1 = n('IGST'); const total = r2(tx + c1 + s1 + i1);
-    const day = isoToDay((r['CN Date (YYYY-MM-DD)'] ?? '').trim()); const kind = /non/i.test(r['CN Type'] ?? '') ? 'Non-taxable' : 'Taxable';
+    const day = isoToDay((r['CN Date (YYYY-MM-DD)'] ?? '').trim()); const kind = /non/i.test(r['CN Type'] ?? '') ? 'Non-taxable' : 'Taxable'; const docType: DocType = /debit/i.test(r['Document'] ?? '') ? 'Vendor debit' : /refund/i.test(r['Document'] ?? '') ? 'Refund' : 'Credit note';
     const e = !it ? `Note ${note || '(blank)'} is not open for this vendor` : !cn ? 'Credit note number missing' : !day ? 'Date must be YYYY-MM-DD' : total <= 0 ? 'Credit note value missing' : kind === 'Non-taxable' && c1 + s1 + i1 > 0 ? 'GST on a non-taxable credit note' : '';
-    return { line: k + 2, note, cn, total, err: e, ids: it ? [it.t.id] : [], doc: e ? undefined : { no: cn, date: day, kind, taxable: tx, cgst: c1, sgst: s1, igst: i1, total, irn: (r['IRN'] ?? '').trim() } };
+    return { line: k + 2, note, cn, total, err: e, ids: it ? [it.t.id] : [], doc: e ? undefined : { docType, no: cn, date: day, kind, taxable: tx, cgst: c1, sgst: s1, igst: i1, total, irn: (r['IRN'] ?? '').trim() } };
   });
   const pick = async (f?: File) => { setErr(''); if (!f) return; if (!/\.csv$/i.test(f.name)) { setErr('This demo reads CSV files. In Excel use File → Save As → CSV UTF-8.'); return; }
     const p = parseCSV(await f.text()); const miss = ['Note No', 'CN No', 'Taxable Value'].filter(c => !p.columns.includes(c)); if (miss.length) { setErr(`Missing columns: ${miss.join(', ')}. Download the template for the layout.`); return; }
@@ -234,7 +241,7 @@ function Bulk({ ctx, open, onDone }: { ctx: Ctx; open: CItem[]; onDone: () => vo
   const sample = () => { setFileName('credit_notes_sample.csv'); setRows(check(open.filter(i => i.state !== 'Partly mapped').slice(0, 3).map((i, k) => { const tx = r2(i.diff / 1.18); const g = r2((i.diff - tx) / 2);
     return { 'Note No': i.t.docNo, 'CN No': `CN/${ctx.st.rel.vendorCode.slice(0, 3)}/B${String(k + 1).padStart(2, '0')}`, 'CN Date (YYYY-MM-DD)': '2026-10-05', 'CN Type': 'Taxable', 'Taxable Value': String(tx), 'CGST': String(g), 'SGST': String(r2(i.diff - tx - g)), 'IGST': '0', 'IRN': '' }; }))); };
   // Rows with the same credit note number become one submission covering several notes (many-to-one).
-  const groups = (rows ?? []).filter(r => !r.err).reduce((a, r) => { const g = a.get(r.cn) ?? { ids: [] as string[], doc: r.doc! }; g.ids.push(...r.ids); a.set(r.cn, g); return a; }, new Map<string, { ids: string[]; doc: CnDoc }>());
+  const groups = (rows ?? []).filter(r => !r.err).reduce((a, r) => { const k = `${r.doc!.docType}|${r.cn}`; const g = a.get(k) ?? { ids: [] as string[], doc: r.doc! }; g.ids.push(...r.ids); a.set(k, g); return a; }, new Map<string, { ids: string[]; doc: CnDoc }>());
   const submit = () => { const id = `BLK-${String(ctx.ws.bulks.length + 1).padStart(4, '0')}`; const ids = [...groups.values()].map(g => ctx.submitCn(g.ids, g.doc, 'Bulk upload', id));
     ctx.addBulk({ id, relId: ctx.st.rel.id, file: fileName, rows: rows!.length, subs: ids, by: ctx.user.name, at: ctx.at() }); ctx.toast(`${groups.size} credit note${groups.size === 1 ? '' : 's'} sent to the buyer (${id})`); setRows(null); onDone(); };
   return <>

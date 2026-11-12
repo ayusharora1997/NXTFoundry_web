@@ -11,7 +11,7 @@ import Balance from './Balance';
 import SettingsScreen from './Settings';
 import BalanceConfirm from './BalanceConfirm';
 import CreditMapping from './CreditMapping';
-import { allocate, creditItems, type CnSub, type CnDoc, type BulkReq } from './credit';
+import { allocate, creditItems, docKind, type CnSub, type CnDoc, type BulkReq } from './credit';
 import { Tour, useTour } from './tour';
 import { toursFor } from './tours';
 import './app.css';
@@ -85,10 +85,10 @@ export default function ReconApp() {
       let next = s0; let alloc = q.alloc; let status: CnSub['status'];
       if (action === 'accept') {
         if (q.status !== 'Submitted') return false; const items = creditItems(s0, s0.periods[s0.periods.length - 1].tag, wsRef.current.cns);
-        alloc = allocate(q, bid => items.find(i => i.t.id === bid)?.diff ?? 0); if (!alloc.some(a => a.amount > 0)) { toast('These notes are already fully mapped.', 'warn'); return false; }
-        const r = setAgreedCn(s0, q.tag, alloc.filter(a => a.amount > 0), q.cn.no, q.id, true, user.name, at); if (!r.ok) { toast(r.error, 'warn'); return false; } next = r.state; status = 'Accepted';
+        alloc = allocate(q, bid => items.find(i => i.t.id === bid)?.diff ?? 0); if (!alloc.some(a => Math.abs(a.amount) > 0.004)) { toast('Nothing to map on these notes.', 'warn'); return false; }
+        const r = setAgreedCn(s0, q.tag, alloc.filter(a => Math.abs(a.amount) > 0.004), q.cn.no, q.id, true, user.name, at, '', docKind(q.cn.docType)); if (!r.ok) { toast(r.error, 'warn'); return false; } next = r.state; status = 'Accepted';
       } else if (action === 'reject') { if (q.status !== 'Submitted') return false; status = 'Rejected'; }
-      else if (q.status === 'Accepted') { const r = setAgreedCn(s0, q.tag, q.alloc ?? [], q.cn.no, q.id, false, user.name, at, reason); if (!r.ok) { toast(r.error, 'warn'); return false; } next = r.state; status = 'Reopened'; }
+      else if (q.status === 'Accepted') { const r = setAgreedCn(s0, q.tag, q.alloc ?? [], q.cn.no, q.id, false, user.name, at, reason, docKind(q.cn.docType)); if (!r.ok) { toast(r.error, 'warn'); return false; } next = r.state; status = 'Reopened'; }
       else if (q.status === 'Rejected') status = 'Submitted'; else return false;
       const what = action === 'accept' ? `Accepted ${q.cn.no}` : action === 'reject' ? `Rejected: ${reason}` : q.status === 'Accepted' ? `Reopened: ${reason}. Agreement withdrawn` : `Reopened for review: ${reason}`;
       setWs(w => ({ ...w, states: { ...w.states, [q.relId]: next }, cns: w.cns.map(x => x.id === id ? { ...x, status, alloc, reason: action === 'accept' ? x.reason : reason, decidedBy: user.name, decidedAt: at, log: [...x.log, { at, by: user.name, what }] } : x) }));

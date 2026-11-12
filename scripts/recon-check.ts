@@ -210,6 +210,17 @@ check('R6: September closed, October run end to end and closed, November opened 
   check('When the vendor ledger carries the agreed credit note, reconciliation matches it automatically', !!m && m.rule === 'Credit note agreed in Credit Mapping' && after.txns.some(t => m.vendorIds.includes(t.id) && t.docNo === 'CN/KAV/9001'));
   const r = a.ok ? setAgreedCn(a.state, 'M092026', [{ id: dn.id, amount: Math.abs(dn.amount) }], 'CN/KAV/9001', 'CNS-0001', false, 'Arjun Mehta', AT, 'Wrong GST') : a;
   check('Reopening withdraws the agreement and the note returns to 5c', r.ok && !agreedNotes(r.state).has(dn.id) && annexOf(dn, new Set(), false, agreedNotes(r.state)).startsWith('Annexure 5c')); }
+// Over-credit fixed by a vendor debit: ₹1,000 credit note against a ₹500 debit note, then a ₹500 vendor debit.
+{ let st = newRelState({ ...rel, id: 'T9' }, P(6)); const t = 'M062026';
+  st = ok(importFile(st, file('T9', 'B', t, [row('INV-9', '02-Jun-2026', 'Invoice', 0, 10000), row('DBN-9', '05-Jun-2026', 'Debit Note - Claims', 500, 0, '', 'INV-9')], 0), t, 'Tester', AT));
+  const dbn = st.txns.find(x => x.docNo === 'DBN-9')!;
+  st = ok(setAgreedCn(st, t, [{ id: dbn.id, amount: 1000 }], 'CN-9', 'S1', true, 'Tester', AT, '', 'cn'));
+  check('A credit note larger than the debit note leaves it over-credited, not mapped', !agreedNotes(st).has(dbn.id));
+  st = ok(setAgreedCn(st, t, [{ id: dbn.id, amount: -500 }], 'VD-9', 'S2', true, 'Tester', AT, '', 'vd'));
+  check('A vendor debit reversing the excess brings it back to mapped', agreedNotes(st).has(dbn.id));
+  st = ok(importFile(st, file('T9', 'V', t, [row('INV-9', '02-Jun-2026', 'Invoice', 10000, 0), row('CN-9', '06-Jun-2026', 'Credit Note', 0, 1000), row('VD-9', '08-Jun-2026', 'Vendor Debit', 500, 0)], 0), t, 'Tester', AT));
+  st = runAll(st, t); const mm = st.matches.find(x => x.buyerIds.includes(dbn.id) && !x.reversed);
+  check('Reconciliation closes the debit note against the credit note and the vendor debit together', !!mm && mm.vendorIds.length === 2 && Math.abs(mm.amountDiff) < 0.005); }
 check('Every relationship has a current period in the expected position', Object.entries(CURRENT).every(([r, i]) => ws.states[r].periods.length === i + 1));
 check('Generator is deterministic', JSON.stringify(generateAll().files.map(f => f.closing)) === JSON.stringify(generateAll().files.map(f => f.closing)));
 

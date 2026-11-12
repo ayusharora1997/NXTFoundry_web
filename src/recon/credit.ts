@@ -4,7 +4,13 @@
 // the note once that credit note number appears in it.
 import { FAMILY, closedTxnIds, periodIndex, r2, type RelState, type Txn, type MatchRec } from './cycle';
 
-export interface CnDoc { no: string; date: string; kind: 'Taxable' | 'Non-taxable'; taxable: number; cgst: number; sgst: number; igst: number; total: number; irn: string; file?: string; fileSize?: number }
+export type DocType = 'Credit note' | 'Vendor debit' | 'Refund';
+/** Sign as it sits in the vendor's books: credit notes reduce what is owed, vendor debits and refunds add. */
+export const docSign = (d: DocType) => d === 'Credit note' ? -1 : 1;
+/** How much a document clears on the buyer's notes: credit notes and refunds clear, a vendor debit adds back. */
+export const clears = (c: Pick<CnDoc, 'docType' | 'total'>) => (c.docType === 'Vendor debit' ? -1 : 1) * c.total;
+export const docKind = (d?: DocType) => d === 'Vendor debit' ? 'vd' as const : d === 'Refund' ? 'refund' as const : 'cn' as const;
+export interface CnDoc { docType?: DocType; no: string; date: string; kind: 'Taxable' | 'Non-taxable'; taxable: number; cgst: number; sgst: number; igst: number; total: number; irn: string; file?: string; fileSize?: number }
 export type CnStatus = 'Submitted' | 'Accepted' | 'Rejected' | 'Reopened';
 export interface CnLog { at: string; by: string; what: string }
 export interface CnSub {
@@ -13,7 +19,7 @@ export interface CnSub {
 }
 export interface BulkReq { id: string; relId: string; file: string; rows: number; subs: string[]; by: string; at: string }
 
-export type ItemState = 'Open' | 'Partly mapped' | 'Submitted' | 'Rejected' | 'Mapped';
+export type ItemState = 'Open' | 'Partly mapped' | 'Over-credited' | 'Submitted' | 'Rejected' | 'Mapped';
 export interface CItem {
   t: Txn; kind: string; amount: number; agreed: number; diff: number; state: ItemState; source?: 'Vendor ledger' | 'Credit Mapping';
   subs: CnSub[]; match?: MatchRec; vendorCns: Txn[]; cnNos: string[]; mappedOn?: string; mapping: string;
@@ -23,9 +29,18 @@ export interface CItem {
 export const kindOf = (t: Txn) => { const m = /^Debit Note - (\w+)/i.exec(t.raw['Type'] ?? ''); return m ? m[1] : 'Credit note'; };
 export const kindLabel = (k: string) => k === 'Credit note' ? 'Credit note booked by buyer' : `Debit note · ${k}`;
 
-/** How much of a credit note goes to each note: in order, each up to what is still open on it. */
+/**
+ * How much of a document goes to each note. A credit note or refund fills notes in order up to what is open; anything
+ * beyond lands on the last note as an over-credit. A vendor debit first takes back over-credits, then sits on the first note.
+ */
 export function allocate(sub: Pick<CnSub, 'buyerIds' | 'cn'>, remaining: (id: string) => number) {
-  let left = sub.cn.total; return sub.buyerIds.map(id => { const a = r2(Math.max(0, Math.min(left, remaining(id)))); left = r2(left - a); return { id, amount: a }; });
+  const ids = sub.buyerIds; const out = ids.map(id => ({ id, amount: 0 }));
+  if (sub.cn.docType === 'Vendor debit') {
+    let left = sub.cn.total; out.forEach(o => { const over = Math.max(0, -remaining(o.id)); const a = r2(Math.min(left, over)); o.amount = -a; left = r2(left - a); });
+    if (left > 0 && out.length) out[0].amount = r2(out[0].amount - left); return out;
+  }
+  let left = sub.cn.total; out.forEach(o => { const a = r2(Math.max(0, Math.min(left, remaining(o.id)))); o.amount = a; left = r2(left - a); });
+  if (left > 0 && out.length) out[out.length - 1].amount = r2(out[out.length - 1].amount + left); return out;
 }
 
 /** Every buyer note up to the selected period, with where it stands in Credit Mapping. */
@@ -46,7 +61,7 @@ export function creditItems(st: RelState, tag: string, subs: CnSub[]): CItem[] {
     const mapping = shape(many ? 2 : 1, Math.max(1, agreedList.length));
     if (agreed > 0 && Math.abs(agreed - amount) < 0.005) return { t, kind, amount, agreed, diff: 0, state: 'Mapped', source: 'Credit Mapping', subs: s, vendorCns: [], cnNos, mappedOn: acc[acc.length - 1]?.decidedAt, mapping };
     const diff = r2(amount - agreed);
-    const state: ItemState = s.some(x => x.status === 'Submitted') ? 'Submitted' : agreed > 0 ? 'Partly mapped' : s.length && s[s.length - 1].status === 'Rejected' ? 'Rejected' : 'Open';
+    const state: ItemState = s.some(x => x.status === 'Submitted') ? 'Submitted' : diff < -0.005 ? 'Over-credited' : agreed > 0 ? 'Partly mapped' : s.length && s[s.length - 1].status === 'Rejected' ? 'Rejected' : 'Open';
     return { t, kind, amount, agreed, diff, state, subs: s, vendorCns: [], cnNos, mapping };
   }).sort((a, b) => b.t.date - a.t.date);
 }
