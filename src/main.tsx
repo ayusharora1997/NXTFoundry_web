@@ -1,5 +1,7 @@
 import React, {useState} from 'react';
 import {createRoot} from 'react-dom/client';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './styles.css';
 import ReconciliationLab from './recon/App';
 import { posts, resources, TOPICS, RESOURCE_KINDS, type Post, type PostKind, type ResourceKind } from './content';
@@ -325,8 +327,17 @@ class PageErrorBoundary extends React.Component<{children:React.ReactNode},{fail
   componentDidCatch(err:unknown){console.error('Page error:',err instanceof Error?err.message:'unknown')}
   render(){return this.state.failed?<section className="page section"><Label>SOMETHING WENT WRONG</Label><h1>This page hit a <em>snag.</em></h1><p className="page-lede">Reload to try again. If it keeps happening, email us at {CONTACT_EMAIL}.</p><button className="button" type="button" onClick={()=>window.location.reload()}>Reload the page</button></section>:this.props.children}
 }
+// Vercel Web Analytics + Speed Insights (cookieless). Pages are hash routes, so each is reported under a clean name:
+// in-page anchors (#products-customer, #prog-reset) roll up to their page, and tool screens to one route.
+// Not loaded in the offline bundle, which has no Vercel backend.
+function analyticsRoute(hash:string){const h=hash.replace(/^#/,'');
+  if(!h)return '/'; if(h.startsWith('products'))return '/products'; if(h.startsWith('prog-')||h.startsWith('solutions'))return '/solutions';
+  if(h.startsWith('contact'))return '/contact'; if(h.startsWith('insights'))return '/insights'; if(h.startsWith('reconciliation-lab'))return '/reconciliation-lab';
+  return '/'+h.split('/')[0].replace(/[^a-z0-9-]/gi,'');}
+function SiteInsights({hash}:{hash:string}){if(OFFLINE_BUILD)return null;const route=analyticsRoute(hash);
+  return <><Analytics route={route} path={route}/><SpeedInsights route={route}/></>}
 function App(){const [hash,setHash]=useState(window.location.hash); React.useEffect(()=>{const f=()=>setHash(window.location.hash);window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
 // Each hash is a separate page, so start it at the top — except #contact-form, which is a jump to the form itself.
 React.useLayoutEffect(()=>{const target=(hash==='#contact-form'||hash.startsWith('#products-')||hash.startsWith('#prog-'))&&document.getElementById(hash.slice(1)); if(target)target.scrollIntoView({behavior:'instant' as ScrollBehavior}); else window.scrollTo({top:0,behavior:'instant' as ScrollBehavior})},[hash]);
-let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <main className="tool-only">{content}</main>; return <><Header/><main>{content}</main><Footer/></>}
+let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/></>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/></>}
 createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
