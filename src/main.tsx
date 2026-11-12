@@ -89,8 +89,22 @@ const stages = [['01','Understand','Get close to the real operating model, const
 function Logo(){return <a className="logo" href="#top" aria-label="NXT Foundry home"><img src="/images/nxt-foundry-logo.png" alt="NXT Foundry" width={1454} height={292}/></a>}
 type MenuItem=[string,string,string,string,string?];
 function NavMenu({title,items,all,close}:{title:string;items:MenuItem[];all:[string,string];close:()=>void}){return <div className="nav-menu" role="menu" aria-label={title}><span className="nav-menu-title">{title}</span><div className="nav-menu-grid">{items.map(([href,name,tag,line,kind])=><a key={href} href={href} role="menuitem" onClick={close} className={'nav-menu-item'+(kind?' '+kind:'')}><b>{name}</b><small>{line}</small><span className="nav-menu-tag">{kind==='live'&&<i/>}{tag}</span></a>)}</div><a className="nav-menu-all" href={all[0]} onClick={close}>{all[1]} <ArrowRight size={13}/></a></div>}
-function Header(){const [open,setOpen]=useState(false); return <header className="header"><Logo/><nav className={open?'open':''}>{nav.map(([label,id])=>{const menu=id==='solutions'?<NavMenu title="Service engagements" all={['#solutions','See all engagements']} items={programmes.map(p=>['#prog-'+p.id,p.name,p.tag,p.line] as MenuItem)} close={()=>setOpen(false)}/>:id==='products'?<NavMenu title="Products" all={['#products','See the product suite']} items={suite.map(([sid,,t,d,k,st])=>['#'+sid,t,st,d,k] as MenuItem)} close={()=>setOpen(false)}/>:null;
-  return menu?<div className="nav-item" key={id}><a href={'#'+id} onClick={()=>setOpen(false)} aria-haspopup="true">{label}<span className="nav-caret" aria-hidden="true">▾</span></a>{menu}</div>:<a href={'#'+id} key={id} onClick={()=>setOpen(false)}>{label}</a>;})}</nav><a className="talk desktop" href="#contact">Let’s Talk <ArrowUpRight size={16}/></a><button className="menu" aria-label="Toggle menu" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></header>}
+// Dropdowns: exactly one can be open. Opens on hover or keyboard focus; closes on leaving, on Escape,
+// after clicking its heading or an item, and on every page change.
+function Header(){const [open,setOpen]=useState(false); const [menu,setMenu]=useState<string|null>(null); const noFocusOpen=React.useRef(false);
+React.useEffect(()=>{const f=()=>setMenu(null);window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
+const closeAll=()=>{setOpen(false);setMenu(null)};
+const itemProps=(id:string)=>({
+  onMouseEnter:()=>setMenu(id),
+  onMouseLeave:()=>setMenu(m=>m===id?null:m),
+  onFocus:()=>{if(noFocusOpen.current){noFocusOpen.current=false;return}setMenu(id)},
+  onBlur:(e:React.FocusEvent<HTMLDivElement>)=>{if(!e.currentTarget.contains(e.relatedTarget as Node|null))setMenu(m=>m===id?null:m)},
+  // Escape closes and returns focus to the heading without reopening it; the flag is cleared straight after,
+  // so it can't get stuck when focus was already on the heading.
+  onKeyDown:(e:React.KeyboardEvent<HTMLDivElement>)=>{if(e.key==='Escape'){setMenu(null);noFocusOpen.current=true;e.currentTarget.querySelector<HTMLElement>('a')?.focus();setTimeout(()=>{noFocusOpen.current=false},0)}},
+});
+return <header className="header"><Logo/><nav className={open?'open':''}>{nav.map(([label,id])=>{const dropdown=id==='solutions'?<NavMenu title="Service engagements" all={['#solutions','See all engagements']} items={programmes.map(p=>['#prog-'+p.id,p.name,p.tag,p.line] as MenuItem)} close={closeAll}/>:id==='products'?<NavMenu title="Products" all={['#products','See the product suite']} items={suite.map(([sid,,t,d,k,st])=>['#'+sid,t,st,d,k] as MenuItem)} close={closeAll}/>:null;
+  return dropdown?<div className={'nav-item'+(menu===id?' menu-open':'')} key={id} {...itemProps(id)}><a href={'#'+id} onClick={e=>{closeAll();e.currentTarget.blur()}} aria-haspopup="true" aria-expanded={menu===id}>{label}<span className="nav-caret" aria-hidden="true">▾</span></a>{dropdown}</div>:<a href={'#'+id} key={id} onClick={()=>setOpen(false)}>{label}</a>;})}</nav><a className="talk desktop" href="#contact">Let’s Talk <ArrowUpRight size={16}/></a><button className="menu" aria-label="Toggle menu" onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button></header>}
 function ScopeChip({problem}:{problem:string}){const id=scopeTools[problem];const tool=id?suite.find(t=>t[0]===id):undefined;
   if(!tool)return <span>{problem}</span>;
   const [,,name,,kind]=tool;

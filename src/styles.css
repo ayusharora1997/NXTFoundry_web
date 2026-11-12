@@ -615,10 +615,10 @@ footer{padding-top:52px}
 /* Header hover menus */
 .nav-item{position:relative;display:flex;align-items:center}
 .nav-caret{font-size:9px;margin-left:5px;opacity:.6;display:inline-block;transition:transform .2s}
-.nav-item:hover .nav-caret,.nav-item:focus-within .nav-caret{transform:rotate(180deg)}
+.nav-item.menu-open .nav-caret{transform:rotate(180deg)}
 .nav-menu{position:absolute;top:100%;left:50%;transform:translate(-50%,8px);width:620px;padding:18px;margin-top:18px;background:#0d1613;border:1px solid var(--line);border-radius:6px;box-shadow:0 24px 50px -18px rgba(0,0,0,.8);opacity:0;visibility:hidden;transition:opacity .18s,transform .18s,visibility .18s;z-index:20}
 .nav-menu::before{content:'';position:absolute;left:0;right:0;top:-26px;height:26px}
-.nav-item:hover .nav-menu,.nav-item:focus-within .nav-menu{opacity:1;visibility:visible;transform:translate(-50%,0)}
+.nav-item.menu-open .nav-menu{opacity:1;visibility:visible;transform:translate(-50%,0)}
 .nav-menu-title{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
 .nav-menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .header nav .nav-menu a{font-size:inherit;color:inherit;padding:0;border:0}
