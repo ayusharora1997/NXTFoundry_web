@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { openItems, heldTxnIds, FAMILY, decideCandidate, manualMatch, reverseMatch, STAGES, r2, updateException, proposeAdjustment, decideAdjustment, currentPeriod, TYPE_LABEL, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type MatchRec, type Txn, type RelState, type ExStatus } from './cycle';
+import { typeName, openItems, heldTxnIds, FAMILY, decideCandidate, manualMatch, reverseMatch, STAGES, r2, updateException, proposeAdjustment, decideAdjustment, currentPeriod, MANUAL_STATUSES, fmtDay, tagKey, type OpenItem, type MatchRec, type Txn, type RelState, type ExStatus, agreedNotes } from './cycle';
 import { ENTITIES, tagLabel } from './ledger';
 import { PairTable, kindOf, sumOf } from './PairTable';
 import { annexOf } from './annex';
@@ -22,7 +22,8 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
   const allOpen = useMemo(() => openItems(st, tag, settings), [st, tag, settings]);
   const items = useMemo(() => allOpen.filter(i => !held.has(i.txn.id)), [allOpen, held]);
   const timing = useMemo(() => new Map(allOpen.map(i => [i.txn.id, i.timing])), [allOpen]);
-  const annexOfTx = (t: Txn) => annexOf(t, held, timing.get(t.id) ?? false);
+  const agreed = agreedNotes(st); const agreedCn = (id: string) => (st.cnAgreed ?? {})[id]?.map(x => x.cn).join(', ');
+  const annexOfTx = (t: Txn) => annexOf(t, held, timing.get(t.id) ?? false, agreed);
   const annexes = (x: Txn[]) => [...new Set(x.map(annexOfTx))];
   const byId = useMemo(() => new Map(st.txns.map(t => [t.id, t])), [st]);
   const get = (ids: string[]) => ids.map(i => byId.get(i)!).filter(Boolean);
@@ -63,8 +64,8 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
       <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th><input type="checkbox" aria-label="Select all" checked={all} onChange={() => setSel(all ? [] : list.map(i => i.txn.id))} /></th><th>Annexure</th><th>Open period</th><th>Document no.</th><th>Type</th><th>Date</th><th className="ar">Amount</th><th>Reference</th><th>Age</th><th>Status</th></tr></thead>
         <tbody>{list.map(i => { const t = i.txn; return <tr key={t.id} className={sel.includes(t.id) ? 'sel' : ''}>
           <td><input type="checkbox" aria-label={`Select ${t.docNo || t.ref}`} checked={sel.includes(t.id)} onChange={() => setSel(sel.includes(t.id) ? sel.filter(x => x !== t.id) : [...sel, t.id])} /></td>
-          <td><span className="rx-annref">{annexOfTx(t)}</span></td><td><span className={'rx-tag' + (t.originTag !== tag ? ' old' : '')}>{tagLabel(t.originTag)}</span></td>
-          <td><button className="rw-link" onClick={() => setDetail(t.id)}>{t.docNo || t.ref}</button></td><td>{TYPE_LABEL[t.type]}</td><td>{fmtDay(t.date)}</td><td className="ar"><b>{signedMoney(t.amount, cur)}</b></td><td>{t.ref || (t.against ? `Against ${t.against}` : '—')}</td><td>{i.ageDays}d</td>
+          <td><span className="rx-annref">{annexOfTx(t)}</span>{agreedCn(t.id) && <a className="rx-cnag" href={`#reconciliation-lab/credit/${st.rel.id}/${tag}`} title={agreed.has(t.id) ? 'Credit note accepted in Credit Mapping; matched once it appears in the vendor ledger' : 'Partly covered by credit notes accepted in Credit Mapping'}>{agreed.has(t.id) ? 'CN agreed' : 'CN partly agreed'} · {agreedCn(t.id)} · awaiting vendor ledger</a>}</td><td><span className={'rx-tag' + (t.originTag !== tag ? ' old' : '')}>{tagLabel(t.originTag)}</span></td>
+          <td><button className="rw-link" onClick={() => setDetail(t.id)}>{t.docNo || t.ref}</button></td><td>{typeName(t)}</td><td>{fmtDay(t.date)}</td><td className="ar"><b>{signedMoney(t.amount, cur)}</b></td><td>{t.ref || (t.against ? `Against ${t.against}` : '—')}</td><td>{i.ageDays}d</td>
           <td>{i.candidateId ? <Pill tone="violet">Suggested</Pill> : <Pill tone={exTone(i.ex.status)}>{i.ex.status}</Pill>}</td></tr>; })}
           {!list.length && <tr><td colSpan={10} className="rx-muted">No open {side === 'B' ? 'buyer' : 'vendor'} items.</td></tr>}</tbody>
           {list.length > 0 && <tfoot><tr><td colSpan={6}>Total · {list.length} item{list.length === 1 ? '' : 's'}</td><td className="ar"><b>{signedMoney(sumOf(list.map(i => i.txn)), cur)}</b></td><td colSpan={3} /></tr>{sel.length > 0 && <tr className="sel"><td colSpan={6}>Selected · {sel.length}</td><td className="ar"><b>{signedMoney(sumOf(get(sel)), cur)}</b></td><td colSpan={3} /></tr>}</tfoot>}</table></div>
@@ -117,7 +118,7 @@ export default function OpenItemsScreen({ ctx }: { ctx: Ctx }) {
 function MatchDrawer({ ctx, B, V, onClose, onDone }: { ctx: Ctx; B: Txn[]; V: Txn[]; onClose: () => void; onDone: () => void }) {
   const { st, tag, run, user, at } = ctx; const cur = st.rel.currency; const [remarks, setRemarks] = useState(''); const [files, setFiles] = useState<string[]>([]);
   const same = !B.length || !V.length; const net = same ? sumOf([...B, ...V]) : r2(sumOf(B) - sumOf(V)); const ok = Math.abs(net) < 0.005;
-  const list = (title: string, x: Txn[]) => <div className="rx-mm"><h4 className="rw-h4">{title} · {x.length}</h4>{x.length ? <div className="rx-cand-tx">{x.map(t => <div key={t.id}><span className="side">{t.side === 'B' ? 'Buyer' : 'Vendor'}</span><b>{t.docNo || t.ref}</b><small>{TYPE_LABEL[t.type]} · {fmtDay(t.date)} · {tagLabel(t.originTag)}</small><b className="amt">{signedMoney(t.amount, cur)}</b></div>)}</div> : <p className="rx-muted">None selected.</p>}</div>;
+  const list = (title: string, x: Txn[]) => <div className="rx-mm"><h4 className="rw-h4">{title} · {x.length}</h4>{x.length ? <div className="rx-cand-tx">{x.map(t => <div key={t.id}><span className="side">{t.side === 'B' ? 'Buyer' : 'Vendor'}</span><b>{t.docNo || t.ref}</b><small>{typeName(t)} · {fmtDay(t.date)} · {tagLabel(t.originTag)}</small><b className="amt">{signedMoney(t.amount, cur)}</b></div>)}</div> : <p className="rx-muted">None selected.</p>}</div>;
   return <Drawer title={same ? 'Match as contra' : 'Match selected items'} sub={same ? `${B.length ? 'Buyer to buyer' : 'Vendor to vendor'} contra · ${B.length + V.length} entries within one ledger` : `${kindOf(B, V)} · ${B.length} buyer, ${V.length} vendor`} onClose={onClose}>
     {same && <p className="rw-note">Entries from one ledger only, so this is recorded as a contra: they should cancel each other out (for example an invoice and its reversal). Buyer and vendor items are never mixed in a contra.</p>}
     {(!same || B.length > 0) && list('Buyer entries', B)}{(!same || V.length > 0) && list('Vendor entries', V)}
@@ -138,7 +139,7 @@ function ItemDrawer({ ctx, r, onClose, onWorkbench }: { ctx: Ctx; r: Row; onClos
   const linked = st.txns.filter(x => it.linked.includes(x.id));
   const lockedP = st.periods.find(p => p.tag === tag)!.phase !== 'working';
   return <Drawer wide title={`${t.docNo || t.ref} · ${it.category}`} sub={<>{vendorOf(st).displayName} · {st.rel.bu} · {t.side === 'B' ? 'buyer books' : 'vendor books'} · <span className="rx-tag old">{t.originTag}</span></>} onClose={onClose}>
-    <dl className="rw-dl five"><div><dt>Amount</dt><dd>{signedMoney(t.amount, c)}</dd></div><div><dt>Date</dt><dd>{fmtDay(t.date)}</dd></div><div><dt>Type</dt><dd>{TYPE_LABEL[t.type]}</dd></div><div><dt>Age</dt><dd>{it.ageDays} days</dd></div><div><dt>Source</dt><dd>{t.line}</dd></div></dl>
+    <dl className="rw-dl five"><div><dt>Amount</dt><dd>{signedMoney(t.amount, c)}</dd></div><div><dt>Date</dt><dd>{fmtDay(t.date)}</dd></div><div><dt>Type</dt><dd>{typeName(t)}</dd></div><div><dt>Age</dt><dd>{it.ageDays} days</dd></div><div><dt>Source</dt><dd>{t.line}</dd></div></dl>
     <h4 className="rw-h4">Period lineage</h4>
     <ol className="rx-lineage">{[t.originTag, ...it.carriedPeriods.filter(p => p !== t.originTag), tag].filter((x, i, a) => a.indexOf(x) === i).map((p, i, a) => <li key={p} className={i === a.length - 1 ? 'cur' : ''}><span className="rx-tag">{p}</span><small>{i === 0 ? 'Originated' : i === a.length - 1 ? 'Open now' : 'Carried forward at close'}</small></li>)}</ol>
     {linked.length > 0 && <><h4 className="rw-h4">Linked on the other side</h4>{linked.map(x => <p key={x.id} className="rx-muted"><b>{x.docNo || x.ref}</b> · {x.side === 'B' ? 'buyer' : 'vendor'} · {signedMoney(x.amount, c)} · difference {signedMoney(t.side === 'B' ? t.amount - x.amount : x.amount - t.amount, c)}</p>)}</>}

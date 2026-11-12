@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { statement, heldTxnIds, FAMILY, LEDGER_COLUMNS, tagKey, prepare, share, vendorResponse, finalSignoff, reopen, closePeriod, approveRounding, fmtDay, r2, type Statement, type AnnexRow, type Side } from './cycle';
+import { statement, heldTxnIds, agreedNotes, FAMILY, LEDGER_COLUMNS, tagKey, prepare, share, vendorResponse, finalSignoff, reopen, closePeriod, approveRounding, fmtDay, r2, type Statement, type AnnexRow, type Side } from './cycle';
 import { nextDef, filesFor } from './store';
 import { tagLabel } from './ledger';
 import { xlsx, saveBlob } from './xlsx';
@@ -21,8 +21,8 @@ export default function Balance({ ctx }: { ctx: Ctx }) {
   const next = nextDef(st.rel, tag); const nextReady = next && filesFor(ws, st.rel.id, next.tag).some(f => f.kind === 'period');
   const v = vendorOf(st), e = entityOf(st);
   // ---- Statement model: closing balance per buyer → annexures → closing balance per vendor ----
-  const held = heldTxnIds(st); const byId = new Map(st.txns.map(t => [t.id, t]));
-  const info = (r: AnnexRow): Info => ({ fam: FAMILY[byId.get(r.txnId)!.type], side: r.buyerAmount !== null ? 'B' : 'V', held: held.has(r.txnId), timing: r.category.endsWith('(timing)') });
+  const held = heldTxnIds(st); const agreedSet = agreedNotes(st); const byId = new Map(st.txns.map(t => [t.id, t]));
+  const info = (r: AnnexRow): Info => ({ fam: FAMILY[byId.get(r.txnId)!.type], side: r.buyerAmount !== null ? 'B' : 'V', held: held.has(r.txnId), timing: r.category.endsWith('(timing)'), agreed: agreedSet.has(r.txnId) });
   // Moving from the buyer's closing to the vendor's: remove what only the buyer has, add what only the vendor has.
   const eff = (r: AnnexRow) => r.buyerAmount !== null ? -r.buyerAmount : (r.vendorAmount ?? 0);
   const allRows = s.annexures.flatMap(a => a.rows);

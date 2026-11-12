@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TYPE_LABEL, fmtDay, r2, type Txn } from './cycle';
+import { typeName, fmtDay, r2, type Txn } from './cycle';
 import { tagLabel } from './ledger';
 import { signedMoney } from './ui';
 
@@ -14,7 +14,7 @@ export function PairTable({ rows, cur, curTag, status, empty = 'Nothing here.' }
   const ref = (t: Txn) => t.ref || (t.against ? `Against ${t.against}` : '—');
   const cells = (items: Txn[]) => {
     const col = (f: (t: Txn) => React.ReactNode, cls = '') => <td className={cls}>{items.length ? items.map(t => <div key={t.id} className="rx-ln">{f(t)}</div>) : <span className="rx-muted">—</span>}</td>;
-    return <>{col(t => <b>{t.docNo || t.ref}</b>, 'sep')}{col(t => TYPE_LABEL[t.type])}{col(t => fmtDay(t.date))}{col(t => <b>{signedMoney(t.amount, cur)}</b>, 'ar')}{col(ref)}{col(t => <small>{t.kind === 'period' ? 'Period ledger' : t.kind === 'backdated' ? 'Back-dated' : 'Historical'} · {t.line}</small>)}{col(() => status)}</>;
+    return <>{col(t => <b>{t.docNo || t.ref}</b>, 'sep')}{col(t => typeName(t))}{col(t => fmtDay(t.date))}{col(t => <b>{signedMoney(t.amount, cur)}</b>, 'ar')}{col(ref)}{col(t => <small>{t.kind === 'period' ? 'Period ledger' : t.kind === 'backdated' ? 'Back-dated' : 'Historical'} · {t.line}</small>)}{col(() => status)}</>;
   };
   return <>
     <div className="rw-table-wrap"><table className="rw-table compact rx-rec">

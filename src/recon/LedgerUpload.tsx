@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { gate, importFile, previewFile, statement, openItems, r2, TYPE_LABEL, type LedgerFile, type RelState, type Side } from './cycle';
+import { typeName, gate, importFile, previewFile, statement, openItems, r2, type LedgerFile, type RelState, type Side } from './cycle';
 import { filesFor, autoReconcile } from './store';
 import { tagLabel } from './ledger';
 import { parseCSV } from './csv';
@@ -32,7 +32,7 @@ export default function LedgerUpload({ ctx }: { ctx: Ctx }) {
   const vendorName = vendorOf(st).displayName; const name = tagLabel(tag);
   const buyerFetched = buyerFile ? (/ERP/i.test(buyerFile.source) ? `Fetched from ERP on ${buyerFile.availableAt}` : `Uploaded on ${buyerFile.availableAt}`) : 'Fetched from the ERP once the period’s extract is available';
 
-  const standardised = (x: RelState['periods'][number]) => st.txns.filter(t => t.fileId === x.imports.V).map(t => ({ 'Line ID': t.line, 'Document No': t.docNo, 'Document Type': TYPE_LABEL[t.type], 'Document Date': t.date ? new Date(t.date).toISOString().slice(0, 10) : '', 'Reference': t.ref || t.against, 'Signed amount': t.amount, 'Original period': tagLabel(t.originTag) }));
+  const standardised = (x: RelState['periods'][number]) => st.txns.filter(t => t.fileId === x.imports.V).map(t => ({ 'Line ID': t.line, 'Document No': t.docNo, 'Document Type': typeName(t), 'Document Date': t.date ? new Date(t.date).toISOString().slice(0, 10) : '', 'Reference': t.ref || t.against, 'Signed amount': t.amount, 'Original period': tagLabel(t.originTag) }));
   const dlSrc = (f: LedgerFile | undefined) => f && download(f.fileName, toCSV(f.rows));
 
   const steps: { k: string; state: StepState; title: string; body: React.ReactNode }[] = [

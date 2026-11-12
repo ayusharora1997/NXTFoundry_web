@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { gate, previewFile, importFile, approveOpening, runStage, stageAvailable, decideCandidate, reverseMatch, manualMatch, closedTxnIds, openPool, STAGES, TYPE_LABEL, LEDGER_COLUMNS, fmtDay, r2, type LedgerFile, type MatchRec, type Txn, type StageId, type Side, type SideCheck, type RelState } from './cycle';
+import { typeName, gate, previewFile, importFile, approveOpening, runStage, stageAvailable, decideCandidate, reverseMatch, manualMatch, closedTxnIds, openPool, STAGES, LEDGER_COLUMNS, fmtDay, r2, type LedgerFile, type MatchRec, type Txn, type StageId, type Side, type SideCheck, type RelState } from './cycle';
 import { filesFor } from './store';
 import { tagLabel } from './ledger';
 import { parseCSV } from './csv';
@@ -43,7 +43,7 @@ export default function Reconcile({ ctx }: { ctx: Ctx }) {
   const ref = (t: Txn) => t.ref || (t.against ? `Against ${t.against}` : '—');
   const cells = (items: Txn[], r: Row) => {
     const col = (f: (t: Txn) => React.ReactNode, cls = '') => <td className={cls}>{items.length ? items.map(t => <div key={t.id} className="rx-ln">{f(t)}</div>) : <span className="rx-muted">—</span>}</td>;
-    return <>{col(t => <b>{t.docNo || t.ref}</b>, 'sep')}{col(t => TYPE_LABEL[t.type])}{col(t => fmtDay(t.date))}{col(t => <b>{signedMoney(t.amount, cur)}</b>, 'ar')}{col(ref)}{col(t => <small>{t.kind === 'period' ? 'Period ledger' : t.kind === 'backdated' ? 'Back-dated' : 'Historical'} · {t.line}</small>)}
+    return <>{col(t => <b>{t.docNo || t.ref}</b>, 'sep')}{col(t => typeName(t))}{col(t => fmtDay(t.date))}{col(t => <b>{signedMoney(t.amount, cur)}</b>, 'ar')}{col(ref)}{col(t => <small>{t.kind === 'period' ? 'Period ledger' : t.kind === 'backdated' ? 'Back-dated' : 'Historical'} · {t.line}</small>)}
       {col(() => r.mm.confidence === 'Manual' ? <Pill tone="violet">Manual match</Pill> : r.mm.confidence === 'Probable' ? <Pill tone="amber">Suggested match</Pill> : <Pill tone="green">Matched</Pill>)}</>;
   };
   const exportCsv = () => download(`${st.rel.id}_${tag}_reconciled.csv`, toCSV(shown.map(r => ({ 'Open period': tagLabel(r.tag), 'Match type': kindOf(r), Rule: stageName(r.mm), 'Buyer documents': r.B.map(t => t.docNo || t.ref).join(' | '), 'Buyer amount': r.B.length ? sum(r.B) : '', 'Vendor documents': r.V.map(t => t.docNo || t.ref).join(' | '), 'Vendor amount': r.V.length ? sum(r.V) : '', 'Difference (buyer − vendor)': r.diff }))));
@@ -107,7 +107,7 @@ export function ImportDrawer({ ctx, file, onClose, onImport }: { ctx: Ctx; file:
     {pv.duplicates.length > 0 && <ul className="rw-errs">{pv.duplicates.map(r => <li key={r.line}>{r.line}: {r.reason}</li>)}</ul>}
     <h4 className="rw-h4">Normalised lines · source values kept alongside</h4>
     <div className="rw-table-wrap"><table className="rw-table compact"><thead><tr><th>Line</th><th>Document (source)</th><th>Normalised key</th><th>Type</th><th>Date</th><th className="ar">Signed amount</th><th>Reference</th><th>Original period</th></tr></thead>
-      <tbody>{pv.txns.slice(0, 40).map(t => <tr key={t.id}><td>{t.line}</td><td>{t.docNo}</td><td><code>{t.docNorm || '—'}</code></td><td>{TYPE_LABEL[t.type]}</td><td>{fmtDay(t.date)}</td><td className="ar">{signedMoney(t.amount, cur)}</td><td>{t.ref || t.against}</td><td><span className={'rx-tag' + (t.originTag !== tag ? ' old' : '')}>{t.originTag}</span></td></tr>)}</tbody></table></div>
+      <tbody>{pv.txns.slice(0, 40).map(t => <tr key={t.id}><td>{t.line}</td><td>{t.docNo}</td><td><code>{t.docNorm || '—'}</code></td><td>{typeName(t)}</td><td>{fmtDay(t.date)}</td><td className="ar">{signedMoney(t.amount, cur)}</td><td>{t.ref || t.against}</td><td><span className={'rx-tag' + (t.originTag !== tag ? ' old' : '')}>{t.originTag}</span></td></tr>)}</tbody></table></div>
     {pv.txns.length > 40 && <p className="rx-muted">…and {pv.txns.length - 40} more.</p>}
     <div className="rw-drawer-foot"><button className="rw-btn ghost" onClick={onClose}>Cancel</button><span className="sp" /><button className="rw-btn lime" disabled={!pv.txns.length || file.relId !== st.rel.id} onClick={() => onImport(file)}><Icon n="upload" /> Import {pv.txns.length} lines</button></div>
   </Drawer>;
@@ -129,7 +129,7 @@ function GroupDrawer({ ctx, txns, onClose, onDone }: { ctx: Ctx; txns: Txn[]; on
   const b = txns.filter(t => t.side === 'B'), v = txns.filter(t => t.side === 'V'); const same = !b.length || !v.length;
   const net = same ? r2(txns.reduce((s, t) => s + t.amount, 0)) : r2(b.reduce((s, t) => s + t.amount, 0) - v.reduce((s, t) => s + t.amount, 0));
   return <Drawer title={same ? 'Manual contra' : `Grouped match · ${b.length}:${v.length}`} sub="Reviewer-built match. It closes only if the signed amounts net to zero." onClose={onClose}>
-    <div className="rx-cand-tx">{txns.map(t => <div key={t.id}><span className="side">{t.side === 'B' ? 'Buyer' : 'Vendor'}</span><b>{t.docNo || t.ref}</b><small>{TYPE_LABEL[t.type]} · {fmtDay(t.date)} · {t.originTag}</small><b className="amt">{signedMoney(t.amount, cur)}</b></div>)}</div>
+    <div className="rx-cand-tx">{txns.map(t => <div key={t.id}><span className="side">{t.side === 'B' ? 'Buyer' : 'Vendor'}</span><b>{t.docNo || t.ref}</b><small>{typeName(t)} · {fmtDay(t.date)} · {t.originTag}</small><b className="amt">{signedMoney(t.amount, cur)}</b></div>)}</div>
     <dl className="rw-dl"><div><dt>{same ? 'Net of selection' : 'Buyer − vendor'}</dt><dd className={Math.abs(net) < 0.005 ? 'rw-ok' : 'rw-neg'}>{Math.abs(net) < 0.005 ? '✓ 0.00' : signedMoney(net, cur)}</dd></div></dl>
     {Math.abs(net) >= 0.005 && <p className="rw-note warn">These do not net to zero, so they cannot be closed as a match. Leave them open, or propose an adjustment for the difference from Open items.</p>}
     <label className="rw-field"><span>Reason</span><textarea rows={3} value={reason} onChange={e => setReason(e.target.value)} placeholder="Why these belong together (e.g. vendor allocated one receipt across three invoices)" /></label>

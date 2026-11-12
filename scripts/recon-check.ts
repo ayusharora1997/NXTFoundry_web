@@ -3,10 +3,11 @@
 // annexures by originating period, sign-off and closure, and carry-forward across three or more periods.
 import {
   newRelState, importFile, gate, approveOpening, runStage, decideCandidate, manualMatch, reverseMatch, openItems, statement, prepare, share, vendorResponse,
-  finalSignoff, reopen, closePeriod, confirmBalance, openPool, approveRounding, updateException, proposeAdjustment, decideAdjustment, closedTxnIds, status, noteMappings, mapNote, STAGES, DEFAULT_SETTINGS,
+  finalSignoff, reopen, closePeriod, confirmBalance, openPool, setAgreedCn, agreedNotes, closedTxnIds as closedIds2, approveRounding, updateException, proposeAdjustment, decideAdjustment, closedTxnIds, status, noteMappings, mapNote, STAGES, DEFAULT_SETTINGS,
   type RelState, type LedgerFile, type Relationship, type PeriodDef, type Row,
 } from '../src/recon/cycle';
-import { initWorkspace, drive } from '../src/recon/store';
+import { initWorkspace, drive, autoReconcile } from '../src/recon/store';
+import { annexOf } from '../src/recon/annex';
 import { RELS, periodsFor, generateAll, CURRENT } from '../src/recon/ledger';
 
 let failed = 0, passed = 0;
@@ -198,6 +199,17 @@ check('R6: September closed, October run end to end and closed, November opened 
   check('Balance confirmation closes the period and opens the next from the confirmed balance', c.ok && c.state.periods[3].phase === 'closed' && !!c.state.periods[3].confirmed && c.state.periods[4].prevClosing?.B === bal && c.state.periods[4].prevClosing?.V === bal);
   check('Items up to a confirmed period stay recorded there and do not reach the next period', c.ok && before > 0 && openPool(c.state, 'M092026').length === before && openPool(c.state, 'M102026').length === 0);
   check('A closed period cannot be confirmed again', c.ok && !confirmBalance(c.state, 'M092026', bal, d1[4], 'BCC-T', 'R. Iyer', 'R. Iyer', AT).ok); }
+// Credit Mapping: buyer debit notes, vendor credit notes agreed outside the ledger, and the vendor ledger as source of truth.
+{ const R3 = ws.states.R3; const jul = R3.txns.find(t => t.side === 'B' && t.raw['Type'] === 'Debit Note - Claims' && t.originTag === 'M072026');
+  check('A buyer debit note settled by the vendor ledger is matched in reconciliation', !!jul && closedIds2(R3).has(jul.id));
+  const R1 = ws.states.R1; const dn = R1.txns.find(t => t.side === 'B' && t.raw['Type'] === 'Debit Note - Claims' && t.importedIn === 'M092026')!;
+  check('Buyer debit notes come in as credit-note family, reducing the payable', !!dn && dn.type === 'CN' && dn.amount < 0);
+  const a = setAgreedCn(R1, 'M092026', [{ id: dn.id, amount: Math.abs(dn.amount) }], 'CN/KAV/9001', 'CNS-0001', true, 'Arjun Mehta', AT);
+  check('An accepted credit note marks the debit note as agreed and moves it to Annexure 5d', a.ok && agreedNotes(a.state).has(dn.id) && annexOf(dn, new Set(), false, agreedNotes(a.state)).startsWith('Annexure 5d'));
+  const vf = ws.files.find(f => f.relId === 'R1' && f.periodTag === 'M092026' && f.side === 'V' && f.kind === 'period')!; const imp = a.ok ? importFile(a.state, vf, 'M092026', 'R. Iyer', AT) : a; const after = imp.ok ? autoReconcile(imp.state, ws, 'M092026', AT) : R1; const m = after.matches.find(x => x.buyerIds.includes(dn.id) && !x.reversed);
+  check('When the vendor ledger carries the agreed credit note, reconciliation matches it automatically', !!m && m.rule === 'Credit note agreed in Credit Mapping' && after.txns.some(t => m.vendorIds.includes(t.id) && t.docNo === 'CN/KAV/9001'));
+  const r = a.ok ? setAgreedCn(a.state, 'M092026', [{ id: dn.id, amount: Math.abs(dn.amount) }], 'CN/KAV/9001', 'CNS-0001', false, 'Arjun Mehta', AT, 'Wrong GST') : a;
+  check('Reopening withdraws the agreement and the note returns to 5c', r.ok && !agreedNotes(r.state).has(dn.id) && annexOf(dn, new Set(), false, agreedNotes(r.state)).startsWith('Annexure 5c')); }
 check('Every relationship has a current period in the expected position', Object.entries(CURRENT).every(([r, i]) => ws.states[r].periods.length === i + 1));
 check('Generator is deterministic', JSON.stringify(generateAll().files.map(f => f.closing)) === JSON.stringify(generateAll().files.map(f => f.closing)));
 

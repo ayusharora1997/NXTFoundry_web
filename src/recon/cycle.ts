@@ -19,9 +19,13 @@ const isRev = (t: TxnType) => t.endsWith('REV');
 // Labels as they arrive in ERP extracts and vendor ledgers → engine types.
 const TYPE_IN: Record<string, TxnType> = {
   'invoice': 'INV', 'tax invoice': 'INV', 'invoice reversal': 'INVREV', 'debit note': 'DN', 'debit note reversal': 'DNREV', 'credit note': 'CN', 'credit note reversal': 'CNREV',
+  // A debit note the buyer raises on the vendor reduces the payable: it is matched against the vendor's credit note.
+  'debit note - claims': 'CN', 'debit note - quantity': 'CN', 'debit note - price': 'CN',
   'payment': 'PAY', 'receipt': 'PAY', 'payment reversal': 'PAYREV', 'receipt reversal': 'PAYREV', 'tds': 'TDS', 'tds receivable': 'TDS', 'tds reversal': 'TDSREV',
 };
 export const r2 = (n: number) => Math.round(n * 100) / 100;
+/** The type as people read it: a buyer debit note keeps its own name (Debit Note - Claims) though it is matched as a credit note. */
+export const typeName = (t: { type: TxnType; raw?: Row }) => /^debit note - /i.test(t.raw?.['Type'] ?? '') ? t.raw!['Type'] : TYPE_LABEL[t.type];
 const DAY = 86400000;
 export const ENGINE_VERSION = 'nxt-recon 2.0';
 
@@ -89,7 +93,9 @@ export interface Period {
 export interface Audit { id: number; at: string; by: string; periodTag: string; action: string; detail: string; before?: string; after?: string; reason?: string }
 export interface RelState {
   rel: Relationship; periods: Period[]; txns: Txn[]; matches: MatchRec[]; candidates: Candidate[]; adjustments: Adjustment[];
-  exceptions: Record<string, ExRec>; credit: Record<string, CreditMap>; carry: { txnId: string; from: string; to: string; at: string }[]; audit: Audit[]; seq: number;
+  exceptions: Record<string, ExRec>; credit: Record<string, CreditMap>;
+  /** Credit notes the buyer accepted in Credit Mapping, per buyer note: number and the amount allocated to that note. */
+  cnAgreed?: Record<string, { cn: string; cnNorm: string; amount: number; ref: string }[]>; carry: { txnId: string; from: string; to: string; at: string }[]; audit: Audit[]; seq: number;
 }
 export interface Settings { tolerance: Record<string, number>; probableThreshold: number; dateWindow: number; timingDays: number; stages: { tds: boolean; paytds: boolean } }
 export const DEFAULT_SETTINGS: Settings = { tolerance: { INR: 500, USD: 10 }, probableThreshold: 60, dateWindow: 10, timingDays: 5, stages: { tds: true, paytds: true } };
@@ -103,7 +109,7 @@ export const getPeriod = (st: RelState, tag: string) => st.periods.find(p => p.t
 export const currentPeriod = (st: RelState) => st.periods[st.periods.length - 1];
 /** Tags sort by year then month: M062026 < M072026 < Q092026. */
 export const tagKey = (tag: string) => Number(tag.slice(3)) * 100 + Number(tag.slice(1, 3));
-function clone(st: RelState): RelState { return { ...st, periods: st.periods.map(p => ({ ...p, stages: { ...p.stages }, signoffs: [...p.signoffs], imports: { ...p.imports }, extraFiles: [...p.extraFiles], opening: { ...p.opening }, closing: { ...p.closing }, dates: { ...p.dates } })), txns: [...st.txns], matches: [...st.matches], candidates: [...st.candidates], adjustments: [...st.adjustments], exceptions: { ...st.exceptions }, credit: { ...st.credit }, carry: [...st.carry], audit: [...st.audit] }; }
+function clone(st: RelState): RelState { return { ...st, periods: st.periods.map(p => ({ ...p, stages: { ...p.stages }, signoffs: [...p.signoffs], imports: { ...p.imports }, extraFiles: [...p.extraFiles], opening: { ...p.opening }, closing: { ...p.closing }, dates: { ...p.dates } })), txns: [...st.txns], matches: [...st.matches], candidates: [...st.candidates], adjustments: [...st.adjustments], exceptions: { ...st.exceptions }, credit: { ...st.credit }, cnAgreed: Object.fromEntries(Object.entries(st.cnAgreed ?? {}).map(([k, v]) => [k, [...v]])), carry: [...st.carry], audit: [...st.audit] }; }
 function log(st: RelState, by: string, at: string, periodTag: string, action: string, detail: string, extra: Partial<Audit> = {}) { st.audit.push({ id: ++st.seq, at, by, periodTag, action, detail, ...extra }); }
 const nid = (st: RelState, p: string) => `${p}-${String(++st.seq).padStart(5, '0')}`;
 export const locked = (p: Period) => p.phase !== 'working';
@@ -261,7 +267,7 @@ export function runStage(st0: RelState, tag: string, id: StageId, settings: Sett
       const base = FAMILY[r.type];
       const originals = free(xs).filter(o => o.type === base && Math.abs(o.amount + r.amount) < 0.005 && o.date <= r.date);
       const byRef = originals.find(o => base === 'PAY' ? o.refNorm && o.refNorm === r.refNorm : r.againstNorm && o.docNorm === r.againstNorm);
-      if (byRef) return add(id, 'contra', 'Exact', 'Reversal references the original', side === 'B' ? [byRef, r] : [], side === 'V' ? [byRef, r] : [], `${TYPE_LABEL[r.type]} ${r.docNo || r.ref} reverses ${byRef.docNo || byRef.ref} (${base === 'PAY' ? 'same UTR' : 'named on the reversal'}); net zero.`);
+      if (byRef) return add(id, 'contra', 'Exact', 'Reversal references the original', side === 'B' ? [byRef, r] : [], side === 'V' ? [byRef, r] : [], `${typeName(r)} ${r.docNo || r.ref} reverses ${byRef.docNo || byRef.ref} (${base === 'PAY' ? 'same UTR' : 'named on the reversal'}); net zero.`);
       const bySuffix = originals.find(o => o.docNorm && r.docNorm.startsWith(o.docNorm) && /^(R|REV)\d*$/.test(r.docNorm.slice(o.docNorm.length)));
       if (bySuffix) return add(id, 'contra', 'Rule-based', 'Reversal number = original + R/REV', side === 'B' ? [bySuffix, r] : [], side === 'V' ? [bySuffix, r] : [], `${r.docNo} carries the original number ${bySuffix.docNo} with a reversal suffix; amounts net to zero.`);
       // Equal and opposite, but nothing ties them together: propose only, never close automatically.
@@ -286,6 +292,12 @@ export function runStage(st0: RelState, tag: string, id: StageId, settings: Sett
   }
   if (id === 'cn') {
     const bs = B.filter(t => t.type === 'CN'), vs = V.filter(t => t.type === 'CN'); considered = bs.length + vs.length;
+    // First, credit notes agreed in Credit Mapping: once the vendor's ledger carries that credit note number, match them.
+    // Notes and credit numbers linked through agreements form one group; it closes only when the amounts agree.
+    const ag = st.cnAgreed ?? {}; const root = new Map<string, string>(); const find = (x: string): string => { const r = root.get(x) ?? x; if (r === x) return x; const f = find(r); root.set(x, f); return f; };
+    Object.entries(ag).forEach(([b, list]) => list.forEach(l => root.set(find(`B:${b}`), find(`C:${l.cnNorm}`))));
+    byKey(bs, vs, t => t.side === 'B' ? (ag[t.id]?.length ? `CNAG|${find(`B:${t.id}`)}` : null) : (root.has(`C:${t.docNorm}`) || [...root.values()].includes(`C:${t.docNorm}`) ? `CNAG|${find(`C:${t.docNorm}`)}` : null),
+      () => 'Rule-based', 'Credit note agreed in Credit Mapping', (b, v) => `${v.map(x => x.docNo).join(', ')} in the vendor's ledger was agreed in Credit Mapping against ${b.map(x => x.docNo).join(', ')}; amounts agree.`);
     byKey(bs, vs, t => t.docNorm ? `CN|${t.docNorm}` : null, (b, v) => sameRaw(b, v) ? 'Exact' : 'Rule-based', 'Credit note number and amount', (b, v) => `Credit note ${b[0].docNo}${sameRaw(b, v) ? '' : ` / ${v[0].docNo}`} on both sides, same amount.`);
     const inv = (t: Txn) => normRef(st.credit[t.id]?.invoiceDoc ?? t.against);
     byKey(bs, vs, t => inv(t) ? `CNINV|${inv(t)}|${Math.abs(t.amount).toFixed(2)}` : null, () => 'Rule-based', 'Original invoice and amount', (b, v) => `Different note numbers (${b[0].docNo} / ${v[0].docNo}) but both credit invoice ${st.credit[b[0].id]?.invoiceDoc ?? b[0].against} for the same amount.`);
@@ -507,7 +519,7 @@ export function statement(st: RelState, tag: string, settings: Settings, at = ''
   const tol = settings.tolerance[st.rel.currency] ?? 0;
   const tags = [...new Set(items.map(i => i.txn.originTag))].sort((a, b) => tagKey(a) - tagKey(b));
   const annexures = tags.map((t, n) => {
-    const rows: AnnexRow[] = items.filter(i => i.txn.originTag === t).map(i => ({ txnId: i.txn.id, docNo: i.txn.docNo || i.txn.ref, date: i.txn.date, type: TYPE_LABEL[i.txn.type], originTag: i.txn.originTag, buyerAmount: i.txn.side === 'B' ? i.txn.amount : null, vendorAmount: i.txn.side === 'V' ? i.txn.amount : null, outstanding: i.txn.side === 'B' ? i.txn.amount : -i.txn.amount, reference: [i.txn.ref, i.txn.against].filter(Boolean).join(' · '), category: i.category + (i.timing ? ' (timing)' : ''), remarks: i.ex.notes[i.ex.notes.length - 1]?.text ?? '', status: i.ex.status, carried: i.carriedPeriods.length }));
+    const rows: AnnexRow[] = items.filter(i => i.txn.originTag === t).map(i => ({ txnId: i.txn.id, docNo: i.txn.docNo || i.txn.ref, date: i.txn.date, type: typeName(i.txn), originTag: i.txn.originTag, buyerAmount: i.txn.side === 'B' ? i.txn.amount : null, vendorAmount: i.txn.side === 'V' ? i.txn.amount : null, outstanding: i.txn.side === 'B' ? i.txn.amount : -i.txn.amount, reference: [i.txn.ref, i.txn.against].filter(Boolean).join(' · '), category: i.category + (i.timing ? ' (timing)' : ''), remarks: i.ex.notes[i.ex.notes.length - 1]?.text ?? '', status: i.ex.status, carried: i.carriedPeriods.length }));
     const totalB = r2(rows.reduce((s, x) => s + (x.buyerAmount ?? 0), 0)), totalV = r2(rows.reduce((s, x) => s + (x.vendorAmount ?? 0), 0));
     return { n: n + 1, tag: t, rows, totalB, totalV, net: r2(totalB - totalV) };
   });
@@ -608,6 +620,27 @@ export function confirmBalance(st0: RelState, tag: string, balance: number, next
   return { ok: true, state: st };
 }
 
+/** Buyer notes whose agreed credit notes (Credit Mapping) cover the full amount. */
+export function agreedNotes(st: RelState): Set<string> {
+  const s = new Set<string>(); const byId = new Map(st.txns.map(t => [t.id, t]));
+  Object.entries(st.cnAgreed ?? {}).forEach(([id, l]) => { const t = byId.get(id); if (t && Math.abs(l.reduce((a, x) => a + x.amount, 0) - Math.abs(t.amount)) < 0.005) s.add(id); });
+  return s;
+}
+/**
+ * Records (add) or withdraws (remove) a credit note the buyer accepted in Credit Mapping. The vendor's ledger stays the
+ * source of truth: nothing is matched here. The credit-note stage matches it once that number appears in the vendor's ledger.
+ */
+export function setAgreedCn(st0: RelState, tag: string, alloc: { id: string; amount: number }[], cn: string, ref: string, add: boolean, by: string, at: string, reason = ''): Result<RelState> {
+  if (!cn.trim()) return fail('A credit note number is required.');
+  const known = new Set(st0.txns.filter(t => t.side === 'B' && FAMILY[t.type] === 'CN').map(t => t.id));
+  if (!alloc.length || alloc.some(a => !known.has(a.id))) return fail('Only buyer debit and credit notes can be mapped.');
+  const st = clone(st0); const ag = st.cnAgreed ?? (st.cnAgreed = {}); const cnNorm = normRef(cn);
+  alloc.forEach(a => { const l = (ag[a.id] ?? []).filter(x => x.ref !== ref); if (add) l.push({ cn, cnNorm, amount: r2(a.amount), ref }); if (l.length) ag[a.id] = l; else delete ag[a.id]; });
+  const docs = alloc.map(a => st.txns.find(t => t.id === a.id)?.docNo).join(', ');
+  log(st, by, at, tag, add ? 'Credit note agreed' : 'Credit note reopened', `${cn} ${add ? 'agreed against' : 'withdrawn from'} ${docs} in Credit Mapping (${ref})`, reason ? { reason } : {});
+  return { ok: true, state: st };
+}
+
 // ---------- Credit / debit note mapping ----------
 // Every credit or debit note is tied to the invoice it adjusts. The credit-note stage uses this mapping when note numbers differ.
 export interface NoteRow { note: Txn; map?: CreditMap; invoice?: Txn; suggestion?: { invoice: Txn; reason: string }; status: 'Mapped' | 'Suggested' | 'Unmapped'; open: boolean }
@@ -623,7 +656,7 @@ export function noteMappings(st: RelState, tag: string): NoteRow[] {
     // Strongest clue: the other side holds a note for the same amount that names its invoice, and that invoice exists here.
     const twin = tx.find(o => o.side !== note.side && o.type === note.type && Math.abs(o.amount - (note.side === 'B' ? note.amount : note.amount)) < 0.005 && o.against);
     const viaTwin = twin && sameSide.find(i => i.docNorm === twin.againstNorm);
-    if (viaTwin) return { note, suggestion: { invoice: viaTwin, reason: `The ${note.side === 'B' ? 'vendor' : 'buyer'}’s ${TYPE_LABEL[note.type].toLowerCase()} ${twin!.docNo} for the same amount names this invoice` }, status: 'Suggested' as const, open: open.has(note.id) };
+    if (viaTwin) return { note, suggestion: { invoice: viaTwin, reason: `The ${note.side === 'B' ? 'vendor' : 'buyer'}’s ${typeName(note).toLowerCase()} ${twin!.docNo} for the same amount names this invoice` }, status: 'Suggested' as const, open: open.has(note.id) };
     const near = sameSide.filter(i => i.date <= note.date && i.amount >= Math.abs(note.amount)).sort((a, b) => b.date - a.date)[0];
     return near ? { note, suggestion: { invoice: near, reason: 'Most recent earlier invoice large enough to carry the note' }, status: 'Suggested' as const, open: open.has(note.id) } : { note, status: 'Unmapped' as const, open: open.has(note.id) };
   });
@@ -634,6 +667,6 @@ export function mapNote(st0: RelState, tag: string, noteId: string, invoiceDoc: 
   if (!st0.txns.some(t => t.side === note.side && t.type === 'INV' && normRef(t.docNo) === normRef(invoiceDoc))) return fail('That invoice is not in this relationship’s ledger on the same side.');
   const st = clone(st0); const before = st.credit[noteId]?.invoiceDoc;
   st.credit[noteId] = { invoiceDoc, method, by, at };
-  log(st, by, at, tag, 'Credit mapping', `${TYPE_LABEL[note.type]} ${note.docNo} → invoice ${invoiceDoc} (${method})`, { before: before ?? '(none)', after: invoiceDoc });
+  log(st, by, at, tag, 'Credit mapping', `${typeName(note)} ${note.docNo} → invoice ${invoiceDoc} (${method})`, { before: before ?? '(none)', after: invoiceDoc });
   return { ok: true, state: st };
 }

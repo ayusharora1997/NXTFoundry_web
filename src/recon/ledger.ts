@@ -49,7 +49,7 @@ export const CURRENT: Record<string, number> = { R1: 3, R2: 3, R3: 3, R4: 1, R5:
 export const tagLabel = (tag: string) => { const m = Number(tag.slice(1, 3)), y = tag.slice(3); return tag[0] === 'Q' ? `${MONTHS[m - 3]} – ${MONTHS[m - 1]} ${y}` : `${MONTHS[m - 1]} ${y}`; };
 
 // ---------- Generator ----------
-interface Spec { side: Side; tag: string; kind: LedgerFile['kind']; origin?: string; type: TxnType; doc: string; date: number; amt: number; ref?: string; against?: string; narr: string; truth: string }
+interface Spec { side: Side; tag: string; kind: LedgerFile['kind']; origin?: string; type: TxnType; doc: string; date: number; amt: number; ref?: string; against?: string; narr: string; truth: string; label?: string }
 interface Inv { no: string; amt: number; date: number; truth: string }
 function mulberry32(seed: number) { return () => { seed |= 0; seed = (seed + 0x6d2b79f5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
 const B_LABEL: Record<TxnType, string> = { INV: 'Invoice', INVREV: 'Invoice Reversal', DN: 'Debit Note', DNREV: 'Debit Note Reversal', CN: 'Credit Note', CNREV: 'Credit Note Reversal', PAY: 'Payment', PAYREV: 'Payment Reversal', TDS: 'TDS', TDSREV: 'TDS Reversal' };
@@ -90,6 +90,16 @@ function generateRel(rel: Relationship, defs: PeriodDef[], seed: number): Spec[]
   };
   const dn = (d: PeriodDef, i: Inv) => { const no = `DN/${vp}/${String(n++).padStart(3, '0')}`; const amt = int(1, 8) * unit; const date = dayIn(d, 5, 25); const t = truth();
     specs.push({ side: 'V', tag: d.tag, kind: 'period', type: 'DN', doc: no, date, amt, against: i.no, narr: 'Freight surcharge', truth: t }); specs.push({ side: 'B', tag: d.tag, kind: 'period', type: 'DN', doc: no, date: date + DAY, amt, against: i.no, narr: 'Vendor debit note', truth: t }); };
+  // A debit note the buyer raises on the vendor (claim, quantity shortfall, price difference). It reduces the payable, so it
+  // belongs with credit notes: the vendor is expected to issue a credit note for it. Amounts are fixed, so the rest of the
+  // generated data does not shift.
+  let dbn = 1;
+  const bdn = (d: PeriodDef, i: Inv, kind: 'Claims' | 'Quantity' | 'Price', vendorCn?: { no: string; against?: boolean }) => {
+    const pct = kind === 'Claims' ? 0.03 : kind === 'Quantity' ? 0.08 : 0.02; const amt = Math.max(unit, Math.round(i.amt * pct / unit) * unit);
+    const no = `DBN/${vp}/${fy(d)}/${String(dbn++).padStart(3, '0')}`; const date = Math.min(d.end, i.date + 6 * DAY); const t = `DBN-${seed}-${no}`;
+    specs.push({ side: 'B', tag: d.tag, kind: 'period', type: 'CN', doc: no, date, amt, against: i.no, narr: `Debit note raised · ${kind === 'Claims' ? 'damage claim' : kind === 'Quantity' ? 'short supply' : 'rate difference'}`, truth: t, label: `Debit Note - ${kind}` });
+    if (vendorCn) specs.push({ side: 'V', tag: d.tag, kind: 'period', type: 'CN', doc: vendorCn.no, date: Math.min(d.end, date + 3 * DAY), amt, against: vendorCn.against ? i.no : '', narr: `Credit note for ${kind.toLowerCase()}`, truth: t });
+  };
   const rev = (d: PeriodDef, i: Inv, loose = false) => {
     const date = Math.min(d.end, i.date + 3 * DAY); const at = unpaid.indexOf(i); if (at >= 0) unpaid.splice(at, 1);
     specs.push({ side: 'V', tag: d.tag, kind: 'period', type: 'INVREV', doc: `${i.no}-R`, date, amt: i.amt, against: i.no, narr: 'Invoice cancelled (wrong rate)', truth: i.truth });
@@ -110,13 +120,16 @@ function generateRel(rel: Relationship, defs: PeriodDef[], seed: number): Spec[]
   defs.forEach((d, i) => {
     if (d.start > TODAY) return;
     if (rel.id === 'R1') { const m = normal(d, 4); if (i === 0) inv(d, { bTag: defs[1].tag }); if (i === 1) inv(d, { vTag: defs[2].tag }); if (i === 2) rev(d, m[1]); if (i === 3 || i === 4) { const due = unpaid.filter(x => x.date < d.start).slice(0, 3); if (due.length > 1) pay(d, due, { split: true }); } if (i % 2 === 0) cn(d, m[0]); }
-    if (rel.id === 'R2') { const m = normal(d, 4); if (i === 2) inv(d, { date: d.end - 2 * DAY, vKind: 'backdated', vTag: defs[3].tag, vOrigin: d.tag, bTag: defs[3].tag }); if (i === 1) dn(d, m[0]); if (i === 3) cn(d, m[2]); }
+    if (rel.id === 'R1') { const m = unpaid.slice(-3); if (i === 2 && m[0]) bdn(d, m[0], 'Price'); if (i === 3 && m.length >= 2) { bdn(d, m[0], 'Claims', { no: 'CN/KAV/9001' }); bdn(d, m[1], 'Quantity'); } }
+    if (rel.id === 'R2') { const m = normal(d, 4); if (i === 3) bdn(d, m[3], 'Claims'); if (i === 2) inv(d, { date: d.end - 2 * DAY, vKind: 'backdated', vTag: defs[3].tag, vOrigin: d.tag, bTag: defs[3].tag }); if (i === 1) dn(d, m[0]); if (i === 3) cn(d, m[2]); }
     if (rel.id === 'R3') {
       const m = normal(d, 4);
       if (i === 0) inv(d, { bAmt: 0 }); // placeholder replaced below
       if (i === 1) { inv(d, { bTag: defs[3].tag }); const x = inv(d, { noPay: true }); const dcNo = `DC-${x.no.slice(-4)}`; specs.splice(specs.findIndex(s => s.side === 'B' && s.doc === x.no), 1, { ...specs.find(s => s.side === 'B' && s.doc === x.no)!, doc: dcNo }); }
       if (i === 3) { [0, 1].forEach(() => { const x = inv(d, { noPay: true }); const at = specs.findIndex(s => s.side === 'B' && s.doc === x.no); specs[at] = { ...specs[at], doc: `DC-${x.no.slice(-4)}` }; }); cn(d, m[1], { bNo: `MCN-${n}`, bNoAgainst: true }); }
       if (i === 2) cn(d, m[0]);
+      if (i === 1) bdn(d, m[2], 'Claims', { no: 'CN/DEC/0711', against: true });
+      if (i === 3) { bdn(d, m[2], 'Quantity'); bdn(d, m[3], 'Price'); }
     }
     if (rel.id === 'R4') { const m = normal(d, 6, 3); if (i === 0) cn(d, m[2], { bMissing: true }); if (i === 1) { inv(d, { vMissing: true }); cn(d, m[0]); } }
     if (rel.id === 'R5') {
@@ -155,7 +168,7 @@ export function generateAll(): Generated {
         const line = (s: Spec, j: number, tagPart: string): Row => {
           const signed = SIGN[s.type] * s.amt; const dr = side === 'B' ? signed < 0 : signed > 0; const id = `${side}-${d.tag}${tagPart}-${String(j + 1).padStart(4, '0')}`;
           truth[`${rel.id}:${side}:${id}`] = s.truth;
-          return { 'Line ID': id, 'Document No': s.doc, 'Document Date': fmt(s.date), 'Posting Date': fmt(Math.max(s.date, s.kind === 'period' ? d.start : s.date)), 'Type': (side === 'B' ? B_LABEL : V_LABEL)[s.type], 'Debit': dr ? s.amt.toFixed(2) : '', 'Credit': dr ? '' : s.amt.toFixed(2), 'Reference': s.ref ?? '', 'Against Doc': s.against ?? '', 'Narration': s.narr, 'Period Tag': s.origin ?? '' };
+          return { 'Line ID': id, 'Document No': s.doc, 'Document Date': fmt(s.date), 'Posting Date': fmt(Math.max(s.date, s.kind === 'period' ? d.start : s.date)), 'Type': s.label ?? (side === 'B' ? B_LABEL : V_LABEL)[s.type], 'Debit': dr ? s.amt.toFixed(2) : '', 'Credit': dr ? '' : s.amt.toFixed(2), 'Reference': s.ref ?? '', 'Against Doc': s.against ?? '', 'Narration': s.narr, 'Period Tag': s.origin ?? '' };
         };
         const extras = specs.filter(s => s.side === side && s.tag === d.tag && s.kind !== 'period');
         const back = extras.filter(s => s.kind === 'backdated');

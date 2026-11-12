@@ -1,7 +1,7 @@
 // Which statement annexure an unreconciled item belongs to. Shared by the statement and the Unreconciled screen so the two always agree.
-import { FAMILY, heldTxnIds, type RelState, type Statement, type Txn } from './cycle';
+import { FAMILY, heldTxnIds, agreedNotes, type RelState, type Statement, type Txn } from './cycle';
 
-export interface Info { fam: string; side: 'B' | 'V'; held: boolean; timing: boolean }
+export interface Info { fam: string; side: 'B' | 'V'; held: boolean; timing: boolean; agreed?: boolean }
 const INVF = ['INV', 'DN'];
 export const SECT: { n: number; sub?: string; title: string; fam: string[]; t: (i: Info) => boolean }[] = [
   { n: 1, title: 'Invoices subsequently accounted by buyer', fam: INVF, t: i => i.side === 'V' && i.timing && !i.held },
@@ -10,7 +10,8 @@ export const SECT: { n: number; sub?: string; title: string; fam: string[]; t: (
   { n: 4, title: 'Invoices not accounted by vendor', fam: INVF, t: i => i.side === 'B' && !i.held },
   { n: 5, sub: 'a', title: 'Credit notes subsequently or not accounted by buyer', fam: ['CN'], t: i => i.side === 'V' && !i.held },
   { n: 5, sub: 'b', title: 'Credit notes partially matched', fam: ['CN'], t: i => i.held },
-  { n: 5, sub: 'c', title: 'Credit notes subsequently or not accounted by vendor', fam: ['CN'], t: i => i.side === 'B' && !i.held },
+  { n: 5, sub: 'c', title: 'Credit notes subsequently or not accounted by vendor', fam: ['CN'], t: i => i.side === 'B' && !i.held && !i.agreed },
+  { n: 5, sub: 'd', title: 'Credit notes agreed in Credit Mapping, awaiting vendor ledger', fam: ['CN'], t: i => i.side === 'B' && !i.held && !!i.agreed },
   { n: 6, title: 'Payments not accounted by buyer', fam: ['PAY'], t: i => i.side === 'V' && !i.held },
   { n: 7, title: 'Payments partially matched', fam: ['PAY'], t: i => i.held },
   { n: 8, title: 'Payments not accounted by vendor', fam: ['PAY'], t: i => i.side === 'B' && !i.held },
@@ -20,17 +21,17 @@ export const SECT: { n: number; sub?: string; title: string; fam: string[]; t: (
 ];
 export const sectionOf = (i: Info) => SECT.find(d => d.fam.includes(i.fam) && d.t(i));
 /** "Annexure 4 · M092026": the annexure number and the annexure (original period) tag. */
-export function annexOf(t: Txn, held: Set<string>, timing: boolean): string {
-  const d = sectionOf({ fam: FAMILY[t.type], side: t.side, held: held.has(t.id), timing });
+export function annexOf(t: Txn, held: Set<string>, timing: boolean, agreed?: Set<string>): string {
+  const d = sectionOf({ fam: FAMILY[t.type], side: t.side, held: held.has(t.id), timing, agreed: agreed?.has(t.id) });
   return d ? `Annexure ${d.n}${d.sub ?? ''} · ${t.originTag}` : '—';
 }
 
 /** Annexures that carry a value for a statement, numbered as on the statement. Annexures that are empty or net to nil are left out. */
 export function annexSummary(st: RelState, s: Statement) {
-  const held = heldTxnIds(st); const byId = new Map(st.txns.map(t => [t.id, t])); const rows = s.annexures.flatMap(a => a.rows);
+  const held = heldTxnIds(st); const ag = agreedNotes(st); const byId = new Map(st.txns.map(t => [t.id, t])); const rows = s.annexures.flatMap(a => a.rows);
   return [1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => {
     const secs = SECT.filter(d => d.n === n); let count = 0, effect = 0;
-    rows.forEach(r => { const t = byId.get(r.txnId); if (!t) return; const i: Info = { fam: FAMILY[t.type], side: r.buyerAmount !== null ? 'B' : 'V', held: held.has(r.txnId), timing: r.category.endsWith('(timing)') };
+    rows.forEach(r => { const t = byId.get(r.txnId); if (!t) return; const i: Info = { fam: FAMILY[t.type], side: r.buyerAmount !== null ? 'B' : 'V', held: held.has(r.txnId), timing: r.category.endsWith('(timing)'), agreed: ag.has(r.txnId) };
       if (secs.some(d => d.fam.includes(i.fam) && d.t(i))) { count++; effect += r.buyerAmount !== null ? -r.buyerAmount : (r.vendorAmount ?? 0); } });
     return { n, name: n === 5 ? 'Credit notes' : n === 9 ? 'TDS' : secs[0].title, count, effect: Math.round(effect * 100) / 100 };
   }).filter(a => a.effect !== 0);

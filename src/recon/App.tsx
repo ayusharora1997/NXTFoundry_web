@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { confirmBalance, manualMatch, reverseMatch, decideCandidate, status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
+import { confirmBalance, setAgreedCn, manualMatch, reverseMatch, decideCandidate, status, gate, heldTxnIds, statement, openItems, currentPeriod, type RelState, type Result, type Settings, type WfStatus } from './cycle';
 import { initWorkspace, USERS, canApprove, now, bcOf, nextDef, type Workspace, type User, type VendorRequest, type BcRec } from './store';
 import { VENDORS, ENTITIES, tagLabel } from './ledger';
 import { Icon, Drawer, Picker, PeriodPicker, Toasts, Avatar, type Toast } from './ui';
@@ -10,14 +10,16 @@ import OpenItemsScreen from './OpenItems';
 import Balance from './Balance';
 import SettingsScreen from './Settings';
 import BalanceConfirm from './BalanceConfirm';
+import CreditMapping from './CreditMapping';
+import { allocate, creditItems, type CnSub, type CnDoc, type BulkReq } from './credit';
 import { Tour, useTour } from './tour';
 import { toursFor } from './tours';
 import './app.css';
 
 // Four screens; each sub-tab is a route of its own.
-export type Screen = 'unmapped' | 'mapped' | 'dash' | 'upload' | 'matched' | 'open' | 'statement' | 'confirm' | 'admin';
+export type Screen = 'credit' | 'dash' | 'upload' | 'matched' | 'open' | 'statement' | 'confirm' | 'admin';
 const NAV: { id: string; label: string; icon: string; subs: [Screen, string][] }[] = [
-  { id: 'credit', label: 'Credit Mapping', icon: 'file', subs: [['unmapped', 'Unmapped Credits'], ['mapped', 'Mapped Credits']] },
+  { id: 'credit', label: 'Credit Mapping', icon: 'file', subs: [['credit', '']] },
   { id: 'recon', label: 'Reconciliation', icon: 'check', subs: [['dash', 'Dashboard'], ['upload', 'Vendor Ledger Upload'], ['matched', 'Reconciled Transactions'], ['open', 'Unreconciled Transactions'], ['statement', 'Reconciliation Statement']] },
   { id: 'confirm', label: 'Balance Confirmation', icon: 'sign', subs: [['confirm', '']] },
   { id: 'admin', label: 'Admin Settings', icon: 'rules', subs: [['admin', '']] },
@@ -32,6 +34,7 @@ export interface Ctx {
   isVendor: boolean; visible: RelState[]; requests: VendorRequest[];
   submit: (r: Pick<VendorRequest, 'relId' | 'tag' | 'kind' | 'ids' | 'refId' | 'force' | 'reason' | 'summary'>) => void; decide: (id: string, approve: boolean) => void;
   updateBc: (id: string, patch: Partial<BcRec>, what: string) => void; confirmBc: (id: string, remarks: string) => boolean;
+  submitCn: (buyerIds: string[], cn: CnDoc, via?: CnSub['via'], bulkId?: string) => string; decideCn: (id: string, action: 'accept' | 'reject' | 'reopen', reason?: string) => boolean; addBulk: (b: BulkReq) => void;
 }
 export const vendorOf = (st: RelState) => VENDORS.find(v => v.id === st.rel.vendorId)!;
 export const entityOf = (st: RelState) => ENTITIES.find(e => e.id === st.rel.entityId)!;
@@ -74,6 +77,22 @@ export default function ReconApp() {
       const nb: BcRec | null = nx && nf && !wsRef.current.bcs.some(x => x.relId === b.relId && x.tag === nx.tag) ? { id: `BC-${nx.tag}-${b.relId}`, relId: b.relId, tag: nx.tag, balance: nf.closing ?? 0, reminders: [], status: 'Not sent', log: [{ at, by: 'System', what: `Queued after ${tagLabel(b.tag)} was confirmed` }] } : null;
       setWs(w => ({ ...w, states: { ...w.states, [b.relId]: next }, bcs: [...w.bcs.map(x => x.id === id ? { ...x, status: 'Confirmed' as const, respondedBy: user.name, respondedAt: at, remarks, certNo, log: [...x.log, { at, by: user.name, what: `Agreed. Certificate ${certNo} issued; ${tagLabel(b.tag)} closed without reconciliation` }] } : x), ...(nb ? [nb] : [])] }));
       return true; },
+    submitCn: (buyerIds, cn, via = 'Form', bulkId) => { const id = `CNS-${String(wsRef.current.cns.length + 1).padStart(4, '0')}`; const at = now();
+      setWs(w => ({ ...w, cns: [...w.cns, { id, relId: route.relId, tag: route.tag, buyerIds, cn, status: 'Submitted', via, bulkId, by: user.name, at, log: [{ at, by: user.name, what: `Submitted ${cn.no}${bulkId ? ` through bulk upload ${bulkId}` : ''}` }] }] })); return id; },
+    addBulk: b => setWs(w => ({ ...w, bulks: [...w.bulks, b] })),
+    decideCn: (id, action, reason = '') => { const q = wsRef.current.cns.find(x => x.id === id); if (!q) return false; const at = now(); const s0 = wsRef.current.states[q.relId];
+      if ((action === 'reject' || action === 'reopen') && !reason.trim()) { toast('Give a reason.', 'warn'); return false; }
+      let next = s0; let alloc = q.alloc; let status: CnSub['status'];
+      if (action === 'accept') {
+        if (q.status !== 'Submitted') return false; const items = creditItems(s0, s0.periods[s0.periods.length - 1].tag, wsRef.current.cns);
+        alloc = allocate(q, bid => items.find(i => i.t.id === bid)?.diff ?? 0); if (!alloc.some(a => a.amount > 0)) { toast('These notes are already fully mapped.', 'warn'); return false; }
+        const r = setAgreedCn(s0, q.tag, alloc.filter(a => a.amount > 0), q.cn.no, q.id, true, user.name, at); if (!r.ok) { toast(r.error, 'warn'); return false; } next = r.state; status = 'Accepted';
+      } else if (action === 'reject') { if (q.status !== 'Submitted') return false; status = 'Rejected'; }
+      else if (q.status === 'Accepted') { const r = setAgreedCn(s0, q.tag, q.alloc ?? [], q.cn.no, q.id, false, user.name, at, reason); if (!r.ok) { toast(r.error, 'warn'); return false; } next = r.state; status = 'Reopened'; }
+      else if (q.status === 'Rejected') status = 'Submitted'; else return false;
+      const what = action === 'accept' ? `Accepted ${q.cn.no}` : action === 'reject' ? `Rejected: ${reason}` : q.status === 'Accepted' ? `Reopened: ${reason}. Agreement withdrawn` : `Reopened for review: ${reason}`;
+      setWs(w => ({ ...w, states: { ...w.states, [q.relId]: next }, cns: w.cns.map(x => x.id === id ? { ...x, status, alloc, reason: action === 'accept' ? x.reason : reason, decidedBy: user.name, decidedAt: at, log: [...x.log, { at, by: user.name, what }] } : x) }));
+      toast(action === 'accept' ? `${q.cn.no} accepted` : action === 'reject' ? `${q.cn.no} rejected; the vendor can correct and resubmit` : `${q.cn.no} reopened`); return true; },
     run: (fn, okMsg, relId = route.relId) => { const r = fn(wsRef.current.states[relId]); if (!r.ok) { toast(r.error, 'warn'); return false; } const next = r.state; setWs(w => ({ ...w, states: { ...w.states, [relId]: next } })); if (okMsg) toast(okMsg); return true; },
   };
   const curStat = status(st, route.tag, ws.settings);
@@ -91,7 +110,7 @@ export default function ReconApp() {
     <div className="rx-top">
       <div className="rx-bar">
         <a className="rd-brand" href="#products" title="NXT Foundry products"><span className="rw-mark">NXT</span><div><b>Vendor Payable Reconciliation</b><small>Meridian Consumer Products · buyer workspace</small></div></a>
-        {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <>
+        {((navOf(route.screen).id === 'recon' && route.screen !== 'dash') || route.screen === 'credit') && <>
           <Picker value={route.relId} onChange={v => v !== 'ALL' && ctx.select(v)} allLabel="Choose a relationship" options={visible.map(x => ({ id: x.rel.id, label: label(x), meta: `${x.rel.entityId} · ${status(x, currentPeriod(x).tag, ws.settings)}`, dot: dot(x) }))} />
           <PeriodPicker tags={st.periods.map(p => p.tag)} value={route.tag} quarterly={st.rel.frequency === 'Quarterly'} onPick={t => ctx.select(route.relId, t)} />
         </>}
@@ -107,13 +126,12 @@ export default function ReconApp() {
     </div>
     <p className="rw-banner">Illustrative NXT Foundry demo · synthetic data, in-memory only. The buyer, vendors, people and every figure are fictional; the user switcher stands in for sign-in and permissions.</p>
     {user.vendorId && <p className="rx-vbar"><b>Vendor view · {vendorOf(st).displayName}.</b> You can see every screen for your own account. Statement responses are yours to give; matches, reversals and suggestions you make are sent to the buyer for review and only apply once approved.</p>}
-    {navOf(route.screen).id === 'recon' && route.screen !== 'dash' && <div className="rx-context">
+    {((navOf(route.screen).id === 'recon' && route.screen !== 'dash') || route.screen === 'credit') && <div className="rx-context">
       <div><b>{vendorOf(st).legalName}</b><span>{st.rel.vendorCode} · {entityOf(st).name} · {st.rel.bu} · {st.rel.currency} · {st.rel.frequency}</span></div>
       <div className="rx-context-r">{bc?.status === 'Confirmed' && <a className="rw-pill green" href={`#reconciliation-lab/confirm/${route.relId}/${route.tag}`} title={`Certificate ${bc.certNo}: vendor confirmed the balance on ${bc.respondedAt}`}>Balance confirmed · recon not required</a>}<span className={'rw-pill ' + STATUS_TONE[curStat]}>{curStat}</span><b>{tagLabel(route.tag)}</b>{period.version > 1 && <span>v{period.version}</span>}</div>
     </div>}
     <div className="rw-main">
-      {route.screen === 'unmapped' && <Planned title="Unmapped credits" what="Credit and debit notes not yet tied to the invoice they adjust." />}
-      {route.screen === 'mapped' && <Planned title="Mapped credits" what="Credit and debit notes already tied to their invoices, with how and by whom." />}
+      {route.screen === 'credit' && <CreditMapping key={route.relId} ctx={ctx} />}
       {route.screen === 'dash' && <Dashboard ctx={ctx} />}
       {route.screen === 'upload' && <LedgerUpload ctx={ctx} />}
       {route.screen === 'matched' && <Reconcile ctx={ctx} />}

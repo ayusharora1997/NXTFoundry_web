@@ -94,6 +94,9 @@ About 30 tables in eight groups. Every table carries `org_id` (the client) so on
 | Table | Key columns |
 |---|---|
 | `vendor_requests` | id, period_id, kind (match \| reverse \| confirm \| reject), payload (json), reason, status, requested_by, decided_by, decided_at |
+| `credit_note_submissions` | id, relationship_id, period_id, cn_no, cn_date, cn_type (taxable \| non-taxable), taxable_value, cgst, sgst, igst, total, irn, attachment_id, via (form \| bulk), bulk_id?, status (submitted \| accepted \| rejected \| reopened), reason, submitted_by (vendor, L1), decided_by (buyer, L2), decided_at |
+| `credit_note_allocations` | submission_id, buyer_txn_id, amount (how much of the credit note covers each buyer debit note; the "agreed, awaiting vendor ledger" record that reconciliation matches against once the CN number appears in the vendor ledger) |
+| `credit_bulk_uploads` | id, relationship_id, file_name, storage_key, rows, uploaded_by, uploaded_at |
 | `bc_requests` | id, relationship_id, period_id, balance, sent_at, due_at, status (not sent \| awaiting \| escalated \| confirmed \| disputed), route (upload \| download), remarks, responded_by, responded_at |
 | `bc_reminders` | bc_request_id, step (R1 \| R2 \| escalation), sent_at, channel |
 | `certificates` | id, cert_no, period_id, kind (confirmed \| reconciled), balance, issued_at, storage_key |

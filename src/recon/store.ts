@@ -4,9 +4,10 @@
 
 import {
   newRelState, importFile, gate, approveOpening, runStage, decideCandidate, prepare, share, vendorResponse, finalSignoff, closePeriod, approveRounding,
-  statement, openItems, updateException, STAGES, DEFAULT_SETTINGS, type RelState, type Settings, type LedgerFile, type Result, type PeriodDef, type Relationship,
+  statement, openItems, updateException, setAgreedCn, STAGES, DEFAULT_SETTINGS, type RelState, type Settings, type LedgerFile, type Result, type PeriodDef, type Relationship,
 } from './cycle';
 import { generateAll, periodsFor, RELS, VENDORS, CURRENT } from './ledger';
+import { allocate, type CnSub, type BulkReq } from './credit';
 
 export interface User { id: string; name: string; role: 'Preparer' | 'Approver' | 'Admin' | 'Vendor'; vendorId?: string }
 export const USERS: User[] = [
@@ -29,7 +30,7 @@ export type BcStatus = 'Not sent' | 'Awaiting response' | 'Escalated' | 'Confirm
 export interface BcLog { at: string; by: string; what: string }
 export interface BcRec { id: string; relId: string; tag: string; balance: number; sentAt?: string; dueMs?: number; reminders: string[]; status: BcStatus; route?: 'download' | 'upload'; remarks?: string; respondedBy?: string; respondedAt?: string; certNo?: string; log: BcLog[] }
 export const bcOf = (ws: Pick<Workspace, 'bcs'>, relId: string, tag: string) => ws.bcs.find(b => b.relId === relId && b.tag === tag);
-export interface Workspace { states: Record<string, RelState>; files: LedgerFile[]; truth: Record<string, string>; settings: Settings; userId: string; requests: VendorRequest[]; bcs: BcRec[] }
+export interface Workspace { states: Record<string, RelState>; files: LedgerFile[]; truth: Record<string, string>; settings: Settings; userId: string; requests: VendorRequest[]; bcs: BcRec[]; cns: CnSub[]; bulks: BulkReq[] }
 
 const DAY = 86400000; const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 export const stampAt = (ms: number, hhmm = '10:00') => { const d = new Date(ms); return `${String(d.getUTCDate()).padStart(2, '0')}-${MON[d.getUTCMonth()]}-${d.getUTCFullYear()} ${hhmm}`; };
@@ -104,7 +105,24 @@ export function initWorkspace(): Workspace {
     st = drive(st, base, defs[CURRENT[rel.id]].tag, TARGET[rel.id], rel.id !== 'R2');
     states[rel.id] = st;
   });
-  return { states, files, truth, settings: DEFAULT_SETTINGS, userId: 'u1', requests: [], bcs: seedBcs(states, files) };
+  const { cns, bulks } = seedCredits(states);
+  return { states, files, truth, settings: DEFAULT_SETTINGS, userId: 'u1', requests: [], bcs: seedBcs(states, files), cns, bulks };
+}
+// Credit Mapping examples: R1 has an accepted credit note (in the vendor's September ledger, which arrives on upload) and a
+// rejected one; R3 has one waiting for the buyer, submitted through a bulk upload.
+function seedCredits(states: Record<string, RelState>): { cns: CnSub[]; bulks: BulkReq[] } {
+  const cns: CnSub[] = []; const bulks: BulkReq[] = [];
+  const note = (rel: string, kind: string, tag: string) => states[rel].txns.find(t => t.side === 'B' && t.raw['Type'] === `Debit Note - ${kind}` && t.originTag === tag);
+  const gst = (total: number) => { const taxable = Math.round(total / 1.18 * 100) / 100; const g = Math.round((total - taxable) / 2 * 100) / 100; return { taxable, cgst: g, sgst: Math.round((total - taxable - g) * 100) / 100, igst: 0 }; };
+  const a = note('R1', 'Claims', 'M092026');
+  if (a) { const total = Math.abs(a.amount); const s: CnSub = { id: 'CNS-0001', relId: 'R1', tag: 'M092026', buyerIds: [a.id], cn: { no: 'CN/KAV/9001', date: '24-Sep-2026', kind: 'Non-taxable', taxable: total, cgst: 0, sgst: 0, igst: 0, total, irn: '', file: 'CN-KAV-9001.pdf' }, status: 'Accepted', via: 'Form', by: 'R. Iyer', at: '29-Sep-2026 12:10', decidedBy: 'Arjun Mehta', decidedAt: '30-Sep-2026 10:05', log: [{ at: '29-Sep-2026 12:10', by: 'R. Iyer', what: 'Submitted CN/KAV/9001' }, { at: '30-Sep-2026 10:05', by: 'Arjun Mehta', what: 'Accepted. Mapped fully; awaiting the vendor ledger' }] };
+    s.alloc = allocate(s, () => total); const r = setAgreedCn(states.R1, 'M092026', s.alloc, s.cn.no, s.id, true, 'Arjun Mehta', '30-Sep-2026 10:05'); if (r.ok) states.R1 = r.state; cns.push(s); }
+  const b = note('R1', 'Price', 'M082026');
+  if (b) { const total = Math.abs(b.amount) + 500; cns.push({ id: 'CNS-0002', relId: 'R1', tag: 'M082026', buyerIds: [b.id], cn: { no: 'CN/KAV/8820', date: '02-Sep-2026', kind: 'Taxable', ...gst(total), total, irn: 'IRN-SYN-88203411', file: 'CN-KAV-8820.pdf' }, status: 'Rejected', via: 'Form', by: 'R. Iyer', at: '03-Sep-2026 15:40', decidedBy: 'Arjun Mehta', decidedAt: '04-Sep-2026 11:20', reason: 'Credit note value is ₹500 more than the debit note, and GST is charged on a rate difference agreed as non-taxable. Please issue a corrected credit note.', log: [{ at: '03-Sep-2026 15:40', by: 'R. Iyer', what: 'Submitted CN/KAV/8820' }, { at: '04-Sep-2026 11:20', by: 'Arjun Mehta', what: 'Rejected: value and GST do not match the debit note' }] }); }
+  const c = note('R3', 'Quantity', 'M092026');
+  if (c) { const total = Math.abs(c.amount); cns.push({ id: 'CNS-0003', relId: 'R3', tag: 'M092026', buyerIds: [c.id], cn: { no: 'CN/DEC/0934', date: '27-Sep-2026', kind: 'Taxable', ...gst(total), total, irn: 'IRN-SYN-09340072', file: 'CN-DEC-0934.pdf' }, status: 'Submitted', via: 'Bulk upload', bulkId: 'BLK-0001', by: 'S. Reddy', at: '01-Oct-2026 09:30', log: [{ at: '01-Oct-2026 09:30', by: 'S. Reddy', what: 'Submitted CN/DEC/0934 through bulk upload BLK-0001' }] });
+    bulks.push({ id: 'BLK-0001', relId: 'R3', file: 'deccan_credit_notes_sep.csv', rows: 1, subs: ['CNS-0003'], by: 'S. Reddy', at: '01-Oct-2026 09:30' }); }
+  return { cns, bulks };
 }
 // One BC per relationship for its current period. Where the vendor ledger is already in, the vendor disagreed and uploaded it;
 // R1 is still waiting (reminder 1 sent) and R6's vendor confirmed the balance.

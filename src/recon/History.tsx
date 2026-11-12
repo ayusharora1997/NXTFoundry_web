@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { TYPE_LABEL, fmtDay, r2 } from './cycle';
+import { typeName, TYPE_LABEL, fmtDay, r2 } from './cycle';
 import { tagLabel } from './ledger';
 import { Card, DataTable, Pill, money, signedMoney } from './ui';
 import { PageHead, STATUS_TONE, type Ctx } from './App';
@@ -23,7 +23,7 @@ export default function History({ ctx, embedded }: { ctx: Ctx; embedded?: boolea
       </article>; })}</div>
     <Card actions={<div className="rw-seg">{([['carry', 'Carry-forward movements'], ['rev', 'Match reversals'], ['adj', 'Adjustments'], ['sign', 'Sign-off and closure']] as const).map(([k, l]) => <button key={k} className={view === k ? 'on' : ''} onClick={() => setView(k)}>{l}</button>)}</div>}>
       {view === 'carry' && <DataTable rows={carry} rowKey={c => c.txnId + c.from} fileName={`${st.rel.id}_carry-forward.csv`} empty="Nothing has been carried forward yet." initialSort={{ key: 'from', dir: -1 }} cols={[
-        { key: 'doc', label: 'Item', text: c => c.t.docNo || c.t.ref, render: c => <span className="rw-stack"><b>{c.t.docNo || c.t.ref}</b><small>{c.t.side === 'B' ? 'Buyer' : 'Vendor'} · {TYPE_LABEL[c.t.type]}</small></span> },
+        { key: 'doc', label: 'Item', text: c => c.t.docNo || c.t.ref, render: c => <span className="rw-stack"><b>{c.t.docNo || c.t.ref}</b><small>{c.t.side === 'B' ? 'Buyer' : 'Vendor'} · {typeName(c.t)}</small></span> },
         { key: 'amt', label: 'Amount', align: 'right', text: c => money(c.t.amount, cur), render: c => signedMoney(c.t.amount, cur) },
         { key: 'orig', label: 'Original period', text: c => c.t.originTag, render: c => <span className="rx-tag old">{c.t.originTag}</span> },
         { key: 'from', label: 'Carried from', text: c => c.from, render: c => <span className="rx-tag">{c.from}</span> },
