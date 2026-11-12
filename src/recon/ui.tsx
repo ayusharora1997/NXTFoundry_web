@@ -2,6 +2,21 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { toCSV } from './engine';
 import { tagLabel, TODAY } from './ledger';
 
+// ---------- AI marker ----------
+/**
+ * ✦ marks a spot where AI assists. Until that AI feature is switched on it is an honest teaser: a dimmed chip
+ * that says "in training" and, when clicked, what the AI sous-chef will do here.
+ */
+export function AiChip({ label, hint }: { label: string; hint: string }) {
+  const [open, setOpen] = useState(false);
+  return <span className="ai-chip-wrap">
+    <button type="button" className="ai-chip" aria-expanded={open} onClick={e => { e.stopPropagation(); e.preventDefault(); setOpen(o => !o); }}>
+      <span className="ai-spark" aria-hidden="true">✦</span>{label}<em>in training</em>
+    </button>
+    {open && <span className="ai-pop" role="status"><b>✦ AI sous-chef, in training.</b> {hint}</span>}
+  </span>;
+}
+
 // ---------- Formatting ----------
 export const inr = (n: number | null | undefined, dp = 0) => n === null || n === undefined ? '—' : (n < -0.004 ? '−' : '') + '₹' + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp });
 export const num = (n: number | null | undefined, dp = 0) => n === null || n === undefined ? '—' : (n < -0.004 ? '−' : '') + Math.abs(n).toLocaleString('en-IN', { minimumFractionDigits: dp, maximumFractionDigits: dp });

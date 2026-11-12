@@ -857,3 +857,9 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .roll-word.in{transform:translateY(0);opacity:1}
 .roll-word.out{transform:translateY(-105%);opacity:0}
 @media (prefers-reduced-motion:reduce){.roll-word{transition:none}}
+/* Products: honest AI teaser on the live product */
+.px-ai{display:flex;flex-wrap:wrap;align-items:center;gap:10px;font-size:14px!important;color:#c9b8ff!important}
+.px-ai-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;border:1px dashed rgba(201,184,255,.55);background:rgba(124,77,255,.1);color:#e2d9ff;font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.px-ai-badge span{display:inline-block;color:#b39dff;animation:ai-twinkle 2.4s ease-in-out infinite}
+@keyframes ai-twinkle{0%,100%{transform:scale(1) rotate(0);opacity:.85}50%{transform:scale(1.25) rotate(20deg);opacity:1}}
+@media (prefers-reduced-motion:reduce){.px-ai-badge span{animation:none}}

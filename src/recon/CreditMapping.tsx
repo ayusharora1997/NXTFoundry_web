@@ -4,7 +4,7 @@ import { tagLabel } from './ledger';
 import { parseCSV } from './csv';
 import { toCSV } from './engine';
 import { creditItems, kindLabel, mappingOf, clears, docSign, type CItem, type CnSub, type CnDoc, type DocType } from './credit';
-import { Card, DataTable, Drawer, Icon, Pill, Avatar, money, signedMoney, download, type Col } from './ui';
+import { AiChip, Card, DataTable, Drawer, Icon, Pill, Avatar, money, signedMoney, download, type Col } from './ui';
 import { PageHead, vendorOf, entityOf, type Ctx } from './App';
 import { Tour, useTour, card, type TourStep } from './tour';
 import { DocViewer, sheetPdf, type ViewDoc } from './DocViewer';
@@ -291,7 +291,7 @@ function Attach({ id, file, size, url, onPick, onClear, onView }: { id: string; 
   const [over, setOver] = useState(false); const [err, setErr] = useState('');
   const take = (f?: File) => { setErr(''); if (!f) return; if (!/\.pdf$/i.test(f.name) && f.type !== 'application/pdf') { setErr('Attach it as a PDF.'); return; } if (f.size > 10 * 1048576) { setErr('The file is larger than 10 MB.'); return; } onPick(f.name, f.size, URL.createObjectURL(f)); };
   if (file) return <FileCard name={file} size={size} note="Ready to submit" onClear={onClear} onView={url ? onView : undefined} />;
-  return <><label className={'rx-att-drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files?.[0]); }}>
+  return <><AiChip label="Read this PDF" hint="Soon it will read the credit note number, date, amount and GST from the PDF and fill them in for you to check." /><label className={'rx-att-drop' + (over ? ' over' : '')} onDragOver={e => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={e => { e.preventDefault(); setOver(false); take(e.dataTransfer.files?.[0]); }}>
     <input id={id} type="file" accept=".pdf,application/pdf" className="sr-only" onChange={e => { take(e.target.files?.[0]); e.currentTarget.value = ''; }} />
     <span className="rx-att-cloud" aria-hidden="true"><Icon n="upload" s={18} /></span><span><b>Drop the PDF here</b><small>or <u>browse your files</u> · PDF up to 10 MB</small></span></label>
     {err && <small className="rw-err">{err}</small>}</>;

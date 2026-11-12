@@ -211,7 +211,7 @@ function Products(){
     <div className="px-rail" role="tablist" aria-label="Products">{suite.map(([id,n,t,,k,st])=>{const on=id===sel;return <button key={id} role="tab" id={id} aria-selected={on} aria-controls="px-stage" className={'px-tab '+k+(on?' on':'')} onClick={()=>pick(id)}>
       <span className="px-n">{n}</span><span className="px-t"><b>{t}</b><Status kind={k}>{st}</Status></span>{on&&auto&&<i className="px-prog" style={{width:`${(tick/durOf(id))*100}%`}}/>}</button>})}</div>
     <div className="px-stage" id="px-stage" role="tabpanel" aria-labelledby={sel} key={sel}>
-      <div className="px-info"><Status kind={cur[4]}>{cur[5]}</Status><h2>{cur[2]}</h2><p>{cur[3]}</p>
+      <div className="px-info"><Status kind={cur[4]}>{cur[5]}</Status><h2>{cur[2]}</h2><p>{cur[3]}</p>{live&&<p className="px-ai"><span className="px-ai-badge"><span aria-hidden="true">✦</span> AI sous-chef: in training</span>Learning to read PDFs, explain gaps and suggest matches. Joining the kitchen in the next batch.</p>}
         <ul className="px-points">{d.points.map(x=><li key={x}>{x}</li>)}</ul>
         <a className={'button '+(live?'':'ghost-btn')} href={d.cta[1]} {...(live?{target:'_blank',rel:'noopener'}:{})}>{d.cta[0]} <ArrowUpRight size={16}/></a>{live?<small className="pv-note">Synthetic data · no sign-up</small>:<small className="pv-note">Not live yet · shares the vendor engine</small>}</div>
       {live?<a className="px-visual" href="#reconciliation-lab" target="_blank" rel="noopener" aria-label="Open the live tool (opens in a new tab)">{d.preview}</a>:<div className="px-visual soon">{d.preview}<span className="ps-tape">{cur[4]==='menu'?'Next on the menu':'Something’s cooking'}</span></div>}

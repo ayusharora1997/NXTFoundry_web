@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { gate, openItems, statement, currentPeriod, type RelState, type WfStatus, type Statement } from './cycle';
 import { VENDORS, ENTITIES, tagLabel } from './ledger';
 import { annexSummary } from './annex';
-import { Card, Collapsible, DataTable, Pill, money, signedMoney, short, type Col } from './ui';
+import { AiChip, Card, Collapsible, DataTable, Pill, money, signedMoney, short, type Col } from './ui';
 import { PageHead, STATUS_TONE, vendorOf, entityOf, type Ctx, type Screen } from './App';
 
 // Where to go next for each status. Matching runs by itself once ledgers are in and openings validate.
@@ -56,7 +56,7 @@ export default function Dashboard({ ctx }: { ctx: Ctx }) {
   ];
   const expand = (r: Row) => { const c = r.st.rel.currency;
     return <div className="rx-dash-x">
-      <div className="rx-dash-sum"><div><span>Buyer closing</span><b>{money(r.s.buyerClosing, c)}</b></div><div><span>Vendor closing</span><b>{money(r.s.vendorClosing, c)}</b></div><div><span>Difference</span><b>{money(r.s.difference, c)}</b></div><div><span>Open buyer items</span><b>{signedMoney(r.s.openB, c)}</b></div><div><span>Open vendor items</span><b>{signedMoney(-r.s.openV, c)}</b></div><div><span>Adjustments</span><b>{signedMoney(r.s.adjEffect, c)}</b></div></div>
+      <div className="rx-dash-sum"><div><span>Buyer closing</span><b>{money(r.s.buyerClosing, c)}</b></div><div><span>Vendor closing</span><b>{money(r.s.vendorClosing, c)}</b></div><div><span>Difference</span><b>{money(r.s.difference, c)}</b>{Math.abs(r.s.difference ?? 0) > 0.004 && <AiChip label="Explain this gap" hint="Soon it will explain in plain English why the two closing balances differ, using the matched and open items behind the number." />}</div><div><span>Open buyer items</span><b>{signedMoney(r.s.openB, c)}</b></div><div><span>Open vendor items</span><b>{signedMoney(-r.s.openV, c)}</b></div><div><span>Adjustments</span><b>{signedMoney(r.s.adjEffect, c)}</b></div></div>
       {r.ann.length ? <table className="rw-table compact"><thead><tr><th>Annexure</th><th>What it holds</th><th className="ar">Items</th><th className="ar">Effect on the bridge</th></tr></thead>
         <tbody>{r.ann.map(a => <tr key={a.n}><td><b>Annexure {a.n}</b></td><td>{a.name}</td><td className="ar">{a.count}</td><td className="ar"><b>{signedMoney(a.effect, c)}</b></td></tr>)}</tbody></table>
         : <p className="rx-muted">{r.status === 'Awaiting ledgers' ? 'No reconciliation yet: the vendor ledger for this period has not been uploaded.' : 'No open items. Nothing to annex.'}</p>}
