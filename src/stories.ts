@@ -352,3 +352,14 @@ export const stories: Story[] = [
     concept: true,
   },
 ];
+
+// Major industries shown as filter boxes on the Stories tab. Map each story's industry to one of these;
+// a new industry with no entry here shows under its own name.
+export const SECTORS: Record<string, string> = {
+  'Automotive': 'Manufacturing',
+  'Apparel manufacturing': 'Manufacturing',
+  'E-commerce': 'Retail & e-commerce',
+  'Fitness & wellness': 'Consumer services',
+  'Banking & financial services': 'Financial services',
+};
+export const sectorOf = (s: Story) => SECTORS[s.industry] ?? s.industry;

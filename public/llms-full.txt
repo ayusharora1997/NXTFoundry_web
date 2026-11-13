@@ -732,15 +732,7 @@ STORIES
 
 Real problems, what we found and what changed.
 
-Industry
-
-All7Automotive1Fitness & wellness1E-commerce3Apparel manufacturing1Banking & financial services1
-
-Type
-
-All7Consulting project2Tech implementation2Concept3
-
-Showing 7 of 7
+All industries7Manufacturing2Consumer services1Retail & e-commerce3Financial services1
 
 AutomotiveTech implementationEW
 
@@ -755,38 +747,6 @@ We built a Power BI dashboard that tracks every PO from approval to payment and 
 −70.7%
 
 unmapped PO value, down from €42 million to €12.3 million
-
-Read the story
-
-Fitness & wellnessConsulting projectEW
-
-How was one member checking in at two centres at once?
-
-Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.
-
-What changed
-
-We limited each membership to one device and one sign-in method, and put gate barriers under monitoring.
-
-1 device
-
-per membership, with any change approved through Customer Experience
-
-Read the story
-
-E-commerceTech implementationEW
-
-Where did ₹76 crore of stock go between two warehouses?
-
-Transfers were closed on expected quantities and email confirmations — not on what actually arrived.
-
-What changed
-
-We helped build a reconciliation tool with advance notice, a four-hour window and automatic escalation.
-
-~5%
-
-of monthly stock transfers still open in disputes, after the fix
 
 Read the story
 
@@ -806,6 +766,38 @@ across forecasting, buying, redistribution and stock visibility
 
 Read the story
 
+E-commerceConcept
+
+How do you catch a banned seller coming back under a new name?
+
+Listings change constantly, and rule-based checks and customer complaints only flag problems after customers are affected.
+
+What it could change
+
+We designed a conceptual framework that scores listings and sellers on many signals and routes the riskiest to investigation.
+
+3 tiers
+
+of risk — low, medium and high — each with its own review route
+
+Read the story
+
+Fitness & wellnessConsulting projectEW
+
+How was one member checking in at two centres at once?
+
+Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.
+
+What changed
+
+We limited each membership to one device and one sign-in method, and put gate barriers under monitoring.
+
+1 device
+
+per membership, with any change approved through Customer Experience
+
+Read the story
+
 Apparel manufacturingConcept
 
 What if 90+ payroll checks didn’t take a week by hand?
@@ -822,6 +814,22 @@ illustrative payroll verification time with the checks automated
 
 Read the story
 
+E-commerceTech implementationEW
+
+Where did ₹76 crore of stock go between two warehouses?
+
+Transfers were closed on expected quantities and email confirmations — not on what actually arrived.
+
+What changed
+
+We helped build a reconciliation tool with advance notice, a four-hour window and automatic escalation.
+
+~5%
+
+of monthly stock transfers still open in disputes, after the fix
+
+Read the story
+
 Banking & financial servicesConcept
 
 Where should the next centre go if talent matters more than cost?
@@ -835,22 +843,6 @@ We built a conceptual Power BI framework that scores 17 cities on one 0–10 sca
 10
 
 what-if pairings of the five criteria, from cost vs talent to security vs cost
-
-Read the story
-
-E-commerceConcept
-
-How do you catch a banned seller coming back under a new name?
-
-Listings change constantly, and rule-based checks and customer complaints only flag problems after customers are affected.
-
-What it could change
-
-We designed a conceptual framework that scores listings and sellers on many signals and routes the riskiest to investigation.
-
-3 tiers
-
-of risk — low, medium and high — each with its own review route
 
 Read the story
 

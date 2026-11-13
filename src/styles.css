@@ -969,25 +969,12 @@ footer .made-in .heart{color:var(--lime)}
 @media(max-width:900px){.story-list{font-size:16px}}
 
 /* Stories index (#stories): an editorial case list with Industry and Type filters */
-.sx-filters{margin-top:40px;padding:22px 0;border-top:1px solid #27322d;border-bottom:1px solid #27322d;display:grid;gap:14px}
-.sx-group{display:grid;grid-template-columns:90px minmax(0,1fr);gap:16px;align-items:baseline}
-.sx-label{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
-.sx-opts{display:flex;flex-wrap:wrap;gap:6px 22px}
-.sx-opts button{padding:4px 0;background:none;border:0;border-bottom:1px solid transparent;color:#a7b0aa;font:inherit;font-size:15px;cursor:pointer;transition:color .2s,border-color .2s}
-.sx-opts button sup{margin-left:4px;color:#5d6863;font-size:10px;font-weight:700}
-.sx-opts button:hover{color:#f3f3ed}
-.sx-opts button.on{color:#f3f3ed;font-weight:700;border-bottom-color:var(--lime)}
-.sx-opts button.on sup{color:var(--lime)}
-.sx-status{display:flex;gap:18px;align-items:center;padding-left:106px;color:#7c8681;font-size:13px}
-.sx-status button,.sx-empty button{padding:0;background:none;border:0;color:var(--lime);font:inherit;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .sx-type{display:inline-flex;align-items:center;gap:7px;color:#a7b0aa;font-size:13px}
 .sx-type:before{content:"";width:7px;height:7px;border-radius:50%;background:#7c8681}
 .sx-type.t-consult:before{background:var(--lime)}
 .sx-type.t-tech:before{background:#8fc7ff}
 .sx-type.t-concept:before{background:transparent;border:1px solid #a7b0aa}
-.sx-empty{margin:28px 0 0;color:#a7b0aa}
 .story-kind{display:flex;gap:16px;align-items:center;margin:0 0 12px;font-size:14px}
-@media(max-width:1000px){.sx-group{grid-template-columns:1fr;gap:8px}.sx-status{padding-left:0}}
 
 /* What-if chart (story chapter) */
 .wi{margin-top:26px;padding:24px;border:1px solid #1d2622;border-radius:14px;background:#0a0f0d}
@@ -1039,3 +1026,23 @@ footer .made-in .heart{color:var(--lime)}
 .brick.lead .brick-res b{font-size:38px}
 .brick-read{align-self:flex-start;display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding-bottom:3px;border-bottom:1px solid var(--lime);font-size:14px;font-weight:700}
 @media(max-width:700px){.bricks{columns:1}.brick,.brick.lead{padding:22px}}
+
+/* Stories: industry boxes + endless upward stream */
+.sector-boxes{display:flex;flex-wrap:wrap;gap:8px;margin-top:34px}
+.sector-boxes button{display:inline-flex;align-items:center;gap:10px;padding:9px 14px;border:1px solid #2c3833;border-radius:6px;background:#0a0f0d;color:#c7d0c9;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;transition:border-color .2s,color .2s,background .2s}
+.sector-boxes button span{min-width:20px;padding:1px 6px;border-radius:4px;background:#18211d;color:#a7b0aa;font-size:11px;font-weight:700;text-align:center}
+.sector-boxes button:hover{border-color:#4a5d1a;color:#f3f3ed}
+.sector-boxes button.on{background:var(--lime);border-color:var(--lime);color:#0a100d}
+.sector-boxes button.on span{background:rgba(10,16,13,.15);color:#0a100d}
+.stream{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;height:min(82vh,860px);margin-top:28px;overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 7%,#000 88%,transparent);mask-image:linear-gradient(transparent,#000 7%,#000 88%,transparent)}
+.stream-col{overflow:hidden}
+.stream-track{animation:stream-up var(--dur,80s) linear infinite}
+.stream-col:nth-child(2) .stream-track{animation-delay:calc(var(--dur) * -.35)}
+.stream-col:nth-child(3) .stream-track{animation-delay:calc(var(--dur) * -.7)}
+.stream-col:hover .stream-track,.stream-col:focus-within .stream-track{animation-play-state:paused}
+.stream-set{display:flow-root}
+.stream-set .brick{margin:0 0 16px}
+@keyframes stream-up{to{transform:translateY(-25%)}}
+.bricks.still{columns:3 300px}
+@media(prefers-reduced-motion:reduce){.stream{height:auto;-webkit-mask-image:none;mask-image:none}.stream-track{animation:none}.stream-set:not(:first-child){display:none}}
+@media(max-width:800px){.stream{grid-template-columns:1fr;height:auto;gap:0;-webkit-mask-image:none;mask-image:none}.stream-track{animation:none}.stream-set:not(:first-child){display:none}}

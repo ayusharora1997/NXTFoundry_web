@@ -9,7 +9,7 @@ import ToolPreview, { GstrPreview, InvoicePreview, BankPreview, SettlementPrevie
 import PhoneField from './PhoneField';
 import Consent, { openConsent } from './Consent';
 import { faqs } from './faqs';
-import { stories, type Story } from './stories';
+import { stories, sectorOf, type Story } from './stories';
 import { composePhone, DEFAULT_COUNTRY, COUNTRIES } from './countries';
 
 const Icon=({type}:{type:'up'|'right'|'menu'|'x'})=>{const paths={up:<><path d="M5 19 19 5"/><path d="M9 5h10v10"/></>,right:<><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,menu:<><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></>,x:<><path d="M6 6l12 12"/><path d="M18 6 6 18"/></>};return <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[type]}</svg>};
@@ -154,24 +154,30 @@ const richQ=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<em key={i}>{x}
 const storyText=(t:string)=>t.replace(/\*\*/g,'');
 const para=(p:string,k:number)=>p.startsWith('- ')?<ul className="story-list" key={k}>{p.slice(2).split('\n- ').map((x,i)=><li key={i}>{rich(x)}</li>)}</ul>:<p key={k}>{rich(p)}</p>;
 function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.earlier&&<span className="chip-tag">EW</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
-function Stories(){const [ind,setInd]=useState('All');const [type,setType]=useState('All');
-  const inds=['All',...Array.from(new Set(stories.map(s=>s.industry)))];
-  const types=['All',...(['Consulting project','Tech implementation','Concept'] as const).filter(t=>stories.some(s=>s.type===t))];
-  const list=stories.filter(s=>(ind==='All'||s.industry===ind)&&(type==='All'||s.type===type));
-  const count=(k:'industry'|'type',v:string)=>v==='All'?stories.length:stories.filter(s=>s[k]===v).length;
-  const Group=({label,opts,val,set,k}:{label:string;opts:string[];val:string;set:(v:string)=>void;k:'industry'|'type'})=><div className="sx-group" role="group" aria-label={label}><span className="sx-label">{label}</span><div className="sx-opts">{opts.map(o=><button type="button" key={o} className={val===o?'on':''} aria-pressed={val===o} onClick={()=>set(o)}>{o}<sup>{count(k,o)}</sup></button>)}</div></div>;
+// Stories tab: sector boxes on top, then three brick columns drifting slowly upward in an endless loop
+// (each column a little slower or faster than the next). Hovering or focusing a story pauses its column.
+// Phones, reduced-motion settings and filters with fewer than four stories get a still layout instead.
+function Brick({s,lead,hidden}:{s:Story;lead?:boolean;hidden?:boolean}){const r=s.stats[s.stats.length-1];
+  return <a className={'brick'+(lead?' lead':'')} href={'#stories/'+s.id} {...(hidden?{'aria-hidden':true,tabIndex:-1}:{})}>
+    <p className="brick-kind"><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span>{s.earlier&&<span className="chip-tag">EW</span>}</p>
+    <p className="brick-q">{richQ(s.question)}</p>
+    <p className="brick-hook">{s.hook}</p>
+    <div className="brick-ans"><span>{s.changeLabel??(s.concept?'What it could change':'What changed')}</span><p className="brick-did">{s.did}</p>{r&&<div className="brick-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
+    <span className="brick-read">Read the story <ArrowRight size={14}/></span></a>}
+function Stories(){const [sector,setSector]=useState('All');
+  const sectors=Array.from(new Set(stories.map(sectorOf)));
+  const list=sector==='All'?stories:stories.filter(s=>sectorOf(s)===sector);
+  const stream=list.length>=4;
+  const cols:Story[][]=[[],[],[]];list.forEach((s,i)=>cols[i%3].push(s));
   return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Every story starts <em>with a question.</em></h1>
     <p className="page-lede">Real problems, what we found and what changed.</p>
-    <div className="sx-filters"><Group label="Industry" opts={inds} val={ind} set={setInd} k="industry"/><Group label="Type" opts={types} val={type} set={setType} k="type"/>
-      <div className="sx-status" aria-live="polite"><span>Showing {list.length} of {stories.length}</span>{(ind!=='All'||type!=='All')&&<button type="button" onClick={()=>{setInd('All');setType('All')}}>Clear filters</button>}</div></div>
-    <div className="bricks">{list.map((s,i)=>{const r=s.stats[s.stats.length-1];const lead=i===0;
-      return <a className={'brick'+(lead?' lead':'')} href={'#stories/'+s.id} key={s.id}>
-        <p className="brick-kind"><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span>{s.earlier&&<span className="chip-tag">EW</span>}</p>
-        <p className="brick-q">{richQ(s.question)}</p>
-        <p className="brick-hook">{s.hook}</p>
-        <div className="brick-ans"><span>{s.changeLabel??(s.concept?'What it could change':'What changed')}</span><p className="brick-did">{s.did}</p>{r&&<div className="brick-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
-        <span className="brick-read">Read the story <ArrowRight size={14}/></span></a>})}</div>
-    {!list.length&&<p className="sx-empty">No stories match these filters yet. <button type="button" onClick={()=>{setInd('All');setType('All')}}>Show all stories</button></p>}
+    <div className="sector-boxes" role="group" aria-label="Filter by industry">
+      <button type="button" className={sector==='All'?'on':''} aria-pressed={sector==='All'} onClick={()=>setSector('All')}>All industries<span>{stories.length}</span></button>
+      {sectors.map(x=><button type="button" key={x} className={sector===x?'on':''} aria-pressed={sector===x} onClick={()=>setSector(x)}>{x}<span>{stories.filter(s=>sectorOf(s)===x).length}</span></button>)}
+    </div>
+    {stream?<div className="stream" key={sector}>{cols.map((c,ci)=><div className="stream-col" key={ci} style={{'--dur':`${(c.length*26)+ci*9}s`} as React.CSSProperties}>
+        <div className="stream-track">{[0,1,2,3].map(k=><div className="stream-set" key={k}>{c.map(s=><Brick key={s.id+k} s={s} lead={s===list[0]} hidden={k>0}/>)}</div>)}</div></div>)}</div>
+      :<div className="bricks still">{list.map((s,i)=><Brick key={s.id} s={s} lead={i===0}/>)}</div>}
   </section>}
 // What-if chart (story chapter "Try the what-if"): pick any two criteria; points reposition on a 0–10 scatter
 // split into a 3×3 strategic-fit grid. Data comes from the story's whatIf block in src/stories.ts.
