@@ -34,7 +34,7 @@ const SHOW_INSIGHTS = false;
 // Flip to true to bring back the full pages; their content is unchanged below.
 const INSIGHTS_PAGE_LIVE = false;
 const RESOURCES_PAGE_LIVE = false;
-const nav = [['What We Do','solutions'],['Products','products'],['Our Approach','approach'],['Insights','insights'],['Resources','resources'],['About','about']];
+const nav = [['What We Do','solutions'],['Products','products'],['Our Approach','approach'],['Insights','insights'],['Resources','resources'],['Stories','stories'],['About','about']];
 const focus = ['Operations & Business Performance','Revenue & Financial Control','Procurement & Supply Chain','Inventory & Margin Intelligence'];
 const fitSignals = ['An owner-led or professionally managed business in the ₹50 Cr – ₹1,000 Cr revenue range','Growing fast enough that your operating model is straining','Dealing with revenue leakage, control gaps, procurement complexity, or reconciliation debt','Looking for someone who will implement the fix, not just write a deck'];
 // Programmes on the What We Do page. No fees are quoted on the site — every CTA asks the visitor to get in touch.
@@ -111,13 +111,14 @@ function ScopeChip({problem}:{problem:string}){const id=scopeTools[problem];cons
 // "Coming soon" page with a little kitchen theatre while we write. Messages rotate; reduced-motion users get the first one, still.
 const COMING_LINES:Record<string,string[]> = {
   INSIGHTS:['Sharpening pencils…','Arguing over a headline…','Checking the numbers twice…','Cutting the jargon…','Letting it simmer…','Almost ready to serve…'],
+  STORIES:['Finding the plot…','Checking every number in the story…','Cutting the jargon…','Getting the before-and-after right…','Letting it simmer…','Almost ready to tell…'],
   RESOURCES:['Polishing templates…','Testing checklists on real books…','Removing the fluff…','Tidying spreadsheet formulas…','Letting it simmer…','Almost ready to serve…'],
 };
-function ComingSoon({label,id}:{label:string,id:string}){const lines=COMING_LINES[label]||COMING_LINES.INSIGHTS;const [i,setI]=useState(0);
+function ComingSoon({label,id,title,lede='It will be posted here soon.'}:{label:string,id:string,title?:React.ReactNode,lede?:string}){const lines=COMING_LINES[label]||COMING_LINES.INSIGHTS;const [i,setI]=useState(0);
   React.useEffect(()=>{if(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;const t=setInterval(()=>setI(n=>(n+1)%lines.length),2400);return()=>clearInterval(t)},[lines]);
   return <section className="page section coming-soon" id={id}><Label>{label}</Label>
-    <h1>We’re preparing something <em>for you</em><span className="cs-dots" aria-hidden="true"><i/><i/><i/></span></h1>
-    <p className="page-lede">It will be posted here soon.</p>
+    <h1>{title??<>We’re preparing something <em>for you</em></>}<span className="cs-dots" aria-hidden="true"><i/><i/><i/></span></h1>
+    <p className="page-lede">{lede}</p>
     <div className="cs-kitchen" role="status" aria-live="polite"><div className="cs-bar" aria-hidden="true"><span/></div><p className="cs-line" key={i}>{lines[i]}</p></div>
   </section>}
 function Label({children}:{children:React.ReactNode}){return <div className="eyebrow"><span className="dot"/>{children}</div>}
@@ -356,7 +357,7 @@ function SiteInsights({hash}:{hash:string}){if(OFFLINE_BUILD)return null;const r
 function App(){const [hash,setHash]=useState(window.location.hash); React.useEffect(()=>{const f=()=>setHash(window.location.hash);window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
 // Each hash is a separate page, so start it at the top — except #contact-form, which is a jump to the form itself.
 React.useLayoutEffect(()=>{const target=(hash==='#contact-form'||hash.startsWith('#products-')||hash.startsWith('#prog-'))&&document.getElementById(hash.slice(1)); if(target)target.scrollIntoView({behavior:'instant' as ScrollBehavior}); else window.scrollTo({top:0,behavior:'instant' as ScrollBehavior})},[hash]);
-let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>}
+let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash==='#stories')content=<ComingSoon label="STORIES" id="stories-page" title={<>We’re building the <em>narrative</em></>} lede="Stories from the work — the problem, what we found and what changed — will be told here soon."/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>}
 // Pages rendered to text at build time for /llms-full.txt (scripts/llms-full.tsx). Keep in step with the routes in App.
 export const LLM_PAGES:[string,string,React.ReactNode][] = [
   ['Home','https://www.nxtfoundry.in/',<Home/>],
