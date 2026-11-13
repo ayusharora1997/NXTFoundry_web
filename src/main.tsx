@@ -9,7 +9,7 @@ import ToolPreview, { GstrPreview, InvoicePreview, BankPreview, SettlementPrevie
 import PhoneField from './PhoneField';
 import Consent, { openConsent } from './Consent';
 import { faqs } from './faqs';
-import { stories, sectorOf, type Story } from './stories';
+import { stories, sectorOf, type Story, type VisualChapter } from './stories';
 import { composePhone, DEFAULT_COUNTRY, COUNTRIES } from './countries';
 
 const Icon=({type}:{type:'up'|'right'|'menu'|'x'})=>{const paths={up:<><path d="M5 19 19 5"/><path d="M9 5h10v10"/></>,right:<><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></>,menu:<><path d="M4 7h16"/><path d="M4 12h16"/><path d="M4 17h16"/></>,x:<><path d="M6 6l12 12"/><path d="M18 6 6 18"/></>};return <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[type]}</svg>};
@@ -181,19 +181,31 @@ function Stories(){const [sector,setSector]=useState('All');
   </section>}
 // Story visuals (one chapter per story, chosen in src/stories.ts): before/after bars, a lifecycle strip,
 // a control map and a broken loop. Use these where a step-by-step timeline isn't the clearest picture.
-type StoryVisual=NonNullable<Story['visual']>['blocks'][number];
+type StoryVisual=VisualChapter['blocks'][number];
 function VisualBlock({v}:{v:StoryVisual}){
   if(v.kind==='shift'){const max=Math.max(v.before.value,v.after.value);
     return <div className="vz vz-shift"><p className="vz-t">{v.title}</p>
       {[['Before',v.before,'b'],['After',v.after,'a']].map(([k,x,c])=>{const it=x as {label:string;value:number;display:string};return <div className={'vz-bar '+c} key={k as string}>
         <span className="vz-bl">{it.label}</span><div className="vz-track"><i style={{width:`${Math.max(6,(it.value/max)*100)}%`}}/></div><b>{it.display}</b></div>})}
       <p className="vz-cap"><strong>{v.change}</strong> {v.caption}</p></div>}
-  if(v.kind==='lifecycle')return <div className="vz vz-life"><p className="vz-t">{v.title}</p>
+  if(v.kind==='lifecycle')return <div className={'vz vz-life'+(v.neutral?' neutral':'')}><p className="vz-t">{v.title}</p>
       <ol className="vz-stages">{v.stages.map((st,i)=><li key={st.name}><span className="vz-sn">{String(i+1).padStart(2,'0')}</span><b>{st.name}</b>{(st.flags??[]).map(f=><em key={f}>{f}</em>)}</li>)}</ol>
       <p className="vz-cap">{v.caption}</p></div>;
   if(v.kind==='controls')return <div className="vz vz-ctrl"><p className="vz-t">{v.title}</p>
       <div className="vz-grid">{v.items.map((it,i)=><div key={it.name}><span className="vz-sn">{String(i+1).padStart(2,'0')}</span><b>{it.name}</b><p>{it.checks}</p></div>)}</div>
       {v.caption&&<p className="vz-cap">{v.caption}</p>}</div>;
+  if(v.kind==='venn')return <div className="vz vz-venn"><p className="vz-t">{v.title}</p>
+      <div className="vz-vbody"><svg viewBox="0 0 320 300" className="vz-vsvg" role="img" aria-label={v.sets.map(x=>x.name).join(', ')+': '+v.centre}>
+        <circle cx="160" cy="105" r="88" className="c0"/><circle cx="108" cy="190" r="88" className="c1"/><circle cx="212" cy="190" r="88" className="c2"/>
+        <text x="160" y="52" textAnchor="middle" className="vl">{v.sets[0]?.name}</text><text x="70" y="235" textAnchor="middle" className="vl">{v.sets[1]?.name}</text><text x="250" y="235" textAnchor="middle" className="vl">{v.sets[2]?.name}</text>
+        <text x="160" y="160" textAnchor="middle" className="vc">{v.centre}</text></svg>
+        <div className="vz-vsets">{v.sets.map((x,i)=><div key={x.name} className={'s'+i}><b>{x.name}</b><ul>{x.items.map(it=><li key={it}>{rich(it)}</li>)}</ul></div>)}</div></div>
+      {v.caption&&<p className="vz-cap">{v.caption}</p>}</div>;
+  if(v.kind==='mrp'){const inr=(n:number)=>'₹'+n.toLocaleString('en-IN');
+    return <div className="vz vz-mrp"><p className="vz-t">{v.title}</p>
+      <div className="vz-mlist">{v.listings.map((l,i)=>{const off=Math.round((l.mrp-l.price)/l.mrp*100);return <div key={l.name} className={'m'+i}><span className="vz-k">{l.name}</span><p className="vz-mp"><s>MRP {inr(l.mrp)}</s></p><p className="vz-pp">{inr(l.price)}</p><p className="vz-off">{off}% off</p></div>})}</div>
+      <p className="vz-formula">Discount % = (MRP − selling price) ÷ MRP × 100</p>
+      <p className="vz-cap">{v.caption}</p></div>}
   if(v.kind==='points')return <div className="vz vz-points"><p className="vz-t">{v.title}</p>
       <ol className="vz-nodes plain">{v.nodes.map(n=><li key={n.name}><b>{n.name}</b><p className="vz-gap"><span>Gap</span>{n.gap}</p><p className="vz-fix"><span>Fix</span>{n.fix}</p></li>)}</ol>
       {v.caption&&<p className="vz-cap">{v.caption}</p>}</div>;
@@ -238,8 +250,9 @@ function WhatIf({w}:{w:NonNullable<Story['whatIf']>}){const [x,setX]=useState(w.
         <p><b>{strong}</b> of {w.points.length} land in the top-right cell, strong on both criteria.</p><p className="wi-hint">Change either criterion and the shortlist moves with it — that’s the trade-off made visible.</p></aside>
     </div></div>}
 function StoryPage({s}:{s:Story}){
+  const vis=s.visual?(Array.isArray(s.visual)?s.visual:[s.visual]):[];
   const endLabel=s.impactLabel??(s.concept?'Illustrative impact':'The outcome');
-  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey',s.journeyLabel??'Where it broke'] as [string,string]]:[]),...(s.visual?[['visual',s.visual.chapter] as [string,string]]:[]),['what','What we did'],...(s.whatIf?[['whatif',s.whatIf.chapter] as [string,string]]:[]),['outcome',endLabel]];
+  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey',s.journeyLabel??'Where it broke'] as [string,string]]:[]),...vis.map((v,i)=>['visual'+i,v.chapter] as [string,string]),['what','What we did'],...(s.whatIf?[['whatif',s.whatIf.chapter] as [string,string]]:[]),['outcome',endLabel]];
   const num=(id:string)=>String(chapters.findIndex(c=>c[0]===id)+1).padStart(2,'0');
   const [active,setActive]=useState('problem');
   React.useEffect(()=>{if(typeof IntersectionObserver==='undefined')return;const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)setActive(e.target.id.replace('ch-',''))})},{rootMargin:'-30% 0px -60% 0px'});chapters.forEach(([id])=>{const el=document.getElementById('ch-'+id);if(el)io.observe(el)});return()=>io.disconnect()},[s.id]);
@@ -258,7 +271,7 @@ function StoryPage({s}:{s:Story}){
         {s.journey&&<section className="story-ch" id="ch-journey"><h2>{num('journey')} · {s.journeyLabel??'Where it broke'}</h2><p className="story-jt">{s.journey.title}</p>
           <div className="story-legend"><span><i className="bad"/>{s.journeyLabel?'Risk signal':'Where it broke'}</span><span><i className="good"/>{s.journeyLabel?'How the framework responds':'What we put in place'}</span></div>
           <ol className="story-steps">{s.journey.steps.map((st,i)=><li key={i} className={st.fix?'broke':''}><h3>{i+1} · {st.title}</h3><p>{st.text}</p>{st.fix&&<div className="story-fix"><b>{s.journeyLabel?'Response':'Fix'}</b> {st.fix}</div>}</li>)}</ol></section>}
-        {s.visual&&<section className="story-ch" id="ch-visual"><h2>{num('visual')} · {s.visual.chapter}</h2>{s.visual.blocks.map((v,i)=><VisualBlock v={v} key={i}/>)}</section>}
+        {vis.map((c,ci)=><section className="story-ch" id={'ch-visual'+ci} key={ci}><h2>{num('visual'+ci)} · {c.chapter}</h2>{c.blocks.map((v,i)=><VisualBlock v={v} key={i}/>)}</section>)}
         <section className="story-ch" id="ch-what"><h2>{num('what')} · What we did</h2>{s.whatWeDid.map((p,i)=>para(p,i))}</section>
         {s.whatIf&&<section className="story-ch" id="ch-whatif"><h2>{num('whatif')} · {s.whatIf.chapter}</h2><p>{rich(s.whatIf.intro)}</p><WhatIf w={s.whatIf}/></section>}
         <section className="story-ch" id="ch-outcome"><h2>{num('outcome')} · {endLabel}</h2>

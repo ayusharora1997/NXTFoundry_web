@@ -778,7 +778,7 @@ We designed a conceptual framework that scores listings and sellers on many sign
 
 3 tiers
 
-of risk — low, medium and high — each with its own review route
+of risk — under 60, 60–80 and 80+ — each with its own review route
 
 Read the story
 
@@ -1410,61 +1410,173 @@ Brand ProtectionRisk AnalyticsMarketplace Trust
 
 #### 01 · The problem
 
-Large e-commerce marketplaces operate across extensive seller networks, product categories and constantly changing listings. Traditional rule-based monitoring and reactive customer complaints can make it difficult to identify suspicious sellers and potentially counterfeit products before they affect customers.
+Counterfeit products are a growing threat to consumer trust, brand reputation and regulatory compliance in Indian e-commerce. As digital marketplaces reach deeper into Tier 2 and Tier 3 cities, consumers are more exposed to fake goods — especially in high-demand categories such as apparel, footwear, electronics, cosmetics and luxury accessories.
 
-5 risk areas, from listing manipulation to seller re-entry
+>3 MRP changes in a month — one of the signals that a listing may be manipulated
 
-The conceptual assessment identified several risk areas:
+A vast seller ecosystem, combined with light seller verification and listing moderation, gives counterfeiters room to operate:
 
-- Listing manipulation: frequent changes to product descriptions, MRP and listing attributes could help suspicious sellers evade conventional monitoring
+- Large, lightly verified seller base: open marketplaces onboard third-party sellers quickly, often with minimal KYC, so new accounts are easy to create
 
-- Seller re-entry: previously delisted sellers could attempt to return through alternate accounts, devices or addresses
+- Dynamic listings: sellers frequently change titles, MRP, descriptions and images, which helps them slip past listing audits and mimic genuine listings
 
-- Unusual pricing behaviour: abnormal MRP fluctuations and discount patterns could indicate deceptive pricing or suspicious listing activity
+- Rule-based monitoring: fixed rules miss behaviour-based patterns such as repeated MRP manipulation or seasonal pricing anomalies
 
-- Returns and complaint anomalies: unusually high return rates, negative feedback and counterfeit complaints could signal potentially problematic products or sellers
+- Reactive enforcement: penalties often follow customer complaints, by which time the damage is done
 
-- Fragmented risk intelligence: seller, listing, transaction, customer feedback and device data were not being considered together in a unified risk assessment
+The cost shows up across the platform: more returns and refunds, higher support costs, manual audits and investigations, damage to the reputation of the marketplace and its genuine sellers — and brands that may pull out of marketplaces that don’t protect them.
 
-#### 02 · How a risk is scored
+#### 02 · Spotting a fake listing
 
-Many signals, one score, a clear next step
+Three lenses on every listing
 
-SignalsMRP and price changesDiscount patternsListing editsRatings and reviewsReturn ratesCounterfeit complaintsSeller historyDevice and address signals
+Listing score
 
-- LowKeep monitoring
+- Listing score = listing rating × returns % × seller rating
 
-- MediumWatch closely; re-score as signals change
+- Score below the average for the same vertical
 
-- HighAlert and manual investigation — not automatic removal
+Frequent MRP changes
+
+- More than 3 MRP updates in a month
+
+- More than 5 MRP updates in a quarter
+
+Variance in MRP
+
+- 40%+ price swing during sale periods
+
+- 25%+ gap to the MRP of the best-selling listing
+
+- 40%+ gap to the MRP of an Alpha Seller or other marketplace sellers (min and max)
+
+Each signal carries a weight. A listing that trips more than one lens has a higher probability of being counterfeit.
+
+How an inflated MRP manufactures a bigger “discount”
+
+Genuine MRP
+
+MRP ₹25,000
+
+₹15,000
+
+40% off
+
+Inflated MRP
+
+MRP ₹30,000
+
+₹15,000
+
+50% off
+
+Discount % = (MRP − selling price) ÷ MRP × 100
+
+Same selling price, a bigger headline discount. Platforms often limit how often a seller can change the selling price, so moving the MRP becomes the lever — and during sales, counterfeit sellers mimic market-wide price drops to avoid suspicion. Illustrative figures.
+
+#### 03 · Spotting a returning seller
+
+Eight behavioural fingerprints, matched against previously blacklisted sellers
+
+01Pricing behaviour
+
+Frequent MRP changes (more than 3 a month); 30–50% price dips during peak sales
+
+02Consumer feedback
+
+Surge in 1-star ratings; counterfeit complaints on the listing and to CX
+
+03Category patterns
+
+High volume in risky sub-categories; shifts to adjacent ones, like hair oil to hair care
+
+04Sales and returns
+
+High sales velocity with a matching spike in returns
+
+05Network traits
+
+IP addresses and device fingerprints shared with known offenders
+
+06Address and postal code
+
+Similar addresses, postal codes or names to blacklisted sellers
+
+07SKU lifecycle
+
+Short-lived SKUs listed and delisted within 30 days; high churn
+
+08Seller Protection Fund
+
+Multiple SPF claims during flash sales or after negative reviews
+
+A match is a reason to look closer, not proof. A shared IP or a similar address on its own does not establish that two accounts belong to the same person.
+
+#### 04 · How a risk is scored
+
+Risk score = Σ (signal weight × signal value)
+
+SignalsMRP and price changesDiscount patternsListing scoreRatings and reviewsReturn ratesCounterfeit complaintsSeller historyDevice and address signals
+
+- Under 60Routine monitoring
+
+- 60–80Enhanced monitoring and alerts
+
+- 80+Flag for manual review and investigation — not automatic removal
 
 Verified investigation outcomes feed back into the models, so detection improves over time.
 
-#### 03 · What we did
+The analytical pipeline
 
-We designed a conceptual anti-counterfeit intelligence framework combining listing-level monitoring, seller behaviour analysis and risk-based investigation. It covered four capabilities:
+- 01Collect and validate8 data sources
 
-- Listing risk identification: monitored listing quality, MRP changes, pricing volatility, customer ratings and return patterns to identify suspicious product listings
+- 02Pre-processNormalisationEncoding
 
-- Seller behaviour intelligence: compared active seller profiles against previously flagged seller patterns using pricing behaviour, category activity, complaint history, addresses and device-level signals
+- 03Detect anomaliesIsolation ForestDBSCAN
 
-- Composite risk scoring: combined multiple risk indicators into a structured scoring model to classify listings and sellers into low-, medium- and high-risk categories
+- 04Model MRP over timeSeasonal ARIMALSTM
 
-- Investigation and feedback: a workflow for risk alerts, manual investigation, enforcement actions and feeding verified outcomes back into the detection framework
+- 05Benchmark listingsVertical scoringRandom Forest
 
-The proposed architecture combined:
+- 06Read the reviewsSentiment (BERT)
 
-- SQL-based data extraction and integration
+- 07Integrate and validateEntity resolution
 
-- Python-based anomaly detection using techniques such as Isolation Forest and DBSCAN
+From raw listing, seller and customer data to a scored, validated view of risk.
 
-- Similarity analysis to identify seller behaviour patterns
+#### 05 · What we did
 
-- Time-series analysis of pricing and MRP movements
+We designed a conceptual anti-counterfeit framework combining listing-level monitoring, seller behaviour analysis and risk-based investigation, built on eight data sources:
 
-- NLP-based customer review and sentiment analysis
+- Listing metadata: titles, descriptions, category tags, brand and images
 
-- Power BI dashboards for risk monitoring, exception tracking and investigation prioritisation
+- Pricing and MRP history: time-stamped MRP and selling-price logs, including seasonal discounts
+
+- Customer feedback: ratings, review text, return tags and reason codes
+
+- Transaction data: units sold, order frequency and sales velocity by SKU
+
+- Complaint and refund logs: counterfeit claims, refund issues and Seller Protection Fund usage
+
+- Network and device logs: IP addresses, browser fingerprints and device IDs
+
+- Seller master data: registered addresses, KYC, category preferences and ratings
+
+- Returns and RTO data: return and return-to-origin rates by SKU, seller and category
+
+The workflow runs in five steps:
+
+- Data ingestion: continuous extraction of listing data and seller updates
+
+- Scoring and flagging: risk scoring applied daily; high-risk listings flagged for review
+
+- Alerts: real-time alerts for sudden MRP changes or abnormal return spikes
+
+- Investigation and remediation: the risk team reviews flagged listings; confirmed counterfeits are removed and sellers penalised
+
+- Feedback loop: verified cases are fed back into the models to improve detection
+
+A pattern-matching engine compares active sellers with blacklisted “fingerprints” using cosine similarity or Euclidean distance on behaviour vectors, K-Means or DBSCAN clustering to find blacklist-like groups, and One-Class SVM or Isolation Forest to isolate outliers. Results surface in Power BI dashboards, with SQL for data extraction and Python for the models.
 
 Three things set it apart:
 
@@ -1472,11 +1584,21 @@ Three things set it apart:
 
 - Multi-signal risk scoring: combining pricing, returns, complaints, listing quality and seller history rather than relying on one indicator
 
-- Closed-loop risk management: feeding verified investigation outcomes back into the detection models to improve future identification
+- Closed-loop risk management: feeding verified investigation outcomes back into the detection models
 
-#### 04 · Intended impact
+The platform framework sits alongside methods brands can use themselves:
 
-3 tiers of risk — low, medium and high — each with its own review route
+- Overt: product serialisation (unique codes, QR) and tamper-evident packaging
+
+- Covert: anti-counterfeit cells, IP registration assistance and brand registry programmes
+
+- Digital: taggants, GTIN and ISBN validation, and track-and-trace platforms
+
+- Forensic: laboratory analysis such as spectroscopy, chromatography and microscopy
+
+#### 06 · Intended impact
+
+3 tiers of risk — under 60, 60–80 and 80+ — each with its own review route
 
 The framework was designed to help marketplaces:
 
@@ -1486,17 +1608,19 @@ The framework was designed to help marketplaces:
 
 - Detect repeat offenders and potential seller re-entry
 
-- Improve visibility into counterfeit-related returns and complaints
+- Reduce returns, complaints and manual audit effort linked to counterfeits
 
-- Support regulatory compliance monitoring
+- Support regulatory compliance monitoring, with audit trails for MRP changes and enforcement actions
 
 - Strengthen marketplace trust and brand protection through proactive monitoring
+
+Metrics to track include the share of flagged listings in top categories, return rates on flagged SKUs, time from risk flag to resolution, brand-partner satisfaction and customer repeat rate.
 
 A suspicious price movement or a high return rate is a risk signal, not proof that a product is counterfeit. The framework is built to prioritise human review, not to replace it.
 
 E-commerce marketplace · Brand protection
 
-This is an independently developed conceptual framework. The models, thresholds, expected improvements and examples are illustrative and are not verified implementation results.
+This is an independently developed conceptual framework demonstrating domain knowledge and analytical thinking in e-commerce risk management. It does not reference, replicate or disclose confidential information from any client or employer. All examples, figures, models and thresholds are illustrative and are not verified implementation results.
 
 Have a problem that sounds familiar?
 

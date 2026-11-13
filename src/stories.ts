@@ -20,18 +20,7 @@ export type Story = {
   stats: { value: string; label: string }[];   // first = the problem in a number, last = the result (shown on the tile)
   problem: string[];          // paragraphs; the first number appears after the first paragraph
   journey?: { title: string; steps: JourneyStep[] };   // optional "Where it broke" chapter, followed step by step
-  visual?: {                  // optional picture chapter (use instead of, or as well as, a journey)
-    chapter: string;
-    blocks: (
-      | { kind: 'shift'; title: string; before: { label: string; value: number; display: string }; after: { label: string; value: number; display: string }; change: string; caption: string }
-      | { kind: 'lifecycle'; title: string; stages: { name: string; flags?: string[] }[]; caption: string }
-      | { kind: 'controls'; title: string; items: { name: string; checks: string }[]; caption?: string }
-      | { kind: 'loop'; title: string; nodes: { name: string; gap: string; fix: string }[]; closes: string }
-      | { kind: 'points'; title: string; nodes: { name: string; gap: string; fix: string }[]; caption?: string }
-      | { kind: 'split'; title: string; parts: { label: string; value: number; display: string }[]; total: string; caption: string }
-      | { kind: 'score'; title: string; signals: string[]; tiers: { name: string; route: string }[]; loop: string }
-    )[];
-  };
+  visual?: VisualChapter | VisualChapter[];   // optional picture chapter(s): use instead of, or as well as, a journey
   journeyLabel?: string;      // optional chapter title instead of "Where it broke" (concepts: steps show "Risk signal" / "Response")
   whatIf?: {                  // optional interactive chart chapter: pick two criteria, points reposition on a 0–10 grid
     chapter: string;          // chapter title, e.g. "Try the what-if"
@@ -50,6 +39,21 @@ export type Story = {
   concept?: boolean;          // true = an independently developed concept, not client work: "Concept" tag,
                               // "What it could change" on the tile and "Illustrative impact" as the last chapter
   earlier?: boolean;          // true = shows the "EW" tag (fuller wording to be added once agreed)
+};
+
+export type VisualChapter = {
+    chapter: string;
+    blocks: (
+      | { kind: 'shift'; title: string; before: { label: string; value: number; display: string }; after: { label: string; value: number; display: string }; change: string; caption: string }
+      | { kind: 'lifecycle'; title: string; stages: { name: string; flags?: string[] }[]; caption: string; neutral?: boolean }   // neutral: tags are tools, not problems
+      | { kind: 'controls'; title: string; items: { name: string; checks: string }[]; caption?: string }
+      | { kind: 'loop'; title: string; nodes: { name: string; gap: string; fix: string }[]; closes: string }
+      | { kind: 'points'; title: string; nodes: { name: string; gap: string; fix: string }[]; caption?: string }
+      | { kind: 'split'; title: string; parts: { label: string; value: number; display: string }[]; total: string; caption: string }
+      | { kind: 'score'; title: string; signals: string[]; tiers: { name: string; route: string }[]; loop: string }
+      | { kind: 'venn'; title: string; sets: { name: string; items: string[] }[]; centre: string; caption?: string }
+      | { kind: 'mrp'; title: string; listings: { name: string; mrp: number; price: number }[]; caption: string }
+    )[];
 };
 
 export const stories: Story[] = [
@@ -340,41 +344,86 @@ export const stories: Story[] = [
     did: 'We designed a conceptual framework that scores listings and sellers on many signals and routes the riskiest to investigation.',
     areas: ['Brand Protection', 'Risk Analytics', 'Marketplace Trust'],
     stats: [
-      { value: '5', label: 'risk areas, from listing manipulation to seller re-entry' },
-      { value: '3 tiers', label: 'of risk — low, medium and high — each with its own review route' },
+      { value: '>3', label: 'MRP changes in a month — one of the signals that a listing may be manipulated' },
+      { value: '3 tiers', label: 'of risk — under 60, 60–80 and 80+ — each with its own review route' },
     ],
     problem: [
-      'Large e-commerce marketplaces operate across extensive seller networks, product categories and constantly changing listings. Traditional rule-based monitoring and reactive customer complaints can make it difficult to identify suspicious sellers and potentially counterfeit products before they affect customers.',
-      'The conceptual assessment identified several risk areas:',
-      '- **Listing manipulation:** frequent changes to product descriptions, MRP and listing attributes could help suspicious sellers evade conventional monitoring\n- **Seller re-entry:** previously delisted sellers could attempt to return through alternate accounts, devices or addresses\n- **Unusual pricing behaviour:** abnormal MRP fluctuations and discount patterns could indicate deceptive pricing or suspicious listing activity\n- **Returns and complaint anomalies:** unusually high return rates, negative feedback and counterfeit complaints could signal potentially problematic products or sellers\n- **Fragmented risk intelligence:** seller, listing, transaction, customer feedback and device data were not being considered together in a unified risk assessment',
+      'Counterfeit products are a growing threat to consumer trust, brand reputation and regulatory compliance in Indian e-commerce. As digital marketplaces reach deeper into Tier 2 and Tier 3 cities, consumers are more exposed to fake goods — especially in high-demand categories such as apparel, footwear, electronics, cosmetics and luxury accessories.',
+      'A vast seller ecosystem, combined with light seller verification and listing moderation, gives counterfeiters room to operate:',
+      '- **Large, lightly verified seller base:** open marketplaces onboard third-party sellers quickly, often with minimal KYC, so new accounts are easy to create\n- **Dynamic listings:** sellers frequently change titles, MRP, descriptions and images, which helps them slip past listing audits and mimic genuine listings\n- **Rule-based monitoring:** fixed rules miss behaviour-based patterns such as repeated MRP manipulation or seasonal pricing anomalies\n- **Reactive enforcement:** penalties often follow customer complaints, by which time the damage is done',
+      'The cost shows up across the platform: more returns and refunds, higher support costs, manual audits and investigations, damage to the reputation of the marketplace and its genuine sellers — and brands that may pull out of marketplaces that don’t protect them.',
     ],
-    visual: {
-      chapter: 'How a risk is scored',
-      blocks: [
-        { kind: 'score', title: 'Many signals, one score, a clear next step', signals: [
-          'MRP and price changes', 'Discount patterns', 'Listing edits', 'Ratings and reviews', 'Return rates', 'Counterfeit complaints', 'Seller history', 'Device and address signals',
-        ], tiers: [
-          { name: 'Low', route: 'Keep monitoring' },
-          { name: 'Medium', route: 'Watch closely; re-score as signals change' },
-          { name: 'High', route: 'Alert and manual investigation — not automatic removal' },
-        ], loop: 'Verified investigation outcomes feed back into the models, so detection improves over time.' },
-      ],
-    },
+    visual: [
+      {
+        chapter: 'Spotting a fake listing',
+        blocks: [
+          { kind: 'venn', title: 'Three lenses on every listing', sets: [
+            { name: 'Listing score', items: ['Listing score = listing rating × returns % × seller rating', 'Score below the average for the same vertical'] },
+            { name: 'Frequent MRP changes', items: ['More than **3 MRP updates in a month**', 'More than **5 MRP updates in a quarter**'] },
+            { name: 'Variance in MRP', items: ['**40%+** price swing during sale periods', '**25%+** gap to the MRP of the best-selling listing', '**40%+** gap to the MRP of an Alpha Seller or other marketplace sellers (min and max)'] },
+          ], centre: 'Higher risk', caption: 'Each signal carries a weight. A listing that trips more than one lens has a higher probability of being counterfeit.' },
+          { kind: 'mrp', title: 'How an inflated MRP manufactures a bigger “discount”', listings: [
+            { name: 'Genuine MRP', mrp: 25000, price: 15000 },
+            { name: 'Inflated MRP', mrp: 30000, price: 15000 },
+          ], caption: 'Same selling price, a bigger headline discount. Platforms often limit how often a seller can change the selling price, so moving the MRP becomes the lever — and during sales, counterfeit sellers mimic market-wide price drops to avoid suspicion. Illustrative figures.' },
+        ],
+      },
+      {
+        chapter: 'Spotting a returning seller',
+        blocks: [
+          { kind: 'controls', title: 'Eight behavioural fingerprints, matched against previously blacklisted sellers', items: [
+            { name: 'Pricing behaviour', checks: 'Frequent MRP changes (more than 3 a month); 30–50% price dips during peak sales' },
+            { name: 'Consumer feedback', checks: 'Surge in 1-star ratings; counterfeit complaints on the listing and to CX' },
+            { name: 'Category patterns', checks: 'High volume in risky sub-categories; shifts to adjacent ones, like hair oil to hair care' },
+            { name: 'Sales and returns', checks: 'High sales velocity with a matching spike in returns' },
+            { name: 'Network traits', checks: 'IP addresses and device fingerprints shared with known offenders' },
+            { name: 'Address and postal code', checks: 'Similar addresses, postal codes or names to blacklisted sellers' },
+            { name: 'SKU lifecycle', checks: 'Short-lived SKUs listed and delisted within 30 days; high churn' },
+            { name: 'Seller Protection Fund', checks: 'Multiple SPF claims during flash sales or after negative reviews' },
+          ], caption: 'A match is a reason to look closer, not proof. A shared IP or a similar address on its own does not establish that two accounts belong to the same person.' },
+        ],
+      },
+      {
+        chapter: 'How a risk is scored',
+        blocks: [
+          { kind: 'score', title: 'Risk score = Σ (signal weight × signal value)', signals: [
+            'MRP and price changes', 'Discount patterns', 'Listing score', 'Ratings and reviews', 'Return rates', 'Counterfeit complaints', 'Seller history', 'Device and address signals',
+          ], tiers: [
+            { name: 'Under 60', route: 'Routine monitoring' },
+            { name: '60–80', route: 'Enhanced monitoring and alerts' },
+            { name: '80+', route: 'Flag for manual review and investigation — not automatic removal' },
+          ], loop: 'Verified investigation outcomes feed back into the models, so detection improves over time.' },
+          { kind: 'lifecycle', title: 'The analytical pipeline', stages: [
+            { name: 'Collect and validate', flags: ['8 data sources'] },
+            { name: 'Pre-process', flags: ['Normalisation', 'Encoding'] },
+            { name: 'Detect anomalies', flags: ['Isolation Forest', 'DBSCAN'] },
+            { name: 'Model MRP over time', flags: ['Seasonal ARIMA', 'LSTM'] },
+            { name: 'Benchmark listings', flags: ['Vertical scoring', 'Random Forest'] },
+            { name: 'Read the reviews', flags: ['Sentiment (BERT)'] },
+            { name: 'Integrate and validate', flags: ['Entity resolution'] },
+          ], caption: 'From raw listing, seller and customer data to a scored, validated view of risk.', neutral: true },
+        ],
+      },
+    ],
     whatWeDid: [
-      'We designed a conceptual anti-counterfeit intelligence framework combining listing-level monitoring, seller behaviour analysis and risk-based investigation. It covered four capabilities:',
-      '- **Listing risk identification:** monitored listing quality, MRP changes, pricing volatility, customer ratings and return patterns to identify suspicious product listings\n- **Seller behaviour intelligence:** compared active seller profiles against previously flagged seller patterns using pricing behaviour, category activity, complaint history, addresses and device-level signals\n- **Composite risk scoring:** combined multiple risk indicators into a structured scoring model to classify listings and sellers into low-, medium- and high-risk categories\n- **Investigation and feedback:** a workflow for risk alerts, manual investigation, enforcement actions and feeding verified outcomes back into the detection framework',
-      'The proposed architecture combined:',
-      '- SQL-based data extraction and integration\n- Python-based anomaly detection using techniques such as Isolation Forest and DBSCAN\n- Similarity analysis to identify seller behaviour patterns\n- Time-series analysis of pricing and MRP movements\n- NLP-based customer review and sentiment analysis\n- Power BI dashboards for risk monitoring, exception tracking and investigation prioritisation',
+      'We designed a conceptual anti-counterfeit framework combining listing-level monitoring, seller behaviour analysis and risk-based investigation, built on eight data sources:',
+      '- **Listing metadata:** titles, descriptions, category tags, brand and images\n- **Pricing and MRP history:** time-stamped MRP and selling-price logs, including seasonal discounts\n- **Customer feedback:** ratings, review text, return tags and reason codes\n- **Transaction data:** units sold, order frequency and sales velocity by SKU\n- **Complaint and refund logs:** counterfeit claims, refund issues and Seller Protection Fund usage\n- **Network and device logs:** IP addresses, browser fingerprints and device IDs\n- **Seller master data:** registered addresses, KYC, category preferences and ratings\n- **Returns and RTO data:** return and return-to-origin rates by SKU, seller and category',
+      'The workflow runs in five steps:',
+      '- **Data ingestion:** continuous extraction of listing data and seller updates\n- **Scoring and flagging:** risk scoring applied daily; high-risk listings flagged for review\n- **Alerts:** real-time alerts for sudden MRP changes or abnormal return spikes\n- **Investigation and remediation:** the risk team reviews flagged listings; confirmed counterfeits are removed and sellers penalised\n- **Feedback loop:** verified cases are fed back into the models to improve detection',
+      'A pattern-matching engine compares active sellers with blacklisted “fingerprints” using cosine similarity or Euclidean distance on behaviour vectors, K-Means or DBSCAN clustering to find blacklist-like groups, and One-Class SVM or Isolation Forest to isolate outliers. Results surface in Power BI dashboards, with SQL for data extraction and Python for the models.',
       'Three things set it apart:',
-      '- **Behavioural seller matching:** going beyond individual listing checks to identify patterns associated with previously flagged sellers\n- **Multi-signal risk scoring:** combining pricing, returns, complaints, listing quality and seller history rather than relying on one indicator\n- **Closed-loop risk management:** feeding verified investigation outcomes back into the detection models to improve future identification',
+      '- **Behavioural seller matching:** going beyond individual listing checks to identify patterns associated with previously flagged sellers\n- **Multi-signal risk scoring:** combining pricing, returns, complaints, listing quality and seller history rather than relying on one indicator\n- **Closed-loop risk management:** feeding verified investigation outcomes back into the detection models',
+      'The platform framework sits alongside methods brands can use themselves:',
+      '- **Overt:** product serialisation (unique codes, QR) and tamper-evident packaging\n- **Covert:** anti-counterfeit cells, IP registration assistance and brand registry programmes\n- **Digital:** taggants, GTIN and ISBN validation, and track-and-trace platforms\n- **Forensic:** laboratory analysis such as spectroscopy, chromatography and microscopy',
     ],
     outcome: [
       'The framework was designed to help marketplaces:',
-      '- Identify suspicious listings and sellers earlier\n- Prioritise investigations based on risk severity\n- Detect repeat offenders and potential seller re-entry\n- Improve visibility into counterfeit-related returns and complaints\n- Support regulatory compliance monitoring\n- Strengthen marketplace trust and brand protection through proactive monitoring',
+      '- Identify suspicious listings and sellers earlier\n- Prioritise investigations based on risk severity\n- Detect repeat offenders and potential seller re-entry\n- Reduce returns, complaints and manual audit effort linked to counterfeits\n- Support regulatory compliance monitoring, with audit trails for MRP changes and enforcement actions\n- Strengthen marketplace trust and brand protection through proactive monitoring',
+      'Metrics to track include the share of flagged listings in top categories, return rates on flagged SKUs, time from risk flag to resolution, brand-partner satisfaction and customer repeat rate.',
       'A suspicious price movement or a high return rate is a risk signal, not proof that a product is counterfeit. The framework is built to prioritise human review, not to replace it.',
     ],
     meta: 'E-commerce marketplace · Brand protection',
-    note: 'This is an independently developed conceptual framework. The models, thresholds, expected improvements and examples are illustrative and are not verified implementation results.',
+    note: 'This is an independently developed conceptual framework demonstrating domain knowledge and analytical thinking in e-commerce risk management. It does not reference, replicate or disclose confidential information from any client or employer. All examples, figures, models and thresholds are illustrative and are not verified implementation results.',
     impactLabel: 'Intended impact',
     concept: true,
   },

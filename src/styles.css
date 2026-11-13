@@ -1104,3 +1104,28 @@ footer .made-in .heart{color:var(--lime)}
 .vz-tiers .t0 b{color:#a7b0aa}.vz-tiers .t1 b{color:#e8c46a}.vz-tiers .t2 b{color:#f08a8a}
 .vz-tiers .t2{border-color:#5a2a2a;background:#1a0f0f}
 @media(max-width:900px){.vz-flow{grid-template-columns:1fr}.vz-mid{justify-content:center}.vz-mid span{transform:rotate(90deg)}.vz-sbar i b{font-size:13px}.vz-sbar i{padding:0 8px}}
+/* Venn and MRP visuals */
+.vz-vbody{display:grid;grid-template-columns:300px minmax(0,1fr);gap:24px;align-items:center}
+.vz-vsvg{width:100%;height:auto}
+.vz-vsvg circle{stroke-width:1.5;mix-blend-mode:screen}
+.vz-vsvg .c0{fill:rgba(240,138,138,.28);stroke:#f08a8a}
+.vz-vsvg .c1{fill:rgba(232,196,106,.24);stroke:#e8c46a}
+.vz-vsvg .c2{fill:rgba(143,199,255,.24);stroke:#8fc7ff}
+.vz-vsvg .vl{fill:#f3f3ed;font-size:12px;font-weight:700}
+.vz-vsvg .vc{fill:var(--lime);font-size:13px;font-weight:800}
+.vz-vsets{display:grid;gap:14px}
+.vz-vsets b{display:block;margin-bottom:4px;font-size:14.5px}
+.vz-vsets .s0 b{color:#f0a8a8}.vz-vsets .s1 b{color:#e8c46a}.vz-vsets .s2 b{color:#8fc7ff}
+.vz-vsets ul{margin:0;padding-left:18px;color:#c7d0c9;font-size:13.5px;line-height:1.55}
+.vz-vsets strong{color:#fff}
+.vz-mlist{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.vz-mlist>div{padding:18px;border:1px solid #27322d;border-radius:10px;background:#080d0c}
+.vz-mlist>div.m1{border-color:#5a2a2a;background:#1a0f0f}
+.vz-mp{margin:4px 0 0!important;color:#7c8681!important;font-size:14px!important}
+.vz-pp{margin:4px 0 0!important;color:#f3f3ed!important;font-size:28px!important;font-weight:700;letter-spacing:-.02em}
+.vz-off{display:inline-block;margin:8px 0 0!important;padding:3px 8px;border-radius:4px;background:#121a06;color:var(--lime)!important;font-size:15px!important;font-weight:800}
+.vz-mlist>div.m1 .vz-off{background:#2a1212;color:#f0a8a8!important}
+.vz-formula{margin:14px 0 0!important;font-family:ui-monospace,Consolas,monospace;color:#c7d0c9!important;font-size:13px!important}
+.vz-stages{grid-auto-flow:row}
+@media(max-width:900px){.vz-vbody{grid-template-columns:1fr}.vz-vsvg{max-width:300px;margin:0 auto}.vz-mlist{grid-template-columns:1fr}}
+.vz-life.neutral .vz-stages em{border-color:#2c3833;background:#080d0c;color:#c7d0c9}
