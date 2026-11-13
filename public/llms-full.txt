@@ -874,33 +874,31 @@ Purchase order and invoice information was distributed across SAP exports, Excel
 
 - Limited ownership and visibility of outstanding financial exceptions
 
-#### 02 · Where it broke
+#### 02 · Where the value sat
 
-Follow one purchase order
+Unmapped purchase-order value
 
-Where it brokeWhat we put in place
+Before
 
-##### 1 · A PO is raised and approved
+€42M
 
-For one of several IT service areas — Data Centre, Network, SAP, Workplace and more.
+After
 
-##### 2 · It never gets mapped to a service
+€12.3M
 
-PO data sits in SAP exports and spreadsheets, so nobody sees it’s unmapped.
+−70.7% as teams worked through the exceptions the dashboard surfaced.
 
-Fix One lifecycle view, from PO creation and approval through service confirmation, invoicing and payment.
+The PO lifecycle, and where exceptions hid
 
-##### 3 · Invoice and service confirmation don’t match
+- 01PO created and approvedUnmapped POs
 
-Partial payments, multi-service contracts and unlinked confirmations go unnoticed.
+- 02Service confirmationUnlinked confirmations
 
-Fix Exception flags, plus reconciliation of PO value, invoiced amount and payment to show what’s outstanding.
+- 03InvoicingMulti-service contractsInvoice mismatches
 
-##### 4 · The exception ages without an owner
+- 04PaymentPartial payments
 
-Long-pending values build up across service areas.
-
-Fix Aging analysis, filters by service line, region, value and status, and recurring reviews with finance, procurement, delivery and PMO.
+One view across every stage, with long-pending values aged by service area — Data Centre, Network, SAP, Workplace, Information Security and Service Desk.
 
 #### 03 · What we did
 
@@ -1122,35 +1120,29 @@ Despite having inventory provisioning policies and demand-planning processes, ag
 
 - Regional inventory imbalance: stock remained idle in low-demand locations while other regions experienced shortages, with no systematic trigger for redistribution
 
-#### 02 · Where it broke
+#### 02 · The broken loop
 
-Follow one purchase decision
+Demand, buying and stock weren’t talking to each other
 
-Where it brokeWhat we put in place
+- Forecast
 
-##### 1 · The forecast comes in
+GapAround 30–40% accurate, so planners overrode it by hand.
 
-At 30–40% accuracy, planners override it by hand.
+FixSeasonal and regional recalibration, MAPE tracking, overrides only for defined exceptions.
 
-Fix Models recalibrated with seasonal and regional signals, MAPE tracked, and overrides limited to defined exceptions.
+- Purchase order
 
-##### 2 · A fresh PO goes out
+GapOTB, run-rate and unhealthy-item limits weren’t consistently enforced.
 
-OTB, run-rate and unhealthy-item limits aren’t consistently enforced.
+FixAutomated checks, PO restrictions, classification approvals and escalation of breaches.
 
-Fix Automated checks, PO restrictions and escalation of significant policy breaches.
+- Inventory
 
-##### 3 · Stock lands where demand is low
+GapStock idled in low-demand regions and aged past 180 days — provisioned, but not cleared.
 
-Other regions run short, and nothing triggers a transfer.
+FixRedistribution before reordering, and a Power BI view of ageing and liquidation.
 
-Fix SKU-level ageing and sales-velocity comparisons to move stock before ordering more.
-
-##### 4 · It ages past 180 days
-
-Provisioned in the books, but still sitting in the warehouse.
-
-Fix A Power BI view of provisioned stock, ageing and liquidation opportunities.
+ASP–MSP–PO variance monitoring feeds what was actually bought back into the next plan.
 
 #### 03 · What we did
 
@@ -1222,39 +1214,55 @@ The conceptual assessment identified several common challenges:
 
 - Limited visibility into payroll exceptions and control effectiveness
 
-#### 02 · Where it broke
+#### 02 · The control map
 
-Follow one payroll run
+94 checks across eight control areas
 
-Where it brokeWhat we put in place
+01Employee status
 
-##### 1 · Attendance and salary inputs arrive
+Joining and exit dates, status, employee ID
 
-A large workforce, many salary components and statutory deductions to process.
+02Banking details
 
-##### 2 · More than 90 checks, done by hand
+Bank account and IFSC changes, duplicate accounts
 
-HR and payroll teams validate each area manually before processing.
+03Payroll processing
 
-Fix 94 validation and audit checks automated in Power BI with Power Query and DAX, across eight control areas.
+PAN and Aadhaar changes, salary variances, overtime, leave adjustments
 
-##### 3 · Bank and identity changes are easy to miss
+04Headcount
 
-Changed bank accounts, IFSC codes, PAN or Aadhaar sit inside sensitive data.
+Month-on-month and department-level comparisons
 
-Fix Flags for bank and IFSC changes, duplicate accounts, and PAN or Aadhaar changes.
+05Payroll components
 
-##### 4 · Verification stretches to seven days
+Basic pay, DA, allowances, deductions, bonuses
 
-Exceptions surface late, if at all, and payroll is delayed.
+06Leave and attendance
 
-Fix One dashboard for HR, Finance and Internal Audit to clear exceptions before disbursement.
+Leave balances, absences, leave encashment
 
-##### 5 · Little proof the controls are working
+07Tax and statutory
 
-Control effectiveness is hard to show at audit time.
+TDS, PF, ESI, tax exemptions
 
-Fix Structured exception reporting that strengthens audit readiness.
+08Internal audit controls
+
+Duplicate payments, data integrity, change monitoring, exceptions
+
+Every area is checked before disbursement, on one dashboard for HR, Finance and Internal Audit.
+
+Payroll verification time (illustrative)
+
+Manual
+
+7 days
+
+Automated
+
+2 days
+
+5 days sooner in the illustrative scenario — not a verified client result.
 
 #### 03 · What we did
 

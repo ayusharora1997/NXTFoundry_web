@@ -20,6 +20,15 @@ export type Story = {
   stats: { value: string; label: string }[];   // first = the problem in a number, last = the result (shown on the tile)
   problem: string[];          // paragraphs; the first number appears after the first paragraph
   journey?: { title: string; steps: JourneyStep[] };   // optional "Where it broke" chapter, followed step by step
+  visual?: {                  // optional picture chapter (use instead of, or as well as, a journey)
+    chapter: string;
+    blocks: (
+      | { kind: 'shift'; title: string; before: { label: string; value: number; display: string }; after: { label: string; value: number; display: string }; change: string; caption: string }
+      | { kind: 'lifecycle'; title: string; stages: { name: string; flags?: string[] }[]; caption: string }
+      | { kind: 'controls'; title: string; items: { name: string; checks: string }[]; caption?: string }
+      | { kind: 'loop'; title: string; nodes: { name: string; gap: string; fix: string }[]; closes: string }
+    )[];
+  };
   journeyLabel?: string;      // optional chapter title instead of "Where it broke" (concepts: steps show "Risk signal" / "Response")
   whatIf?: {                  // optional interactive chart chapter: pick two criteria, points reposition on a 0–10 grid
     chapter: string;          // chapter title, e.g. "Try the what-if"
@@ -59,13 +68,16 @@ export const stories: Story[] = [
       'Purchase order and invoice information was distributed across SAP exports, Excel files and stakeholder-maintained trackers. Finance, procurement and delivery teams lacked a consolidated view of the PO lifecycle, making it difficult to identify unmapped purchase orders, reconcile invoices and resolve outstanding exceptions. This resulted in:',
       '- **Significant value** sitting in unmapped purchase orders\n- Manual reconciliation across fragmented data sources\n- Delays in identifying invoice and service-confirmation mismatches\n- Limited ownership and visibility of outstanding financial exceptions',
     ],
-    journey: {
-      title: 'Follow one purchase order',
-      steps: [
-        { title: 'A PO is raised and approved', text: 'For one of several IT service areas — Data Centre, Network, SAP, Workplace and more.' },
-        { title: 'It never gets mapped to a service', text: 'PO data sits in SAP exports and spreadsheets, so nobody sees it’s unmapped.', fix: 'One lifecycle view, from PO creation and approval through service confirmation, invoicing and payment.' },
-        { title: 'Invoice and service confirmation don’t match', text: 'Partial payments, multi-service contracts and unlinked confirmations go unnoticed.', fix: 'Exception flags, plus reconciliation of PO value, invoiced amount and payment to show what’s outstanding.' },
-        { title: 'The exception ages without an owner', text: 'Long-pending values build up across service areas.', fix: 'Aging analysis, filters by service line, region, value and status, and recurring reviews with finance, procurement, delivery and PMO.' },
+    visual: {
+      chapter: 'Where the value sat',
+      blocks: [
+        { kind: 'shift', title: 'Unmapped purchase-order value', before: { label: 'Before', value: 42, display: '€42M' }, after: { label: 'After', value: 12.3, display: '€12.3M' }, change: '−70.7%', caption: 'as teams worked through the exceptions the dashboard surfaced.' },
+        { kind: 'lifecycle', title: 'The PO lifecycle, and where exceptions hid', stages: [
+          { name: 'PO created and approved', flags: ['Unmapped POs'] },
+          { name: 'Service confirmation', flags: ['Unlinked confirmations'] },
+          { name: 'Invoicing', flags: ['Multi-service contracts', 'Invoice mismatches'] },
+          { name: 'Payment', flags: ['Partial payments'] },
+        ], caption: 'One view across every stage, with long-pending values aged by service area — Data Centre, Network, SAP, Workplace, Information Security and Service Desk.' },
       ],
     },
     whatWeDid: [
@@ -182,13 +194,14 @@ export const stories: Story[] = [
       'Despite having inventory provisioning policies and demand-planning processes, aged inventory continued to accumulate while fresh purchase orders were being raised. Financial provisioning was taking place, but the underlying stock was not being cleared. The assessment highlighted four interconnected challenges:',
       '- **Inventory accumulation:** significant working capital remained locked in inventory aged beyond 180 days\n- **Weak procurement controls:** Open-to-Buy (OTB), SKU run-rate limits and unhealthy-item restrictions were not consistently enforced\n- **Forecasting gaps:** forecast accuracy remained around 30–40%, increasing reliance on manual overrides and contributing to excess procurement\n- **Regional inventory imbalance:** stock remained idle in low-demand locations while other regions experienced shortages, with no systematic trigger for redistribution',
     ],
-    journey: {
-      title: 'Follow one purchase decision',
-      steps: [
-        { title: 'The forecast comes in', text: 'At 30–40% accuracy, planners override it by hand.', fix: 'Models recalibrated with seasonal and regional signals, MAPE tracked, and overrides limited to defined exceptions.' },
-        { title: 'A fresh PO goes out', text: 'OTB, run-rate and unhealthy-item limits aren’t consistently enforced.', fix: 'Automated checks, PO restrictions and escalation of significant policy breaches.' },
-        { title: 'Stock lands where demand is low', text: 'Other regions run short, and nothing triggers a transfer.', fix: 'SKU-level ageing and sales-velocity comparisons to move stock before ordering more.' },
-        { title: 'It ages past 180 days', text: 'Provisioned in the books, but still sitting in the warehouse.', fix: 'A Power BI view of provisioned stock, ageing and liquidation opportunities.' },
+    visual: {
+      chapter: 'The broken loop',
+      blocks: [
+        { kind: 'loop', title: 'Demand, buying and stock weren’t talking to each other', nodes: [
+          { name: 'Forecast', gap: 'Around 30–40% accurate, so planners overrode it by hand.', fix: 'Seasonal and regional recalibration, MAPE tracking, overrides only for defined exceptions.' },
+          { name: 'Purchase order', gap: 'OTB, run-rate and unhealthy-item limits weren’t consistently enforced.', fix: 'Automated checks, PO restrictions, classification approvals and escalation of breaches.' },
+          { name: 'Inventory', gap: 'Stock idled in low-demand regions and aged past 180 days — provisioned, but not cleared.', fix: 'Redistribution before reordering, and a Power BI view of ageing and liquidation.' },
+        ], closes: 'ASP–MSP–PO variance monitoring feeds what was actually bought back into the next plan.' },
       ],
     },
     whatWeDid: [
@@ -223,14 +236,20 @@ export const stories: Story[] = [
       'The conceptual assessment identified several common challenges:',
       '- More than **90 manual checks** required before payroll processing\n- Significant HR and payroll manpower involved in routine validation\n- Verification cycles extending up to **seven days**\n- Risk of errors in sensitive employee, banking and salary data\n- Limited visibility into payroll exceptions and control effectiveness',
     ],
-    journey: {
-      title: 'Follow one payroll run',
-      steps: [
-        { title: 'Attendance and salary inputs arrive', text: 'A large workforce, many salary components and statutory deductions to process.' },
-        { title: 'More than 90 checks, done by hand', text: 'HR and payroll teams validate each area manually before processing.', fix: '94 validation and audit checks automated in Power BI with Power Query and DAX, across eight control areas.' },
-        { title: 'Bank and identity changes are easy to miss', text: 'Changed bank accounts, IFSC codes, PAN or Aadhaar sit inside sensitive data.', fix: 'Flags for bank and IFSC changes, duplicate accounts, and PAN or Aadhaar changes.' },
-        { title: 'Verification stretches to seven days', text: 'Exceptions surface late, if at all, and payroll is delayed.', fix: 'One dashboard for HR, Finance and Internal Audit to clear exceptions before disbursement.' },
-        { title: 'Little proof the controls are working', text: 'Control effectiveness is hard to show at audit time.', fix: 'Structured exception reporting that strengthens audit readiness.' },
+    visual: {
+      chapter: 'The control map',
+      blocks: [
+        { kind: 'controls', title: '94 checks across eight control areas', items: [
+          { name: 'Employee status', checks: 'Joining and exit dates, status, employee ID' },
+          { name: 'Banking details', checks: 'Bank account and IFSC changes, duplicate accounts' },
+          { name: 'Payroll processing', checks: 'PAN and Aadhaar changes, salary variances, overtime, leave adjustments' },
+          { name: 'Headcount', checks: 'Month-on-month and department-level comparisons' },
+          { name: 'Payroll components', checks: 'Basic pay, DA, allowances, deductions, bonuses' },
+          { name: 'Leave and attendance', checks: 'Leave balances, absences, leave encashment' },
+          { name: 'Tax and statutory', checks: 'TDS, PF, ESI, tax exemptions' },
+          { name: 'Internal audit controls', checks: 'Duplicate payments, data integrity, change monitoring, exceptions' },
+        ], caption: 'Every area is checked before disbursement, on one dashboard for HR, Finance and Internal Audit.' },
+        { kind: 'shift', title: 'Payroll verification time (illustrative)', before: { label: 'Manual', value: 7, display: '7 days' }, after: { label: 'Automated', value: 2, display: '2 days' }, change: '5 days sooner', caption: 'in the illustrative scenario — not a verified client result.' },
       ],
     },
     whatWeDid: [
