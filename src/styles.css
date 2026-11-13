@@ -863,3 +863,7 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .px-ai-badge span{display:inline-block;color:#b39dff;animation:ai-twinkle 2.4s ease-in-out infinite}
 @keyframes ai-twinkle{0%,100%{transform:scale(1) rotate(0);opacity:.85}50%{transform:scale(1.25) rotate(20deg);opacity:1}}
 @media (prefers-reduced-motion:reduce){.px-ai-badge span{animation:none}}
+
+/* Privacy Policy links (footer, contact form) */
+.footer-legal,.privacy a,.form-privacy a{text-decoration:underline;text-underline-offset:3px}
+.form-privacy{font-size:13px;color:var(--muted);margin:12px 0 0}
