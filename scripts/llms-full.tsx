@@ -71,13 +71,13 @@ llms = llms.replace('\n## Contact', `\n## Stories\nCase stories and concept fram
 writeFileSync(llmsPath, llms.replace('(https://www.nxtfoundry.in/#stories)', '(https://www.nxtfoundry.in/stories/)'));
 
 // sitemap.xml: the real pages, including every story page (generated after the build by scripts/story-pages.tsx).
-const today = new Date().toISOString().slice(0, 10);
+// No <lastmod>: stamping every page with the build date on each deploy tells Google the whole site is brand new,
+// which feeds the "1 day ago" label in search results. Google finds changes by crawling instead.
 const urls = ['/', '/stories/', ...stories.map(st => `/stories/${st.id}.html`), '/faq.html', '/privacy.html'];
 writeFileSync(`${ROOT}/public/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url>
     <loc>https://www.nxtfoundry.in${u}</loc>
-    <lastmod>${today}</lastmod>
   </url>`).join('\n')}
 </urlset>
 `);
