@@ -886,4 +886,32 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .cta .cta-note{color:#2c3f0a;font-weight:600}
 .cta-action{flex-shrink:0}
 
-.faq-all{margin:22px 0 0}
+
+/* Footer: quiet, centred block. Lime is reserved for the one live product and the heart; everything else is greyscale. */
+footer{padding:88px 5vw 32px;background:#060a09}
+.footer-inner{max-width:1160px;margin:0 auto}
+.footer-main{display:grid;grid-template-columns:minmax(240px,300px) auto minmax(300px,340px) auto;justify-content:space-between;gap:48px 64px}
+.footer-copy{color:#8d9792;font-size:14px;line-height:1.7;max-width:280px;margin-top:24px}
+.footer-place{margin:18px 0 0;color:#6c7671;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+footer .footer-label{color:#f3f3ed;font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;opacity:.9}
+footer .footer-col{gap:14px;font-size:15px}
+footer .footer-col a{width:fit-content;color:#a7b0aa;text-decoration:none;transition:color .2s}
+footer .footer-col a:hover,footer .footer-col a:focus-visible{color:#fff}
+.footer-products ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+footer .footer-products li a{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:baseline;gap:20px;padding:9px 0;border-bottom:1px solid #18211d}
+.footer-products li:first-child a{border-top:1px solid #18211d}
+.fp-group{margin:10px 0 6px;color:#6c7671;font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.fp-group:first-of-type{margin-top:0}
+.fp-name{line-height:1.4}
+.fp-status{display:inline-flex;align-items:center;gap:7px;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;color:#6c7671;white-space:nowrap}
+.fp-status.fp-live{color:var(--lime)}
+.fp-status i{width:6px;height:6px;border-radius:50%;background:var(--lime);box-shadow:0 0 0 3px rgba(215,255,50,.15)}
+footer .footer-products li a:hover .fp-name{color:#fff}
+footer .footer-col a.footer-more{display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:13px;color:#8d9792}
+.footer-bottom{max-width:none;margin-top:72px;padding-top:24px;border-top:1px solid #18211d;color:#6c7671;font-size:12px;letter-spacing:.04em}
+.footer-bottom .footer-legal{color:#8d9792;text-decoration:none}
+.footer-bottom .footer-legal:hover,.footer-bottom .footer-legal:focus-visible{color:#fff}
+footer .made-in{color:#6c7671}
+footer .made-in .heart{color:var(--lime)}
+@media(max-width:960px){.footer-main{grid-template-columns:1fr 1fr;justify-content:stretch}.footer-brand{grid-column:1/-1}.footer-products{grid-row:3;grid-column:1/-1}}
+@media(max-width:520px){footer{padding-top:64px}.footer-main{grid-template-columns:1fr;gap:40px}.footer-products{grid-row:auto;order:1}}
