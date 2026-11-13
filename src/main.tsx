@@ -194,6 +194,21 @@ function VisualBlock({v}:{v:StoryVisual}){
   if(v.kind==='controls')return <div className="vz vz-ctrl"><p className="vz-t">{v.title}</p>
       <div className="vz-grid">{v.items.map((it,i)=><div key={it.name}><span className="vz-sn">{String(i+1).padStart(2,'0')}</span><b>{it.name}</b><p>{it.checks}</p></div>)}</div>
       {v.caption&&<p className="vz-cap">{v.caption}</p>}</div>;
+  if(v.kind==='points')return <div className="vz vz-points"><p className="vz-t">{v.title}</p>
+      <ol className="vz-nodes plain">{v.nodes.map(n=><li key={n.name}><b>{n.name}</b><p className="vz-gap"><span>Gap</span>{n.gap}</p><p className="vz-fix"><span>Fix</span>{n.fix}</p></li>)}</ol>
+      {v.caption&&<p className="vz-cap">{v.caption}</p>}</div>;
+  if(v.kind==='split'){const tot=v.parts.reduce((a,p)=>a+p.value,0);
+    return <div className="vz vz-split"><p className="vz-t">{v.title}</p>
+      <div className="vz-sbar">{v.parts.map((p,i)=><i key={p.label} className={'p'+i} style={{width:`${(p.value/tot)*100}%`}}><b>{p.display}</b></i>)}</div>
+      <ul className="vz-skey">{v.parts.map((p,i)=><li key={p.label}><i className={'p'+i}/>{p.label} <b>{p.display}</b></li>)}</ul>
+      <p className="vz-cap"><strong>{v.total}</strong> {v.caption}</p></div>}
+  if(v.kind==='score')return <div className="vz vz-score"><p className="vz-t">{v.title}</p>
+      <div className="vz-flow">
+        <div className="vz-sig"><span className="vz-k">Signals</span>{v.signals.map(x=><em key={x}>{x}</em>)}</div>
+        <div className="vz-mid" aria-hidden="true"><span>→</span><b>Composite<br/>risk score</b><span>→</span></div>
+        <ol className="vz-tiers">{v.tiers.map((t,i)=><li key={t.name} className={'t'+i}><b>{t.name}</b><span>{t.route}</span></li>)}</ol>
+      </div>
+      <p className="vz-back"><span aria-hidden="true">↺</span> {v.loop}</p></div>;
   return <div className="vz vz-loop"><p className="vz-t">{v.title}</p>
       <ol className="vz-nodes">{v.nodes.map(n=><li key={n.name}><b>{n.name}</b><p className="vz-gap"><span>Gap</span>{n.gap}</p><p className="vz-fix"><span>Fix</span>{n.fix}</p></li>)}</ol>
       <p className="vz-back"><span aria-hidden="true">↺</span> {v.closes}</p></div>}

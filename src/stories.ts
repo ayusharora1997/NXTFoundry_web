@@ -27,6 +27,9 @@ export type Story = {
       | { kind: 'lifecycle'; title: string; stages: { name: string; flags?: string[] }[]; caption: string }
       | { kind: 'controls'; title: string; items: { name: string; checks: string }[]; caption?: string }
       | { kind: 'loop'; title: string; nodes: { name: string; gap: string; fix: string }[]; closes: string }
+      | { kind: 'points'; title: string; nodes: { name: string; gap: string; fix: string }[]; caption?: string }
+      | { kind: 'split'; title: string; parts: { label: string; value: number; display: string }[]; total: string; caption: string }
+      | { kind: 'score'; title: string; signals: string[]; tiers: { name: string; route: string }[]; loop: string }
     )[];
   };
   journeyLabel?: string;      // optional chapter title instead of "Where it broke" (concepts: steps show "Risk signal" / "Response")
@@ -112,14 +115,18 @@ export const stories: Story[] = [
       '**Unauthorised group-class access.** Certain centre managers were booking classes under their own credentials for unauthorised attendees. In some instances, unofficial trainers were also using gym facilities to offer paid training independently.',
       '**Manual gate access misuse.** Centre managers could operate swing barriers using separate remotes intended for housekeeping access. These were sometimes misused to admit non-members outside the standard membership process, particularly at franchise-operated centres.',
     ],
-    journey: {
-      title: 'Follow a member through the gate',
-      steps: [
-        { title: 'A member signs up', text: 'Gets QR and fingerprint access to every centre in the chain.' },
-        { title: 'One membership, many devices — and two centres at once', text: 'The same access was used on several devices, with impossible concurrent entries across distant centres.', fix: 'One registered device per membership. Device changes need a CX request and approval; repeated changes trigger temporary restrictions and investigation.' },
-        { title: 'QR or fingerprint, whichever is handy', text: 'Either method worked at any time, which made shared access easy.', fix: 'Single-mode authentication: switching between QR and fingerprint needs a CX ticket and approval.' },
-        { title: 'Classes booked on a manager’s login', text: 'Unauthorised attendees joined group classes; unofficial trainers ran paid sessions on the premises.', fix: 'New KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.' },
-        { title: 'The barrier opened with a housekeeping remote', text: 'Non-members were let in outside the membership process, mostly at franchise centres.', fix: 'Swing-barrier openings and closures are now monitored and matched against an actual entry or exit.' },
+    visual: {
+      chapter: 'Where people got in',
+      blocks: [
+        { kind: 'split', title: 'Revenue leakage exposure found by the audit', parts: [
+          { label: 'Membership access misuse', value: 2, display: '₹2 Cr' },
+          { label: 'Other access and operational gaps', value: 3, display: '₹3 Cr' },
+        ], total: '≈ ₹5 crore', caption: 'in overall exposure across the access and operational control gaps.' },
+        { kind: 'points', title: 'Three ways in, outside the membership process', nodes: [
+          { name: 'App and biometric entry', gap: 'One membership on several devices, with impossible concurrent entries across distant centres.', fix: 'One registered device and one sign-in method; changes need a CX request and approval.' },
+          { name: 'Group classes', gap: 'Managers booked classes on their own logins for unauthorised attendees; unofficial trainers ran paid sessions.', fix: 'New KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.' },
+          { name: 'Swing barriers', gap: 'Housekeeping remotes opened gates for non-members, mostly at franchise centres.', fix: 'Gate openings and closures monitored and matched against an actual entry or exit.' },
+        ] },
       ],
     },
     whatWeDid: [
@@ -341,15 +348,16 @@ export const stories: Story[] = [
       'The conceptual assessment identified several risk areas:',
       '- **Listing manipulation:** frequent changes to product descriptions, MRP and listing attributes could help suspicious sellers evade conventional monitoring\n- **Seller re-entry:** previously delisted sellers could attempt to return through alternate accounts, devices or addresses\n- **Unusual pricing behaviour:** abnormal MRP fluctuations and discount patterns could indicate deceptive pricing or suspicious listing activity\n- **Returns and complaint anomalies:** unusually high return rates, negative feedback and counterfeit complaints could signal potentially problematic products or sellers\n- **Fragmented risk intelligence:** seller, listing, transaction, customer feedback and device data were not being considered together in a unified risk assessment',
     ],
-    journeyLabel: 'How a risk is caught',
-    journey: {
-      title: 'Follow one suspicious listing',
-      steps: [
-        { title: 'A seller lists a product', text: 'Descriptions, MRP and attributes can change at any time.' },
-        { title: 'The listing keeps shifting', text: 'Frequent changes to descriptions, MRP and discounts help it slip past fixed rules.', fix: 'Listing monitoring tracks MRP changes, pricing volatility, listing quality, ratings and returns over time.' },
-        { title: 'Returns and complaints start to rise', text: 'High returns, negative reviews and counterfeit complaints build up — risk signals, not proof.', fix: 'Review sentiment analysis and anomaly detection feed a composite score that places the listing in a low, medium or high risk tier.' },
-        { title: 'The seller looks familiar', text: 'A delisted seller may try to return through new accounts, devices or addresses.', fix: 'Behavioural matching against previously flagged sellers. A shared IP or similar address prompts investigation — on its own it doesn’t prove two accounts are linked.' },
-        { title: 'High risk triggers a review, not removal', text: 'A person decides what happens next.', fix: 'Alerts go to manual investigation and enforcement, and verified outcomes feed back into the detection models.' },
+    visual: {
+      chapter: 'How a risk is scored',
+      blocks: [
+        { kind: 'score', title: 'Many signals, one score, a clear next step', signals: [
+          'MRP and price changes', 'Discount patterns', 'Listing edits', 'Ratings and reviews', 'Return rates', 'Counterfeit complaints', 'Seller history', 'Device and address signals',
+        ], tiers: [
+          { name: 'Low', route: 'Keep monitoring' },
+          { name: 'Medium', route: 'Watch closely; re-score as signals change' },
+          { name: 'High', route: 'Alert and manual investigation — not automatic removal' },
+        ], loop: 'Verified investigation outcomes feed back into the models, so detection improves over time.' },
       ],
     },
     whatWeDid: [

@@ -958,39 +958,37 @@ Unauthorised group-class access. Certain centre managers were booking classes un
 
 Manual gate access misuse. Centre managers could operate swing barriers using separate remotes intended for housekeeping access. These were sometimes misused to admit non-members outside the standard membership process, particularly at franchise-operated centres.
 
-#### 02 · Where it broke
+#### 02 · Where people got in
 
-Follow a member through the gate
+Revenue leakage exposure found by the audit
 
-Where it brokeWhat we put in place
+₹2 Cr₹3 Cr
 
-##### 1 · A member signs up
+- Membership access misuse ₹2 Cr
 
-Gets QR and fingerprint access to every centre in the chain.
+- Other access and operational gaps ₹3 Cr
 
-##### 2 · One membership, many devices — and two centres at once
+≈ ₹5 crore in overall exposure across the access and operational control gaps.
 
-The same access was used on several devices, with impossible concurrent entries across distant centres.
+Three ways in, outside the membership process
 
-Fix One registered device per membership. Device changes need a CX request and approval; repeated changes trigger temporary restrictions and investigation.
+- App and biometric entry
 
-##### 3 · QR or fingerprint, whichever is handy
+GapOne membership on several devices, with impossible concurrent entries across distant centres.
 
-Either method worked at any time, which made shared access easy.
+FixOne registered device and one sign-in method; changes need a CX request and approval.
 
-Fix Single-mode authentication: switching between QR and fingerprint needs a CX ticket and approval.
+- Group classes
 
-##### 4 · Classes booked on a manager’s login
+GapManagers booked classes on their own logins for unauthorised attendees; unofficial trainers ran paid sessions.
 
-Unauthorised attendees joined group classes; unofficial trainers ran paid sessions on the premises.
+FixNew KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.
 
-Fix New KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.
+- Swing barriers
 
-##### 5 · The barrier opened with a housekeeping remote
+GapHousekeeping remotes opened gates for non-members, mostly at franchise centres.
 
-Non-members were let in outside the membership process, mostly at franchise centres.
-
-Fix Swing-barrier openings and closures are now monitored and matched against an actual entry or exit.
+FixGate openings and closures monitored and matched against an actual entry or exit.
 
 #### 03 · What we did
 
@@ -1428,39 +1426,19 @@ The conceptual assessment identified several risk areas:
 
 - Fragmented risk intelligence: seller, listing, transaction, customer feedback and device data were not being considered together in a unified risk assessment
 
-#### 02 · How a risk is caught
+#### 02 · How a risk is scored
 
-Follow one suspicious listing
+Many signals, one score, a clear next step
 
-Risk signalHow the framework responds
+SignalsMRP and price changesDiscount patternsListing editsRatings and reviewsReturn ratesCounterfeit complaintsSeller historyDevice and address signals
 
-##### 1 · A seller lists a product
+- LowKeep monitoring
 
-Descriptions, MRP and attributes can change at any time.
+- MediumWatch closely; re-score as signals change
 
-##### 2 · The listing keeps shifting
+- HighAlert and manual investigation — not automatic removal
 
-Frequent changes to descriptions, MRP and discounts help it slip past fixed rules.
-
-Response Listing monitoring tracks MRP changes, pricing volatility, listing quality, ratings and returns over time.
-
-##### 3 · Returns and complaints start to rise
-
-High returns, negative reviews and counterfeit complaints build up — risk signals, not proof.
-
-Response Review sentiment analysis and anomaly detection feed a composite score that places the listing in a low, medium or high risk tier.
-
-##### 4 · The seller looks familiar
-
-A delisted seller may try to return through new accounts, devices or addresses.
-
-Response Behavioural matching against previously flagged sellers. A shared IP or similar address prompts investigation — on its own it doesn’t prove two accounts are linked.
-
-##### 5 · High risk triggers a review, not removal
-
-A person decides what happens next.
-
-Response Alerts go to manual investigation and enforcement, and verified outcomes feed back into the detection models.
+Verified investigation outcomes feed back into the models, so detection improves over time.
 
 #### 03 · What we did
 
