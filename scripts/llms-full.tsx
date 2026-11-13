@@ -6,6 +6,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { LLM_PAGES } from '../src/main';
 import { faqs } from '../src/faqs';
+import { stories } from '../src/stories';
 
 const ROOT = process.cwd();
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr']);
@@ -19,7 +20,7 @@ const decode = (t: string) => t.replace(/&nbsp;/g, ' ').replace(/&#x27;|&#39;/g,
 /** Small HTML → Markdown: headings, paragraphs, list items and table rows become lines; everything else is inline text. */
 function toMarkdown(html: string): string {
   const out: string[] = []; let line = ''; let skip = 0; const stack: { tag: string; skipping: boolean }[] = [];
-  const flush = () => { const t = line.replace(/\s+/g, ' ').trim(); if (t && !/^(#+|-|>)\s*$/.test(t)) out.push(t); line = ''; };
+  const flush = () => { const t = line.replace(/\s+/g, ' ').replace(/ ([.,;:!?)\]])/g, '$1').replace(/\( /g, '(').trim(); if (t && !/^(#+|-|>)\s*$/.test(t)) out.push(t); line = ''; };
   const re = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z0-9]+)([^>]*?)(\/?)>|([^<]+)/g; let m: RegExpExecArray | null;
   while ((m = re.exec(html))) {
     if (m[5] !== undefined) { if (!skip) line += decode(m[5]); continue; }
@@ -30,6 +31,7 @@ function toMarkdown(html: string): string {
       while (stack.length > i) { const e = stack.pop()!; if (e.skipping) skip--; }
       if (!skip && (tag in BLOCK || tag === 'div' || tag === 'section' || tag === 'article' || tag === 'table')) flush();
       if (!skip && (tag === 'td' || tag === 'th')) line += ' | ';
+      if (!skip && /^(span|b|strong|em|small|button|sup|i|a)$/.test(tag)) line += ' ';
       continue;
     }
     if (VOID.has(tag) || m[4] === '/') { if (!skip && tag === 'br') line += ' '; continue; }
@@ -108,4 +110,13 @@ const doc = ['# NXT Foundry — full site text', '',
   '> Every page of https://www.nxtfoundry.in as plain Markdown, generated from the site source on each build. Summary: https://www.nxtfoundry.in/llms.txt', '',
   ...pages.flatMap(([title, url, body]) => [`## [${title}](${url})`, '', `URL: ${url}`, '', body.replace(/^(#+) /gm, '$1## '), ''])].join('\n');
 writeFileSync(`${ROOT}/public/llms-full.txt`, doc);
+
+// llms.txt: list every story (with its industry and type) between the Pages and Contact sections.
+const plain = (t: string) => t.replace(/\*\*/g, '');
+const storyLines = stories.map(st => `- [${plain(st.title)}](https://www.nxtfoundry.in/#stories/${st.id}): ${st.industry} · ${st.type}${st.earlier ? ' · earlier work' : ''}. ${plain(st.did)}`);
+const llmsPath = `${ROOT}/public/llms.txt`;
+let llms = readFileSync(llmsPath, 'utf8').replace(/\n## Stories\n[\s\S]*?(?=\n## )/, '');
+llms = llms.replace('\n## Contact', `\n## Stories\nCase stories and concept frameworks. Concepts are independently developed and their figures are illustrative.\n${storyLines.join('\n')}\n\n## Contact`);
+writeFileSync(llmsPath, llms);
+
 console.log(`llms-full.txt: ${pages.length} pages, ${doc.length.toLocaleString('en')} characters`);

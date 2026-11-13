@@ -14,9 +14,19 @@
 - [Our Approach](https://www.nxtfoundry.in/#approach)
 - [About](https://www.nxtfoundry.in/#about)
 - [Contact](https://www.nxtfoundry.in/#contact)
-- [Stories](https://www.nxtfoundry.in/#stories): Client stories: the problem, what we did and the outcome
+- [Stories](https://www.nxtfoundry.in/#stories): Case stories and concept frameworks — the problem, what we did and the outcome
 - [FAQ](https://www.nxtfoundry.in/faq.html): Fees, duration, remote work, NDAs and who does the work
 - [Privacy Policy](https://www.nxtfoundry.in/privacy.html)
+
+## Stories
+Case stories and concept frameworks. Concepts are independently developed and their figures are illustrative.
+- [A PO lifecycle dashboard for unmapped purchase orders and invoice exceptions](https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle): Automotive · Concept. We designed a Power BI dashboard concept that tracks every PO from approval to payment and surfaces the exceptions.
+- [Closing ₹5 crore of revenue leakage in a fitness chain’s access controls](https://www.nxtfoundry.in/#stories/fitness-access-controls): Fitness & wellness · Consulting project · earlier work. We limited each membership to one device and one sign-in method, and put gate barriers under monitoring.
+- [Bringing accountability to a ₹76 crore warehouse reconciliation gap](https://www.nxtfoundry.in/#stories/warehouse-stock-transfers): E-commerce · Tech implementation · earlier work. We helped build a reconciliation tool with advance notice, a four-hour window and automatic escalation.
+- [Breaking the cycle of slow and non-moving inventory in B2B wholesale](https://www.nxtfoundry.in/#stories/wholesale-slow-moving-inventory): E-commerce · Consulting project · earlier work. We reworked how demand, buying and stock connect — from forecasting and PO controls to redistribution between regions.
+- [Automating 94 payroll checks for apparel manufacturers](https://www.nxtfoundry.in/#stories/payroll-compliance-framework): Apparel manufacturing · Concept. We built a conceptual Power BI framework that automates 94 payroll validation and audit checks across eight control areas.
+- [Choosing where to build: a what-if framework for 17 cities](https://www.nxtfoundry.in/#stories/global-location-strategy): Banking & financial services · Concept. We built a conceptual Power BI framework that scores 17 cities on one 0–10 scale and lets leaders test trade-offs live.
+- [Spotting counterfeit risk on a marketplace before customers do](https://www.nxtfoundry.in/#stories/marketplace-anti-counterfeit): E-commerce · Concept. We designed a conceptual framework that scores listings and sellers on many signals and routes the riskiest to investigation.
 
 ## Contact
 - Email: hello@nxtfoundry.in

@@ -310,25 +310,25 @@ WHERE WE WORK
 
 ##### Operations & Business Performance
 
-Execution that keeps slippingUnclear ownership across teamsNo weekly review rhythmKPIs nobody acts on
+Execution that keeps slipping Unclear ownership across teams No weekly review rhythm KPIs nobody acts on
 
 02
 
 ##### Revenue & Financial Control
 
-Vendor ledgers that don’t match yoursLive · We’ve a tool for this · View Customer balances that don’t match theirsTool on the stove · PeekGST credit that doesn’t match GSTR-2BAdd-on simmering · PeekChannel and marketplace deductionsNext on the menu · PeekBank entries that don’t match the statementNext on the menu · PeekRevenue that doesn’t reconcileWeak approval and control pointsA month-end close that drags
+Vendor ledgers that don’t match yours Live · We’ve a tool for this · View Customer balances that don’t match theirsTool on the stove · Peek GST credit that doesn’t match GSTR-2BAdd-on simmering · Peek Channel and marketplace deductionsNext on the menu · Peek Bank entries that don’t match the statementNext on the menu · Peek Revenue that doesn’t reconcile Weak approval and control points A month-end close that drags
 
 03
 
 ##### Procurement & Supply Chain
 
-Invoices checked by hand against POsPrepping ingredients · PeekVendor terms nobody enforcesPurchases outside policySingle-vendor dependenceFreight and landed-cost leakage
+Invoices checked by hand against POsPrepping ingredients · Peek Vendor terms nobody enforces Purchases outside policy Single-vendor dependence Freight and landed-cost leakage
 
 04
 
 ##### Inventory & Margin
 
-Cash tied up in slow stockMargin erosion by product or channelStock records that don’t match the floorPricing without cost visibility
+Cash tied up in slow stock Margin erosion by product or channel Stock records that don’t match the floor Pricing without cost visibility
 
 HOW THE MONEY WORKS
 
@@ -410,7 +410,7 @@ PRODUCTS & PLATFORMS
 
 Six tools, one engine. One is live today; the rest are in the kitchen.
 
-01Vendor Payable ReconciliationLive · go break it02Customer ReconciliationOn the stove03GSTR ReconciliationAdd-on · simmering04Invoice Reading & ReconciliationPrepping ingredients05Bank ReconciliationOn the menu · next06Payment & Marketplace SettlementsOn the menu · next
+01 Vendor Payable Reconciliation Live · go break it 02 Customer Reconciliation On the stove 03 GSTR Reconciliation Add-on · simmering 04 Invoice Reading & Reconciliation Prepping ingredients 05 Bank Reconciliation On the menu · next 06 Payment & Marketplace Settlements On the menu · next
 
 Live · go break it
 
@@ -418,7 +418,7 @@ Live · go break it
 
 Your payables, checked against every vendor’s own books.
 
-AI sous-chef: in trainingLearning to read PDFs, explain gaps and suggest matches. Joining the kitchen in the next batch.
+AI sous-chef: in training Learning to read PDFs, explain gaps and suggest matches. Joining the kitchen in the next batch.
 
 - Any ledger format
 
@@ -430,15 +430,15 @@ Open the live tool Synthetic data · no sign-up
 
 Reconciliation statement · Deccan Polymers · Sep 2026
 
-- Closing balance as per buyer₹13,31,000
+- Closing balance as per buyer ₹13,31,000
 
-- Annexure 2 · Invoices not accounted by buyer+₹2,61,000
+- Annexure 2 · Invoices not accounted by buyer +₹2,61,000
 
-- Annexure 4 · Invoices not accounted by vendor−₹2,65,500
+- Annexure 4 · Invoices not accounted by vendor −₹2,65,500
 
-- Closing balance as per vendor₹13,26,500 ✓
+- Closing balance as per vendor ₹13,26,500 ✓
 
-Sum of annexures = difference in closing balances−₹4,500 = −₹4,500Unexplained ₹0 ✓
+Sum of annexures = difference in closing balances −₹4,500 = −₹4,500 Unexplained ₹0 ✓
 
 27 matches · 8 open
 
@@ -450,7 +450,7 @@ Sum of annexures = difference in closing balances−₹4,500 = −₹4,500Unexpl
 
 - Review
 
-How they fitInvoice reading→Vendor reconCustomer recon→GSTR reconBank reconSettlements→One statement, signed off
+How they fit Invoice reading → Vendor recon Customer recon → GSTR recon Bank recon Settlements → One statement, signed off
 
 WHAT CHANGES
 
@@ -458,21 +458,21 @@ WHAT CHANGES
 
 Vendor Payable Reconciliation
 
-- Chasing vendors for statements over emailVendors upload in any format; AI reads and maps it
+- Chasing vendors for statements over email Vendors upload in any format; AI reads and maps it
 
-- Ticking two ledgers line by line in ExcelAI and rule-based matching across invoices, credit notes, payments and TDS
+- Ticking two ledgers line by line in Excel AI and rule-based matching across invoices, credit notes, payments and TDS
 
-- A difference nobody can explain at year-endEvery rupee of the gap traced to the entries behind it
+- A difference nobody can explain at year-end Every rupee of the gap traced to the entries behind it
 
-- “Did they agree?” lost in a mail threadThe vendor signs off on the statement itself
+- “Did they agree?” lost in a mail thread The vendor signs off on the statement itself
 
-~75%less time on vendor reconcompared with manual Excel matching
+~75 % less time on vendor recon compared with manual Excel matching
 
-~60%lower reconciliation costfewer hours, fewer follow-ups
+~60 % lower reconciliation cost fewer hours, fewer follow-ups
 
-MLassisted matchinglearns your vendors’ numbering patterns
+ML assisted matching learns your vendors’ numbering patterns
 
-100%backtraced and loggedevery match, reversal and sign-off
+100 % backtraced and logged every match, reversal and sign-off
 
 ~ Indicative estimates for a typical mid-sized finance team, not a guarantee. Actual savings depend on volumes and data quality.
 
@@ -482,7 +482,7 @@ EARLY ACCESS
 
 Pick the ones you need. The most requested tool goes on the stove next, and you hear first when it is ready.
 
-Customer ReconciliationGSTR ReconciliationInvoice Reading & ReconciliationBank ReconciliationPayment & Marketplace Settlements
+Customer Reconciliation GSTR Reconciliation Invoice Reading & Reconciliation Bank Reconciliation Payment & Marketplace Settlements
 
 Talk to us
 
@@ -732,9 +732,9 @@ STORIES
 
 Real problems, what we found and what changed.
 
-All industries7Manufacturing2Consumer services1Retail & e-commerce3Financial services1
+All industries7 Manufacturing2 Consumer services1 Retail & e-commerce3 Financial services1
 
-AutomotiveConcept
+Automotive Concept
 
 Which of €42 million in purchase orders had nobody mapped?
 
@@ -750,7 +750,7 @@ illustrative fall in unmapped PO value, from €42 million to €12.3 million
 
 Read the story
 
-E-commerceConsulting projectEW
+E-commerce Consulting project EW
 
 Why was the business buying more of stock it couldn’t sell?
 
@@ -766,7 +766,7 @@ across forecasting, buying, redistribution and stock visibility
 
 Read the story
 
-E-commerceConcept
+E-commerce Concept
 
 How do you catch a banned seller coming back under a new name?
 
@@ -782,7 +782,7 @@ of risk — under 60, 60–80 and 80+ — each with its own review route
 
 Read the story
 
-Fitness & wellnessConsulting projectEW
+Fitness & wellness Consulting project EW
 
 How was one member checking in at two centres at once?
 
@@ -798,7 +798,7 @@ per membership, with any change approved through Customer Experience
 
 Read the story
 
-Apparel manufacturingConcept
+Apparel manufacturing Concept
 
 What if 90+ payroll checks didn’t take a week by hand?
 
@@ -814,7 +814,7 @@ illustrative payroll verification time with the checks automated
 
 Read the story
 
-E-commerceTech implementationEW
+E-commerce Tech implementation EW
 
 Where did ₹76 crore of stock go between two warehouses?
 
@@ -830,7 +830,7 @@ of monthly stock transfers still open in disputes, after the fix
 
 Read the story
 
-Banking & financial servicesConcept
+Banking & financial services Concept
 
 Where should the next centre go if talent matters more than cost?
 
@@ -852,9 +852,9 @@ URL: https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle
 
 All stories
 
-AutomotiveConcept
+Automotive Concept
 
-Procure to PayFinancial ControlsIT Operations
+Procure to Pay Financial Controls IT Operations
 
 ### A PO lifecycle dashboard for unmapped purchase orders and invoice exceptions
 
@@ -882,19 +882,19 @@ Every PO has to clear five gates before revenue is recognised
 
 Total POs
 
-Pending submissionSubmitted
+Pending submission Submitted
 
-Pending approvalApproved
+Pending approval Approved
 
-UnmappedMapped
+Unmapped Mapped
 
-Pending invoiceInvoice raised
+Pending invoice Invoice raised
 
-Unpaid or partially paidCompletely paid
+Unpaid or partially paid Completely paid
 
 Total recognised revenue
 
-Where a PO can stallMoves to the next stage
+Where a PO can stall Moves to the next stage
 
 The dashboard shows how much value sits at each gate, so teams can see exactly where a PO has stalled and who needs to move it.
 
@@ -904,27 +904,27 @@ Four edge cases that broke simple PO-to-invoice matching
 
 - AMC contracts
 
-GapA single service spread across several staggered POs.
+Gap A single service spread across several staggered POs.
 
-FixLogic to group POs into families and recognise them together.
+Fix Logic to group POs into families and recognise them together.
 
 - Multi-service bundles
 
-GapOne invoice applied to several service lines.
+Gap One invoice applied to several service lines.
 
-FixService-type attribution using keywords.
+Fix Service-type attribution using keywords.
 
 - Partial payments
 
-GapOne PO linked to split payments.
+Gap One PO linked to split payments.
 
-FixDynamic tracking of pending versus cleared amounts.
+Fix Dynamic tracking of pending versus cleared amounts.
 
 - Unlinked confirmations
 
-GapService confirmed, but no invoice raised.
+Gap Service confirmed, but no invoice raised.
 
-FixFlagged as “Pending billing”, with escalations triggered.
+Fix Flagged as “Pending billing”, with escalations triggered.
 
 The rules were codified in Power Query before the data reached the dashboard, so every exception is classified the same way each week.
 
@@ -932,35 +932,35 @@ The rules were codified in Power Query before the data reached the dashboard, so
 
 From scattered files to one view
 
-- 01Excel files and SAP exportsFinanceProcurementDelivery
+- 01 Excel files and SAP exports Finance Procurement Delivery
 
-- 02Consolidated databaseStandard field namesPO-to-invoice joins
+- 02 Consolidated database Standard field names PO-to-invoice joins
 
-- 03Cleaning and analysis in Power BIPower QueryException logic
+- 03 Cleaning and analysis in Power BI Power Query Exception logic
 
-- 04DashboardsOutcomesExceptions
+- 04 Dashboards Outcomes Exceptions
 
 Missing or delayed inputs are flagged rather than dropped, so gaps in the data are visible too.
 
 Five dashboard modules
 
-01PO lifecycle tracker
+01 PO lifecycle tracker
 
 Each PO from creation to payment: submitted → approved → confirmed → invoiced → paid
 
-02Exception overview
+02 Exception overview
 
 Mismatches and unmapped POs, categorised and quantified
 
-03Aging heatmap
+03 Aging heatmap
 
 How long unmapped POs have been pending, by service type and region
 
-04Payment reconciliation
+04 Payment reconciliation
 
 Invoice against payment, including overdue and partial payments
 
-05PO drill-down
+05 PO drill-down
 
 PO-level tracing by service line, region, value bracket, status and exception type
 
@@ -1048,9 +1048,9 @@ URL: https://www.nxtfoundry.in/#stories/fitness-access-controls
 
 All stories
 
-Fitness & wellnessConsulting project
+Fitness & wellness Consulting project
 
-EW Revenue LeakageAccess ControlsInternal Audit
+EW Revenue Leakage Access Controls Internal Audit
 
 ### Closing ₹5 crore of revenue leakage in a fitness chain’s access controls
 
@@ -1070,7 +1070,7 @@ Manual gate access misuse. Centre managers could operate swing barriers using se
 
 Revenue leakage exposure found by the audit
 
-₹2 Cr₹3 Cr
+₹2 Cr ₹3 Cr
 
 - Membership access misuse ₹2 Cr
 
@@ -1082,21 +1082,21 @@ Three ways in, outside the membership process
 
 - App and biometric entry
 
-GapOne membership on several devices, with impossible concurrent entries across distant centres.
+Gap One membership on several devices, with impossible concurrent entries across distant centres.
 
-FixOne registered device and one sign-in method; changes need a CX request and approval.
+Fix One registered device and one sign-in method; changes need a CX request and approval.
 
 - Group classes
 
-GapManagers booked classes on their own logins for unauthorised attendees; unofficial trainers ran paid sessions.
+Gap Managers booked classes on their own logins for unauthorised attendees; unofficial trainers ran paid sessions.
 
-FixNew KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.
+Fix New KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.
 
 - Swing barriers
 
-GapHousekeeping remotes opened gates for non-members, mostly at franchise centres.
+Gap Housekeeping remotes opened gates for non-members, mostly at franchise centres.
 
-FixGate openings and closures monitored and matched against an actual entry or exit.
+Fix Gate openings and closures monitored and matched against an actual entry or exit.
 
 #### 03 · What we did
 
@@ -1132,9 +1132,9 @@ URL: https://www.nxtfoundry.in/#stories/warehouse-stock-transfers
 
 All stories
 
-E-commerceTech implementation
+E-commerce Tech implementation
 
-EW Warehouse OperationsSupply ChainInventory Controls
+EW Warehouse Operations Supply Chain Inventory Controls
 
 ### Bringing accountability to a ₹76 crore warehouse reconciliation gap
 
@@ -1152,7 +1152,7 @@ The root cause was disconnected warehouse systems and a reconciliation process t
 
 Follow one stock transfer
 
-Where it brokeWhat we put in place
+Where it broke What we put in place
 
 ##### 1 · Warehouse A dispatches
 
@@ -1204,9 +1204,9 @@ URL: https://www.nxtfoundry.in/#stories/wholesale-slow-moving-inventory
 
 All stories
 
-E-commerceConsulting project
+E-commerce Consulting project
 
-EW Inventory HealthProcurement ControlsDemand Planning
+EW Inventory Health Procurement Controls Demand Planning
 
 ### Breaking the cycle of slow and non-moving inventory in B2B wholesale
 
@@ -1232,21 +1232,21 @@ Demand, buying and stock weren’t talking to each other
 
 - Forecast
 
-GapAround 30–40% accurate, so planners overrode it by hand.
+Gap Around 30–40% accurate, so planners overrode it by hand.
 
-FixSeasonal and regional recalibration, MAPE tracking, overrides only for defined exceptions.
+Fix Seasonal and regional recalibration, MAPE tracking, overrides only for defined exceptions.
 
 - Purchase order
 
-GapOTB, run-rate and unhealthy-item limits weren’t consistently enforced.
+Gap OTB, run-rate and unhealthy-item limits weren’t consistently enforced.
 
-FixAutomated checks, PO restrictions, classification approvals and escalation of breaches.
+Fix Automated checks, PO restrictions, classification approvals and escalation of breaches.
 
 - Inventory
 
-GapStock idled in low-demand regions and aged past 180 days — provisioned, but not cleared.
+Gap Stock idled in low-demand regions and aged past 180 days — provisioned, but not cleared.
 
-FixRedistribution before reordering, and a Power BI view of ageing and liquidation.
+Fix Redistribution before reordering, and a Power BI view of ageing and liquidation.
 
 ASP–MSP–PO variance monitoring feeds what was actually bought back into the next plan.
 
@@ -1296,9 +1296,9 @@ URL: https://www.nxtfoundry.in/#stories/payroll-compliance-framework
 
 All stories
 
-Apparel manufacturingConcept
+Apparel manufacturing Concept
 
-Payroll ControlsAutomationInternal Audit
+Payroll Controls Automation Internal Audit
 
 ### Automating 94 payroll checks for apparel manufacturers
 
@@ -1324,35 +1324,35 @@ The conceptual assessment identified several common challenges:
 
 94 checks across eight control areas
 
-01Employee status
+01 Employee status
 
 Joining and exit dates, status, employee ID
 
-02Banking details
+02 Banking details
 
 Bank account and IFSC changes, duplicate accounts
 
-03Payroll processing
+03 Payroll processing
 
 PAN and Aadhaar changes, salary variances, overtime, leave adjustments
 
-04Headcount
+04 Headcount
 
 Month-on-month and department-level comparisons
 
-05Payroll components
+05 Payroll components
 
 Basic pay, DA, allowances, deductions, bonuses
 
-06Leave and attendance
+06 Leave and attendance
 
 Leave balances, absences, leave encashment
 
-07Tax and statutory
+07 Tax and statutory
 
 TDS, PF, ESI, tax exemptions
 
-08Internal audit controls
+08 Internal audit controls
 
 Duplicate payments, data integrity, change monitoring, exceptions
 
@@ -1422,9 +1422,9 @@ URL: https://www.nxtfoundry.in/#stories/global-location-strategy
 
 All stories
 
-Banking & financial servicesConcept
+Banking & financial services Concept
 
-Location StrategyDecision SupportPower BI
+Location Strategy Decision Support Power BI
 
 ### Choosing where to build: a what-if framework for 17 cities
 
@@ -1466,15 +1466,15 @@ We developed an interactive Power BI city evaluation dashboard to consolidate mu
 
 The most useful part isn’t the scorecard — it’s the what-if view. A leadership team can change its priorities and see how the relative attractiveness of cities shifts. Try cost vs talent, data security vs cost, or geopolitical stability vs talent.
 
-Across (x)Up (y)
+Across (x) Up (y)
 
-Indian metroGlobal cityIllustrative data: anonymised locations and scores, not real city ratings.Best fit for this pairing
+Indian metro Global city Illustrative data: anonymised locations and scores, not real city ratings. Best fit for this pairing
 
-- IN-1Indian metro · 8.6 + 8.8
+- IN-1 Indian metro · 8.6 + 8.8
 
-- IN-2Indian metro · 8.9 + 8.1
+- IN-2 Indian metro · 8.9 + 8.1
 
-- IN-3Indian metro · 9.1 + 7.4
+- IN-3 Indian metro · 9.1 + 7.4
 
 5 of 17 land in the top-right cell, strong on both criteria.
 
@@ -1510,9 +1510,9 @@ URL: https://www.nxtfoundry.in/#stories/marketplace-anti-counterfeit
 
 All stories
 
-E-commerceConcept
+E-commerce Concept
 
-Brand ProtectionRisk AnalyticsMarketplace Trust
+Brand Protection Risk Analytics Marketplace Trust
 
 ### Spotting counterfeit risk on a marketplace before customers do
 
@@ -1586,35 +1586,35 @@ Same selling price, a bigger headline discount. Platforms often limit how often 
 
 Eight behavioural fingerprints, matched against previously blacklisted sellers
 
-01Pricing behaviour
+01 Pricing behaviour
 
 Frequent MRP changes (more than 3 a month); 30–50% price dips during peak sales
 
-02Consumer feedback
+02 Consumer feedback
 
 Surge in 1-star ratings; counterfeit complaints on the listing and to CX
 
-03Category patterns
+03 Category patterns
 
 High volume in risky sub-categories; shifts to adjacent ones, like hair oil to hair care
 
-04Sales and returns
+04 Sales and returns
 
 High sales velocity with a matching spike in returns
 
-05Network traits
+05 Network traits
 
 IP addresses and device fingerprints shared with known offenders
 
-06Address and postal code
+06 Address and postal code
 
 Similar addresses, postal codes or names to blacklisted sellers
 
-07SKU lifecycle
+07 SKU lifecycle
 
 Short-lived SKUs listed and delisted within 30 days; high churn
 
-08Seller Protection Fund
+08 Seller Protection Fund
 
 Multiple SPF claims during flash sales or after negative reviews
 
@@ -1624,31 +1624,31 @@ A match is a reason to look closer, not proof. A shared IP or a similar address 
 
 Risk score = Σ (signal weight × signal value)
 
-SignalsMRP and price changesDiscount patternsListing scoreRatings and reviewsReturn ratesCounterfeit complaintsSeller historyDevice and address signals
+Signals MRP and price changes Discount patterns Listing score Ratings and reviews Return rates Counterfeit complaints Seller history Device and address signals
 
-- Under 60Routine monitoring
+- Under 60 Routine monitoring
 
-- 60–80Enhanced monitoring and alerts
+- 60–80 Enhanced monitoring and alerts
 
-- 80+Flag for manual review and investigation — not automatic removal
+- 80+ Flag for manual review and investigation — not automatic removal
 
 Verified investigation outcomes feed back into the models, so detection improves over time.
 
 The analytical pipeline
 
-- 01Collect and validate8 data sources
+- 01 Collect and validate 8 data sources
 
-- 02Pre-processNormalisationEncoding
+- 02 Pre-process Normalisation Encoding
 
-- 03Detect anomaliesIsolation ForestDBSCAN
+- 03 Detect anomalies Isolation Forest DBSCAN
 
-- 04Model MRP over timeSeasonal ARIMALSTM
+- 04 Model MRP over time Seasonal ARIMA LSTM
 
-- 05Benchmark listingsVertical scoringRandom Forest
+- 05 Benchmark listings Vertical scoring Random Forest
 
-- 06Read the reviewsSentiment (BERT)
+- 06 Read the reviews Sentiment (BERT)
 
-- 07Integrate and validateEntity resolution
+- 07 Integrate and validate Entity resolution
 
 From raw listing, seller and customer data to a scored, validated view of risk.
 
@@ -1802,7 +1802,7 @@ Yes — that is what Ongoing Advisory is. A senior thinking partner for founders
 
 Still deciding? Start with a conversation.
 
-Book a 30-min diagnosticOr send us a note
+Book a 30-min diagnostic Or send us a note
 
 ## [Privacy Policy](https://www.nxtfoundry.in/privacy.html)
 
