@@ -1,0 +1,5 @@
+# NXT Foundry — all crawlers are welcome. Nothing on this site is blocked.
+User-agent: *
+Allow: /
+
+Sitemap: https://www.nxtfoundry.in/sitemap.xml

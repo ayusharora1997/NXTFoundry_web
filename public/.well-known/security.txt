@@ -1,0 +1,6 @@
+# Security contact for nxtfoundry.in (RFC 9116).
+# To report a security issue, email us with details and steps to reproduce.
+Contact: mailto:hello@nxtfoundry.in
+Expires: 2027-11-12T23:59:59+05:30
+Preferred-Languages: en
+Canonical: https://www.nxtfoundry.in/.well-known/security.txt
