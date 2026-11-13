@@ -352,4 +352,13 @@ function App(){const [hash,setHash]=useState(window.location.hash); React.useEff
 // Each hash is a separate page, so start it at the top — except #contact-form, which is a jump to the form itself.
 React.useLayoutEffect(()=>{const target=(hash==='#contact-form'||hash.startsWith('#products-')||hash.startsWith('#prog-'))&&document.getElementById(hash.slice(1)); if(target)target.scrollIntoView({behavior:'instant' as ScrollBehavior}); else window.scrollTo({top:0,behavior:'instant' as ScrollBehavior})},[hash]);
 let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>}
-createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);
+// Pages rendered to text at build time for /llms-full.txt (scripts/llms-full.tsx). Keep in step with the routes in App.
+export const LLM_PAGES:[string,string,React.ReactNode][] = [
+  ['Home','https://www.nxtfoundry.in/',<Home/>],
+  ['What We Do','https://www.nxtfoundry.in/#solutions',<Solutions/>],
+  ['Products','https://www.nxtfoundry.in/#products',<Products/>],
+  ['Our Approach','https://www.nxtfoundry.in/#approach',<Approach/>],
+  ['About','https://www.nxtfoundry.in/#about',<About/>],
+  ['Contact','https://www.nxtfoundry.in/#contact',<><CTA/><Contact/></>],
+];
+if(!import.meta.env.SSR)createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);

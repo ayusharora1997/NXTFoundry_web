@@ -1,0 +1,25 @@
+# NXT Foundry
+
+> Boutique management consulting and technology practice based in Bengaluru, India, for owner-led and mid-market businesses. Works on operations and business performance, revenue and financial control, procurement and supply chain, and inventory and margin, with expertise in internal controls (SOX 404 / ICoFR, ITGC), internal audit, risk analytics and process automation. Senior-led, with Big 4 risk advisory experience: the people clients meet are the people who do the work.
+
+## Services
+- [Advisory & Diagnostics](https://www.nxtfoundry.in/#solutions): Short diagnostic engagements that identify operational and control weaknesses, and ongoing senior advisory
+- [Managed Solutions & Execution](https://www.nxtfoundry.in/#solutions): Hands-on implementation of fixes alongside client teams
+- [Technology & Automation](https://www.nxtfoundry.in/#products): Workflow automation, BI and business apps, including reconciliation tools
+
+## Pages
+- [Home](https://www.nxtfoundry.in/)
+- [What We Do](https://www.nxtfoundry.in/#solutions): Engagements, from the Diagnostic to ongoing advisory
+- [Products](https://www.nxtfoundry.in/#products): Reconciliation tools
+- [Our Approach](https://www.nxtfoundry.in/#approach)
+- [About](https://www.nxtfoundry.in/#about)
+- [Contact](https://www.nxtfoundry.in/#contact)
+- [Privacy Policy](https://www.nxtfoundry.in/privacy.html)
+
+## Contact
+- Email: hello@nxtfoundry.in
+- Location: Bengaluru, India
+- Book a diagnostic: https://cal.com/ayush-arora-ubgsbp/30min
+
+## Optional
+- [Full site text](https://www.nxtfoundry.in/llms-full.txt): Every page as Markdown

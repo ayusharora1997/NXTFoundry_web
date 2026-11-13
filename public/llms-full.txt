@@ -1,0 +1,905 @@
+# NXT Foundry — full site text
+
+> Every page of https://www.nxtfoundry.in as plain Markdown, generated from the site source on each build. Summary: https://www.nxtfoundry.in/llms.txt
+
+## [Home](https://www.nxtfoundry.in/)
+
+URL: https://www.nxtfoundry.in/
+
+BUSINESS / TECHNOLOGY / INNOVATION
+
+### We solve real business problems and build what comes next.
+
+We combine domain expertise, hands-on execution, and innovation to improve how businesses operate, grow, and make decisions.
+
+Book a 30-min diagnostic Our approach
+
+No sales pitch. Bring a problem; leave with a view on it.
+
+01 / FOUNDATIONS FOR WHAT’S NEXT
+
+01 — WHAT WE DO
+
+#### Good ideas matter. Good execution changes things.
+
+NXT Foundry brings together the commercial, operational, and technical thinking needed to move from a business problem to a solution that works in the real world.
+
+Explore our capabilities
+
+01
+
+##### Business Expertise
+
+Understand business processes, operational challenges, financial controls, and opportunities for improvement.
+
+02
+
+##### Execution
+
+Translate insights into practical solutions and work alongside businesses to implement them.
+
+03
+
+##### Technology & Innovation
+
+Build systems, automation, and products that improve efficiency, visibility, and scalability.
+
+02 — AREAS OF FOCUS
+
+#### Where business meets possibility.
+
+We start where the friction is. These are the business areas we focus on — our advisory, execution, and technology services are applied to each of them.
+
+See how we help
+
+01
+
+##### Operations & Business Performance
+
+02
+
+##### Revenue & Financial Control
+
+03
+
+##### Procurement & Supply Chain
+
+04
+
+##### Inventory & Margin Intelligence
+
+03 — HOW WE CREATE IMPACT
+
+#### Understand → Design → Execute → Scale.
+
+01
+
+##### Understand
+
+Get close to the real operating model, constraints, and opportunity.
+
+02
+
+##### Design
+
+Find the root cause and shape a practical response.
+
+03
+
+##### Execute
+
+Put better processes, controls, and tools into motion.
+
+04
+
+##### Scale
+
+Make what works repeatable, measurable, and ready to grow.
+
+04 — WHO WE ARE BUILT TO HELP
+
+#### For businesses where growth has made the operating model harder to see.
+
+We’re a good fit if you’re:
+
+- An owner-led or professionally managed business in the ₹50 Cr – ₹1,000 Cr revenue range
+
+- Growing fast enough that your operating model is straining
+
+- Dealing with revenue leakage, control gaps, procurement complexity, or reconciliation debt
+
+- Looking for someone who will implement the fix, not just write a deck
+
+START A CONVERSATION
+
+#### Have a business problem worth solving?
+
+Request a proposal
+
+Typical turnaround: 3 business days.
+
+## [What We Do](https://www.nxtfoundry.in/#solutions)
+
+URL: https://www.nxtfoundry.in/#solutions
+
+WHAT WE DO
+
+### Management consulting for growing businesses.
+
+Fixed-scope consulting and advisory programmes for owner-led and professionally managed businesses. Senior-led — the people you meet are the people who do the work. Based in Bengaluru, working across India.
+
+HOW THE PROGRAMMES FIT TOGETHER
+
+- 01
+
+##### Diagnose
+
+Half a day. What’s actually holding the business back.
+
+- 02
+
+##### Plan
+
+Reset, 30 days. Root cause found, fix designed.
+
+- 03
+
+##### Execute
+
+Reset, 60 days. The same work, plus four weeks putting it in place.
+
+- 04
+
+##### Advise
+
+Monthly. A senior sounding board once it’s running.
+
+Most clients move through in that order. You can stop at any point. Or a custom engagement — if what you need doesn’t fit this sequence, we scope it with you before we begin.
+
+Start here
+
+##### The Diagnostic
+
+In half a day, we tell you what is working, what is not, and the one thing to fix first.
+
+Duration
+
+Half a day
+
+Format
+
+In person or online
+
+Output
+
+One written brief
+
+For an owner who can name what feels wrong — margins slipping, cash stuck in stock, revenue that doesn’t reconcile, execution that keeps slipping — but doesn’t yet know the cause or what to fix first.
+
+What you get
+
+- A three-hour working session on the one problem you name (two or three shorter sessions if online)
+
+- A written diagnostic brief on that problem: what’s working, what isn’t, and why
+
+- A one-hour walkthrough of the brief with you
+
+- One clear recommendation for what to do first
+
+If the Diagnostic is all you need, that is the whole engagement — no further obligation.
+
+Get in touch
+
+Fixed engagement
+
+##### The Reset
+
+Four weeks to work out what to do. Four more to make sure it happens.
+
+Duration
+
+30 or 60 days
+
+Format
+
+Weekly on-site visits
+
+Output
+
+Fixes in place, not just findings
+
+For a problem area you can name but haven’t been able to crack. Option 1 designs the fix; Option 2 stays to make sure it happens.
+
+Option 1
+
+###### 30 days
+
+Four weekly visits · your team executes
+
+- Structured discovery of the named problem area — root cause, not symptoms
+
+- The gaps costed in rupees, ranked by impact
+
+- A designed fix: what to do, who owns it, by when
+
+- One page. Plain language. No deck.
+
+Option 2
+
+###### 60 days
+
+Eight weekly visits · we stay for execution
+
+- Everything in Option 1, delivered in the first four weeks
+
+- Four more weeks in person with your leadership team
+
+- Obstacles cleared while they are still small
+
+- A weekly review rhythm installed and handed over — your team runs it, not us
+
+Get in touch
+
+Monthly retainer
+
+##### Ongoing Advisory
+
+A senior sounding board in your corner — every month, for as long as it is useful.
+
+Duration
+
+Monthly, min. 3 months
+
+Format
+
+Regular check-ins + on call
+
+Output
+
+A decision partner, not a report
+
+For founders and leadership teams who want a senior thinking partner on call — before a hire, a price change, a new market, or a vendor renegotiation. Often how the relationship continues after the Reset; also works on its own.
+
+What you get
+
+- Two sessions a month, agenda set by you — at your office in Bengaluru, online anywhere else in India
+
+- WhatsApp access for the decisions that will not wait
+
+- A quarterly business review, and one leadership meeting a quarter if useful
+
+- No deliverables. This is thinking, not documents
+
+Get in touch
+
+Outside the three
+
+##### Custom Engagement
+
+If what you need doesn’t fit the Diagnostic, Reset or Advisory, we scope it with you directly.
+
+Duration
+
+Scoped to fit
+
+Format
+
+Agreed with you upfront
+
+Output
+
+A fixed scope before we begin
+
+For situations that don’t map cleanly to a half-day diagnostic, a four-to-eight week reset, or ongoing advisory — a specific project, a one-time review, or something in between.
+
+What you get
+
+- A scoping conversation to agree the problem and the end point
+
+- A written scope, timeline, and fixed fee agreed before any work begins
+
+- The same senior-led team and plain-language outputs as every other programme
+
+Tell us what you need
+
+WHERE WE WORK
+
+#### The problems we are brought in for.
+
+01
+
+##### Operations & Business Performance
+
+Execution that keeps slippingUnclear ownership across teamsNo weekly review rhythmKPIs nobody acts on
+
+02
+
+##### Revenue & Financial Control
+
+Vendor ledgers that don’t match yoursLive · We’ve a tool for this · View Customer balances that don’t match theirsTool on the stove · PeekGST credit that doesn’t match GSTR-2BAdd-on simmering · PeekChannel and marketplace deductionsNext on the menu · PeekBank entries that don’t match the statementNext on the menu · PeekRevenue that doesn’t reconcileWeak approval and control pointsA month-end close that drags
+
+03
+
+##### Procurement & Supply Chain
+
+Invoices checked by hand against POsPrepping ingredients · PeekVendor terms nobody enforcesPurchases outside policySingle-vendor dependenceFreight and landed-cost leakage
+
+04
+
+##### Inventory & Margin
+
+Cash tied up in slow stockMargin erosion by product or channelStock records that don’t match the floorPricing without cost visibility
+
+HOW THE MONEY WORKS
+
+#### One scope. One agreed fee.
+
+Every programme is fixed-fee, agreed in writing before we start. No hourly billing, no scope creep, no surprise invoice at the end.
+
+If you stop after the Diagnostic, that’s the whole engagement — no further obligation, no upsell conversation.
+
+WHAT WE DON’T DO
+
+- Run your finance, procurement, or operations team day to day. We build the system and train the people who run it
+
+- Produce decks. You get short written documents your team can actually use
+
+- Send a junior to do the work after a senior attends the first meeting. The people you meet are the people who do the work
+
+- Sell you software you don’t need. The fix comes first; a tool only if it earns its place
+
+- Take on work outside our expertise. If we can’t serve the problem well, we tell you upfront — and point you to someone who can
+
+COMMON QUESTIONS
+
+#### Fees and duration.
+
+##### What is your consulting fee?
+
+Every programme is fixed-fee, scoped to your situation and agreed in writing before we start. There is no hourly billing. Get in touch and we’ll share the fee for the programme that fits after a first conversation.
+
+##### How long does a consulting engagement typically last?
+
+The Diagnostic takes half a day. The Reset runs 30 or 60 days with weekly on-site visits. Ongoing Advisory is monthly, with a three-month minimum, for as long as it stays useful. Custom engagements have an end date agreed upfront.
+
+##### Which programme should I start with?
+
+Most clients start with the Diagnostic. If you already know the problem and have tried to fix it, the Reset is usually the right place. If you don’t need a project — just a senior sounding board — start with Ongoing Advisory. Not sure? Talk to us and we’ll tell you honestly.
+
+##### How is payment structured?
+
+Payment terms are fixed and agreed before the work begins — no open-ended billing, no surprise invoice at the end. We’ll walk you through them when we scope the engagement.
+
+##### Can the engagement be done remotely?
+
+Partly. The Diagnostic and Ongoing Advisory work well online. The Reset is built on weekly on-site visits, because operating problems are fixed where the work happens, not on a call. Outside Bengaluru, we agree the on-site rhythm with you before we start.
+
+##### Who will actually do the work?
+
+We do, personally. NXT Foundry is senior-led, not staffed out. You won’t be handed to a junior consultant after the first meeting.
+
+##### What size of business do you work with?
+
+Owner-led and professionally managed businesses, typically in the ₹50 Cr – ₹1,000 Cr revenue range. If you sit outside that, tell us — we’ll say honestly whether we’re the right fit.
+
+##### Will you sign an NDA?
+
+Yes. We’re happy to sign your NDA before the first detailed conversation, or share ours. What you tell us stays with us.
+
+##### Do you offer business mentoring?
+
+Yes — that is what Ongoing Advisory is. A senior thinking partner for founders and leadership teams, on call for the decisions that matter, without a project attached.
+
+START HERE
+
+#### Start with half a day.
+
+Most clients begin with the Diagnostic. If that’s all you need, that is perfectly fine too.
+
+Schedule an introductory call
+
+A first conversation, not the Diagnostic. We’ll hear the situation and tell you honestly whether we can help.
+
+## [Products](https://www.nxtfoundry.in/#products)
+
+URL: https://www.nxtfoundry.in/#products
+
+PRODUCTS & PLATFORMS
+
+### Every number you share with someone else, checked.
+
+Six tools, one engine. One is live today; the rest are in the kitchen.
+
+01Vendor Payable ReconciliationLive · go break it02Customer ReconciliationOn the stove03GSTR ReconciliationAdd-on · simmering04Invoice Reading & ReconciliationPrepping ingredients05Bank ReconciliationOn the menu · next06Payment & Marketplace SettlementsOn the menu · next
+
+Live · go break it
+
+#### Vendor Payable Reconciliation
+
+Your payables, checked against every vendor’s own books.
+
+AI sous-chef: in trainingLearning to read PDFs, explain gaps and suggest matches. Joining the kitchen in the next batch.
+
+- Any ledger format
+
+- Opening balance checked first
+
+- Statement the vendor signs
+
+Open the live tool Synthetic data · no sign-up
+
+Reconciliation statement · Deccan Polymers · Sep 2026
+
+- Closing balance as per buyer₹13,31,000
+
+- Annexure 2 · Invoices not accounted by buyer+₹2,61,000
+
+- Annexure 4 · Invoices not accounted by vendor−₹2,65,500
+
+- Closing balance as per vendor₹13,26,500 ✓
+
+Sum of annexures = difference in closing balances−₹4,500 = −₹4,500Unexplained ₹0 ✓
+
+27 matches · 8 open
+
+- Upload
+
+- Reconcile
+
+- Statement
+
+- Review
+
+How they fitInvoice reading→Vendor reconCustomer recon→GSTR reconBank reconSettlements→One statement, signed off
+
+WHAT CHANGES
+
+#### Less chasing. More closing.
+
+Vendor Payable Reconciliation
+
+- Chasing vendors for statements over emailVendors upload in any format; AI reads and maps it
+
+- Ticking two ledgers line by line in ExcelAI and rule-based matching across invoices, credit notes, payments and TDS
+
+- A difference nobody can explain at year-endEvery rupee of the gap traced to the entries behind it
+
+- “Did they agree?” lost in a mail threadThe vendor signs off on the statement itself
+
+~75%less time on vendor reconcompared with manual Excel matching
+
+~60%lower reconciliation costfewer hours, fewer follow-ups
+
+MLassisted matchinglearns your vendors’ numbering patterns
+
+100%backtraced and loggedevery match, reversal and sign-off
+
+~ Indicative estimates for a typical mid-sized finance team, not a guarantee. Actual savings depend on volumes and data quality.
+
+EARLY ACCESS
+
+#### Want one of these sooner?
+
+Pick the ones you need. The most requested tool goes on the stove next, and you hear first when it is ready.
+
+Customer ReconciliationGSTR ReconciliationInvoice Reading & ReconciliationBank ReconciliationPayment & Marketplace Settlements
+
+Talk to us
+
+## [Our Approach](https://www.nxtfoundry.in/#approach)
+
+URL: https://www.nxtfoundry.in/#approach
+
+OUR APPROACH
+
+### The recommendation is the easy part. The fix is the work.
+
+We work inside the business — on the floor, with the finance team, in the warehouse — until the fix is in place and your people are running it. Senior-led, from the first conversation to the last review.
+
+THE GAP
+
+#### Most advice stops at the recommendation.
+
+Growing businesses don’t lack advice. Auditors tell you what went wrong last year. Software vendors tell you their product will fix it. Large firms send a team, produce a report, and leave.
+
+What’s harder to find is someone who stays for the unglamorous part — tracing the leak to its source, redesigning the approval that keeps failing, sitting with the team until the new way of working becomes the normal one.
+
+That gap is where most operating problems survive. It’s the gap we were built to close.
+
+SOUND FAMILIAR?
+
+##### The signs we usually hear about first.
+
+- Revenue is growing, but nobody can say with confidence what was earned versus what was actually received
+
+- Month-end takes longer every quarter, and the numbers still get argued over
+
+- Purchases, discounts, and credit notes get approved by whoever happens to be available
+
+- Stock on the system doesn’t match stock on the floor, and margin drifts without a clear reason
+
+- The same problem has been “fixed” twice already — and it’s back
+
+“The hardest stretch isn’t starting up. It’s the one where the business has outgrown the owner’s memory, but the systems to replace it haven’t been built yet.”
+
+— How we think about the work
+
+THE PROCESS
+
+#### Four steps. One team throughout.
+
+01
+
+#### Introductory call
+
+A conversation about the business, the problem, and whether we are the right people for it. No pitch. If we’re not the right fit, we say so on the call — and point you to someone who is.
+
+02
+
+#### Diagnostic
+
+A structured working session on the one problem you name. We trace it to the actual constraint — process, control, data, or ownership — not the symptom that brought you to us.
+
+03
+
+#### Fix, on site
+
+Weekly visits to the floor, the finance team, the warehouse — wherever the problem lives. The fix is designed with the people who will run it, then put in place alongside them.
+
+04
+
+#### Review and hand over
+
+We track outcomes, not activity. A weekly review rhythm is installed, owned by your team, and still running after we leave. That’s the test.
+
+What the Diagnostic actually covers
+
+- Where the money actually leaks — revenue, deductions, purchasing, stock, or all four
+
+- Which controls exist on paper and which ones actually operate
+
+- Who owns what, and where accountability quietly falls between two people
+
+- The one change that, if made first, makes everything after it easier
+
+HOW WE WORK WITH YOU
+
+#### Structured for outcomes, not hours.
+
+Scope
+
+##### Agreed first
+
+A written problem, scope, and end point before any work starts. If the scope needs to change, we agree that in writing too.
+
+Cadence
+
+##### Weekly, on site
+
+Regular enough to keep momentum. Spaced so your team has time to do the work between visits.
+
+Fees
+
+##### Fixed, never hourly
+
+One agreed fee per engagement. No hourly billing, no scope creep, no surprise invoice at the end.
+
+Independence
+
+##### Vendor-neutral
+
+We don’t resell software. If a tool helps, we say so; if a spreadsheet and a discipline will do, we say that instead.
+
+Location
+
+##### Bengaluru-first
+
+In person wherever the problem allows. Online works well for diagnostics and ongoing advisory across India.
+
+Capacity
+
+##### A few clients at a time
+
+Depth needs focus. We take on a small number of engagements at once, and we’ll tell you when we’re full.
+
+WORTH BEING DIRECT
+
+#### We’re not the right fit for everyone.
+
+If any of these describe you, we’ll probably say so in the first call — and save us both the time.
+
+- Businesses looking for a report to justify a decision that has already been made
+
+- Owners who want us to run a function permanently rather than build one that runs without us
+
+- Teams unwilling to do the implementation work between visits — we work alongside you, not instead of you
+
+- Pre-revenue or idea-stage startups — an accelerator will serve that stage far better than we can
+
+OUTCOMES
+
+#### What’s different when we leave.
+
+Not frameworks in a slide deck. Working systems inside the business.
+
+01
+
+##### Clarity on the real constraint
+
+Most businesses are solving the wrong problem. After the Diagnostic, you know exactly where the constraint is — and what to do about it first.
+
+02
+
+##### Revenue you can reconcile
+
+What was earned, what was received, and why they differ — visible every month, not reconstructed at year-end.
+
+03
+
+##### Controls that actually operate
+
+Approvals, limits, and checks that work in practice — not a policy document nobody has opened since it was written.
+
+04
+
+##### An operating rhythm that holds
+
+A weekly review your team runs without being chased. Numbers that are current, decisions that are recorded.
+
+05
+
+##### Decisions tested before they’re made
+
+A senior second opinion on the calls that matter — a price change, a vendor switch, a new channel, a senior hire.
+
+06
+
+##### Documentation your team owns
+
+Short, plain-language process notes and checklists. Written for the people who use them, not for a filing cabinet.
+
+READY TO TALK?
+
+#### Start with a conversation.
+
+No pitch, no proposal on the first call. Just a direct conversation about the problem and whether we can help.
+
+Get in touch
+
+We’ll hear the situation and tell you honestly whether we’re the right fit.
+
+## [About](https://www.nxtfoundry.in/#about)
+
+URL: https://www.nxtfoundry.in/#about
+
+ABOUT NXT FOUNDRY
+
+### Built around problems. Driven by possibilities.
+
+NXT Foundry is a business and technology company combining expertise, execution, and innovation to solve meaningful business problems.
+
+WHO YOU WORK WITH
+
+#### Senior-led. Not staffed out.
+
+Based in Bengaluru · Available for engagements across India
+
+Big 4 risk advisory experience across internal controls, internal audit, process reviews, and risk analytics — applied to the operating problems of growing businesses. The people you meet in the first conversation are the people who do the work.
+
+##### Why NXT Foundry exists
+
+After years of seeing the same operational and control problems recur across industries — and the same gap between “the deck” and the actual fix — NXT Foundry was built to close that gap. We bring the rigour of a Big 4 practice, the pace of a lean team, and the willingness to stay until the fix is in place.
+
+HOW WE OPERATE
+
+01
+
+##### Business First
+
+Start with understanding the actual problem.
+
+02
+
+##### Execution Focus
+
+Move beyond recommendations to practical implementation.
+
+03
+
+##### Built for Impact
+
+Prioritize measurable, sustainable business outcomes.
+
+04
+
+##### Innovation With Purpose
+
+Use technology where it creates meaningful value.
+
+05
+
+##### Long-Term Thinking
+
+Build solutions that can evolve and scale.
+
+## [Contact](https://www.nxtfoundry.in/#contact)
+
+URL: https://www.nxtfoundry.in/#contact
+
+START A CONVERSATION
+
+#### Have a business problem worth solving?
+
+Request a proposal
+
+Typical turnaround: 3 business days.
+
+CONTACT
+
+### Let’s make the next move.
+
+Tell us a little about the challenge, opportunity, or idea on your mind.
+
+hello@nxtfoundry.in
+
+We’ll use the information you share only to respond to your enquiry. See our Privacy Policy.
+
+## [Privacy Policy](https://www.nxtfoundry.in/privacy.html)
+
+URL: https://www.nxtfoundry.in/privacy.html
+
+NXT Foundry← Back to the website
+
+### Privacy Policy
+
+Last updated: 13 November 2026
+
+This policy explains what information NXT Foundry collects through www.nxtfoundry.in, why we collect it, who processes it for us, and how to contact us about it. NXT Foundry is based in Bengaluru, India. Questions about this policy go to hello@nxtfoundry.in.
+
+#### Summary
+
+- When you send an enquiry, we collect the details you type into the contact form and use them only to respond to you.
+
+- We do not sell your information or use it for advertising.
+
+- The website uses Vercel Web Analytics and Speed Insights, which do not set cookies. Google Analytics sets cookies only if you accept them in the cookie banner. Otherwise it records visits without cookies.
+
+- Files you open in the Vendor Payable Reconciliation tool are processed in your browser and are not uploaded to us.
+
+- We do not currently use any AI service to process information from this website.
+
+#### 1. The contact form
+
+##### What you give us
+
+Field | Required? |
+
+Name | Yes |
+
+Business email | Yes |
+
+Phone number (with country code) | No |
+
+Company | Yes |
+
+Business type | No |
+
+Area of interest | No |
+
+Message | Yes |
+
+##### What is added automatically
+
+- A submission reference and timestamp, so a retried submission is not stored twice and we can refer to your enquiry.
+
+- A hashed version of your IP address. Your IP address is converted into a keyed hash (HMAC-SHA-256) on our server. The raw IP address is not stored, logged or passed on. The hash is used only to limit how many enquiries can be sent from one connection in a short time.
+
+- A hashed version of your email address (SHA-256), used only to limit repeated submissions from the same address.
+
+- How long the form took to fill in, and a hidden field that people never see. Both are basic checks against automated spam.
+
+##### Why we use it
+
+To read and reply to your enquiry, to follow up on the conversation you started, and to protect the form from spam and abuse. We do not add you to a mailing list.
+
+##### Where it goes
+
+- The form sends your details to our server, hosted on Vercel.
+
+- From there, the details are stored in a Google Sheet in NXT Foundry's Google Workspace account, through Google Apps Script.
+
+- An email notification with your enquiry is sent to our inbox (hello@nxtfoundry.in) through Gmail.
+
+Our server logs record only whether a submission succeeded or failed. They do not contain your form entries or your IP address.
+
+##### How long we keep it
+
+We have not set a fixed deletion schedule. We keep enquiries while they are useful for the conversation they started. You can ask us to delete yours at any time (see section 6).
+
+#### 2. The reconciliation tool
+
+The Vendor Payable Reconciliation tool opens with sample data. Ledger files (CSV or Excel), PDFs and other documents you open in the tool are read and processed in your browser. They are not uploaded to NXT Foundry or sent to any other service, and they are not kept after you close or reload the page.
+
+Features marked ✦ in the tool are previews of AI features that are not switched on. They do not send any data. If we switch them on, we will update this policy first.
+
+#### 3. Analytics and cookies
+
+##### Vercel Web Analytics and Speed Insights
+
+We use Vercel Web Analytics and Vercel Speed Insights to understand which pages are visited and how fast they load. These tools do not use cookies. They collect information such as the page visited, the referring site, browser and device type, operating system, approximate country, and page-load performance. We use this information only in aggregate.
+
+##### Google Analytics
+
+The website loads Google Tag Manager, which runs Google Analytics 4, on every visit. It uses Google's Consent Mode, so how it works depends on your choice in the cookie banner.
+
+- If you click “Not now” or ignore the banner, Google Analytics sets no cookies. It still sends Google a basic, cookieless record of your visit, such as the page viewed, the time, your browser and device type, and your approximate location derived from your IP address. Without a cookie, it cannot recognise you on later visits. Google may use these records to estimate overall visitor numbers.
+
+- If you click “Let’s do it”, Google Analytics also sets first-party cookies (named _ga and _ga_<ID>) that let it recognise repeat visits from the same browser and see how visitors move between pages.
+
+Advertising and ad-personalisation settings are always off. We use the reports to understand how the website is used and to improve it.
+
+##### Cookies and browser storage we use
+
+Name | Type | Set by | Purpose | Lasts |
+
+_ga | Cookie | Google Analytics | Distinguishes one browser from another, so repeat visits can be counted. Set only after “Let’s do it”. | Up to 2 years |
+
+_ga_<ID> | Cookie | Google Analytics | Keeps track of the current visit (session). Set only after “Let’s do it”. | Up to 2 years |
+
+nxt-analytics-consent | Local storage | This website | Remembers your choice in the cookie banner, so we don’t ask on every visit. | Until you clear it |
+
+nxt-tour-*, nxt-recon-collapsed-* | Local storage | This website | Remember whether you have seen a tool’s guided tour and which panels you collapsed. | Until you clear it |
+
+nxt-interest | Session storage | This website | Carries the products you picked on the Products page into the contact form. Removed once it is used. | Until the tab is closed |
+
+Vercel Web Analytics and Speed Insights do not use cookies or browser storage.
+
+##### How to control cookies
+
+- On this website. Use the Cookie settings link at the bottom of every page of the main website to change your choice at any time. If you choose “Not now” after accepting, the Google Analytics cookies are deleted straight away.
+
+- In your browser. Every major browser lets you block or delete cookies, either for all websites or only for www.nxtfoundry.in:
+
+- Chrome: Settings → Privacy and security → Third-party cookies / Site settings → Cookies and site data
+
+- Edge: Settings → Cookies and site permissions → Manage and delete cookies and site data
+
+- Firefox: Settings → Privacy & Security → Cookies and Site Data
+
+- Safari (Mac): Settings → Privacy → Manage Website Data; Safari (iPhone/iPad): Settings → Safari → Advanced → Website Data
+
+Clearing “site data” for www.nxtfoundry.in also removes the local storage items listed above, including your banner choice, so the banner will appear again.
+
+- Block Google Analytics completely. Google offers the Google Analytics Opt-out Browser Add-on, which stops Google Analytics on every website, including the cookieless visit records described above. Many content and tracking blockers do the same.
+
+- Private browsing. In a private or incognito window, cookies and browser storage are deleted when you close the window.
+
+Blocking cookies or browser storage does not stop the website or the contact form from working.
+
+#### 4. Other services and storage in your browser
+
+- Hosting. The website is hosted on Vercel. Like any web host, Vercel receives technical information, such as your IP address and browser details, when your browser requests a page.
+
+- Fonts. The website loads its typeface from Google Fonts, so your browser connects to Google's servers, which receive your IP address and browser details.
+
+- Browser storage. Apart from the Google Analytics cookies described above, which are set only with your consent, we do not set cookies. The website keeps your cookie-banner choice and a few small settings in your browser's local storage or session storage, such as whether you have seen a tool's guided tour, which summary panels you have collapsed, and the products you picked on the Products page so they can be filled into the contact form. These stay on your device, and you can clear them through your browser settings.
+
+#### 5. Who we share information with
+
+We share information only with the service providers named above, and only so they can provide their services to us: Vercel (hosting and analytics) and Google (Google Workspace, Gmail, Google Fonts and Google Analytics). These providers may process data on servers outside India. We do not sell personal information. We may disclose information if the law requires us to.
+
+#### 6. Your choices and contacting us
+
+You can write to hello@nxtfoundry.in to:
+
+- ask what information we hold about you from an enquiry,
+
+- ask us to correct it, or
+
+- ask us to delete it.
+
+It helps to include your enquiry reference (it starts with “NXT-”) if you have it. You can also contact us by email instead of using the contact form.
+
+#### 7. Changes to this policy
+
+If we change how we handle information, for example by moving enquiries to a different system, we will update this page and the date at the top.
