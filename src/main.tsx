@@ -152,12 +152,12 @@ function Footer(){return <footer><div className="footer-inner">
 const rich=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<strong key={i}>{x}</strong>:x);
 const richQ=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<em key={i}>{x}</em>:x);
 const storyText=(t:string)=>t.replace(/\*\*/g,'');
-function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.earlier&&<span className="chip-tag">Earlier work</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
+function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.earlier&&<span className="chip-tag">EW</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
 function Stories(){const [area,setArea]=useState('All');
   const areas=['All',...Array.from(new Set(stories.flatMap(s=>s.areas)))];
   const list=area==='All'?stories:stories.filter(s=>s.areas.includes(area));
   return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Every story starts <em>with a question.</em></h1>
-    <p className="page-lede">Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such.</p>
+    <p className="page-lede">Real problems, what we found and what changed.</p>
     {stories.length>=4&&<div className="filter-row story-filters">{areas.map(x=><button type="button" className={area===x?'active':''} aria-pressed={area===x} onClick={()=>setArea(x)} key={x}>{x}</button>)}</div>}
     <div className={'story-tiles'+(list.length===1?' single':'')}>{list.map((s,i)=>{const r=s.stats[s.stats.length-1];
       return <a className={'story-tile'+(i===0?' lead':'')} href={'#stories/'+s.id} key={s.id}><StoryTags s={s}/>
@@ -189,7 +189,7 @@ function StoryPage({s}:{s:Story}){
         <section className="story-ch" id="ch-outcome"><h2>{s.journey?'04':'03'} · The outcome</h2>
           {last&&last!==first&&<div className="story-pull"><b>{last.value}</b> <span>{last.label}</span></div>}
           {s.outcome.map((p,i)=><p key={i}>{rich(p)}</p>)}
-          <p className="story-meta">{s.meta}</p>{s.earlier&&<p className="story-note">Work led by our team in an earlier advisory role, before NXT Foundry was founded.</p>}{s.note&&<p className="story-note">{s.note}</p>}
+          <p className="story-meta">{s.meta}</p>{s.note&&<p className="story-note">{s.note}</p>}
         </section>
         <div className="story-cta"><p>Have a problem that sounds familiar?</p><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min call <ArrowUpRight size={15}/></a></div>
       </div>

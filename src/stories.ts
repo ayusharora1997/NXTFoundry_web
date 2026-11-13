@@ -20,10 +20,51 @@ export type Story = {
   outcome: string[];          // the result number appears before these paragraphs
   meta: string;               // e.g. "E-commerce · Bengaluru, India"
   note?: string;              // e.g. confidentiality line
-  earlier?: boolean;          // true = done by our team in an earlier role, before NXT Foundry; shown as "Earlier work"
+  earlier?: boolean;          // true = shows the "EW" tag (fuller wording to be added once agreed)
 };
 
 export const stories: Story[] = [
+  {
+    id: 'fitness-access-controls',
+    title: 'Closing ₹5 crore of revenue leakage in a fitness chain’s access controls',
+    question: 'How was one member checking in at **two centres at once**?',
+    hook: 'Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.',
+    areas: ['Revenue Leakage', 'Access Controls', 'Internal Audit'],
+    stats: [
+      { value: '₹5 Cr', label: 'in revenue leakage exposure across access and operational control gaps' },
+      { value: '1 device', label: 'per membership, with any change approved through Customer Experience' },
+    ],
+    problem: [
+      'A leading fitness and wellness chain had a streamlined membership and access model, but weaknesses in its operational controls were creating opportunities for revenue leakage. Our audit identified three key vulnerabilities.',
+      '**Membership access misuse.** Members were accessing multiple centres simultaneously using QR codes, fingerprints and multiple devices. Attendance records showed impossible concurrent entries across geographically distant locations. Our investigation identified approximately **₹2 crore in potential revenue leakage** associated with such access misuse.',
+      '**Unauthorised group-class access.** Certain centre managers were booking classes under their own credentials for unauthorised attendees. In some instances, unofficial trainers were also using gym facilities to offer paid training independently.',
+      '**Manual gate access misuse.** Centre managers could operate swing barriers using separate remotes intended for housekeeping access. These were sometimes misused to admit non-members outside the standard membership process, particularly at franchise-operated centres.',
+    ],
+    journey: {
+      title: 'Follow a member through the gate',
+      steps: [
+        { title: 'A member signs up', text: 'Gets QR and fingerprint access to every centre in the chain.' },
+        { title: 'One membership, many devices — and two centres at once', text: 'The same access was used on several devices, with impossible concurrent entries across distant centres.', fix: 'One registered device per membership. Device changes need a CX request and approval; repeated changes trigger temporary restrictions and investigation.' },
+        { title: 'QR or fingerprint, whichever is handy', text: 'Either method worked at any time, which made shared access easy.', fix: 'Single-mode authentication: switching between QR and fingerprint needs a CX ticket and approval.' },
+        { title: 'Classes booked on a manager’s login', text: 'Unauthorised attendees joined group classes; unofficial trainers ran paid sessions on the premises.', fix: 'New KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.' },
+        { title: 'The barrier opened with a housekeeping remote', text: 'Non-members were let in outside the membership process, mostly at franchise centres.', fix: 'Swing-barrier openings and closures are now monitored and matched against an actual entry or exit.' },
+      ],
+    },
+    whatWeDid: [
+      'We conducted a revenue and access-control audit, working with the IT and revenue teams to assess vulnerabilities and strengthen controls across the membership journey.',
+      '**Device-level access controls.** Membership access was restricted to one registered device. Device changes required a Customer Experience (CX) request and approval. Repeated changes triggered temporary restrictions and further investigation.',
+      '**Single-mode authentication.** Members could access facilities through either QR authentication or fingerprint verification. Switching the access method required a CX ticket and appropriate approval.',
+      '**Gate-level accountability.** Swing-barrier operations were brought under monitoring, tracking gate openings, closures and whether an actual entry or exit occurred.',
+      '**Operational monitoring.** Additional KPIs were introduced to improve visibility into access exceptions and strengthen centre-level accountability.',
+    ],
+    outcome: [
+      'The audit identified approximately **₹5 crore in overall revenue leakage exposure** across the access and operational control gaps, including approximately ₹2 crore associated with membership access misuse.',
+      'The resulting control improvements strengthened membership authentication, reduced opportunities for unauthorised access and improved accountability over physical entry points.',
+    ],
+    meta: 'Fitness and wellness · Multi-centre chain',
+    note: 'Client identity and operational details have been withheld for confidentiality.',
+    earlier: true,
+  },
   {
     id: 'warehouse-stock-transfers',
     title: 'Bringing accountability to a ₹76 crore warehouse reconciliation gap',

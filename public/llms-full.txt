@@ -730,13 +730,23 @@ STORIES
 
 ### Every story starts with a question.
 
-Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such.
+Real problems, what we found and what changed.
 
-Earlier work Warehouse OperationsSupply ChainInventory Controls
+EW Revenue LeakageAccess ControlsInternal Audit
+
+How was one member checking in at two centres at once?
+
+Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.
+
+What changed1 device
+
+per membership, with any change approved through Customer Experience
+
+Read the story
+
+EW Warehouse OperationsSupply ChainInventory Controls
 
 Where did ₹76 crore of stock go between two warehouses?
-
-Transfers were closed on expected quantities and email confirmations — not on what actually arrived.
 
 What changed~5%
 
@@ -744,13 +754,97 @@ of monthly stock transfers still open in disputes, after the fix
 
 Read the story
 
+## [Closing ₹5 crore of revenue leakage in a fitness chain’s access controls](https://www.nxtfoundry.in/#stories/fitness-access-controls)
+
+URL: https://www.nxtfoundry.in/#stories/fitness-access-controls
+
+All stories
+
+EW Revenue LeakageAccess ControlsInternal Audit
+
+### Closing ₹5 crore of revenue leakage in a fitness chain’s access controls
+
+#### 01 · The problem
+
+A leading fitness and wellness chain had a streamlined membership and access model, but weaknesses in its operational controls were creating opportunities for revenue leakage. Our audit identified three key vulnerabilities.
+
+₹5 Cr in revenue leakage exposure across access and operational control gaps
+
+Membership access misuse. Members were accessing multiple centres simultaneously using QR codes, fingerprints and multiple devices. Attendance records showed impossible concurrent entries across geographically distant locations. Our investigation identified approximately ₹2 crore in potential revenue leakage associated with such access misuse.
+
+Unauthorised group-class access. Certain centre managers were booking classes under their own credentials for unauthorised attendees. In some instances, unofficial trainers were also using gym facilities to offer paid training independently.
+
+Manual gate access misuse. Centre managers could operate swing barriers using separate remotes intended for housekeeping access. These were sometimes misused to admit non-members outside the standard membership process, particularly at franchise-operated centres.
+
+#### 02 · Where it broke
+
+Follow a member through the gate
+
+Where it brokeWhat we put in place
+
+##### 1 · A member signs up
+
+Gets QR and fingerprint access to every centre in the chain.
+
+##### 2 · One membership, many devices — and two centres at once
+
+The same access was used on several devices, with impossible concurrent entries across distant centres.
+
+Fix One registered device per membership. Device changes need a CX request and approval; repeated changes trigger temporary restrictions and investigation.
+
+##### 3 · QR or fingerprint, whichever is handy
+
+Either method worked at any time, which made shared access easy.
+
+Fix Single-mode authentication: switching between QR and fingerprint needs a CX ticket and approval.
+
+##### 4 · Classes booked on a manager’s login
+
+Unauthorised attendees joined group classes; unofficial trainers ran paid sessions on the premises.
+
+Fix New KPIs on access exceptions, so each centre’s unusual activity is visible and accountable.
+
+##### 5 · The barrier opened with a housekeeping remote
+
+Non-members were let in outside the membership process, mostly at franchise centres.
+
+Fix Swing-barrier openings and closures are now monitored and matched against an actual entry or exit.
+
+#### 03 · What we did
+
+We conducted a revenue and access-control audit, working with the IT and revenue teams to assess vulnerabilities and strengthen controls across the membership journey.
+
+Device-level access controls. Membership access was restricted to one registered device. Device changes required a Customer Experience (CX) request and approval. Repeated changes triggered temporary restrictions and further investigation.
+
+Single-mode authentication. Members could access facilities through either QR authentication or fingerprint verification. Switching the access method required a CX ticket and appropriate approval.
+
+Gate-level accountability. Swing-barrier operations were brought under monitoring, tracking gate openings, closures and whether an actual entry or exit occurred.
+
+Operational monitoring. Additional KPIs were introduced to improve visibility into access exceptions and strengthen centre-level accountability.
+
+#### 04 · The outcome
+
+1 device per membership, with any change approved through Customer Experience
+
+The audit identified approximately ₹5 crore in overall revenue leakage exposure across the access and operational control gaps, including approximately ₹2 crore associated with membership access misuse.
+
+The resulting control improvements strengthened membership authentication, reduced opportunities for unauthorised access and improved accountability over physical entry points.
+
+Fitness and wellness · Multi-centre chain
+
+Client identity and operational details have been withheld for confidentiality.
+
+Have a problem that sounds familiar?
+
+Book a 30-min call
+
 ## [Bringing accountability to a ₹76 crore warehouse reconciliation gap](https://www.nxtfoundry.in/#stories/warehouse-stock-transfers)
 
 URL: https://www.nxtfoundry.in/#stories/warehouse-stock-transfers
 
 All stories
 
-Earlier work Warehouse OperationsSupply ChainInventory Controls
+EW Warehouse OperationsSupply ChainInventory Controls
 
 ### Bringing accountability to a ₹76 crore warehouse reconciliation gap
 
@@ -807,8 +901,6 @@ We also introduced transfer-specific SKU identification to strengthen audit trac
 The proportion of monthly stock transfers remaining open due to disputes between warehouses reduced to approximately 5%. The intervention significantly reduced inventory losses and improved the visibility, traceability and accountability of stock movements across warehouse locations.
 
 E-commerce · Warehouse Operations · Bengaluru, India
-
-Work led by our team in an earlier advisory role, before NXT Foundry was founded.
 
 Client identity and engagement details are withheld for confidentiality.
 
