@@ -1,6 +1,7 @@
 // Stories (#stories). Add a story by adding an entry here; the first entry gets the large tile on the Stories tab.
 // Each story also gets its own page at #stories/<id>. No dates on purpose.
 // Wrap a phrase in **double asterisks** to highlight it (lime in the question, bold in body text).
+// A paragraph that starts with "- " is shown as a bullet list; separate items with "\n- ".
 // While the list is empty the Stories tab shows the "We're building the narrative" placeholder instead.
 export type JourneyStep = {
   title: string;              // what happened at this step
@@ -21,6 +22,8 @@ export type Story = {
   outcome: string[];          // the result number appears before these paragraphs
   meta: string;               // e.g. "E-commerce · Bengaluru, India"
   note?: string;              // e.g. confidentiality line
+  concept?: boolean;          // true = an independently developed concept, not client work: "Concept" tag,
+                              // "What it could change" on the tile and "Illustrative impact" as the last chapter
   earlier?: boolean;          // true = shows the "EW" tag (fuller wording to be added once agreed)
 };
 
@@ -103,5 +106,44 @@ export const stories: Story[] = [
     meta: 'E-commerce · Warehouse Operations · Bengaluru, India',
     note: 'Client identity and engagement details are withheld for confidentiality.',
     earlier: true,
+  },
+  {
+    id: 'payroll-compliance-framework',
+    title: 'Automating 94 payroll checks for apparel manufacturers',
+    question: 'What if **90+ payroll checks** didn’t take a week by hand?',
+    hook: 'Large workforces, many salary components and statutory deductions — all verified manually before every payroll run.',
+    did: 'We built a conceptual Power BI framework that automates 94 payroll validation and audit checks across eight control areas.',
+    areas: ['Payroll Controls', 'Automation', 'Internal Audit'],
+    stats: [
+      { value: '90+', label: 'manual checks before every payroll run, with verification taking up to seven days' },
+      { value: '7 → 2 days', label: 'illustrative payroll verification time with the checks automated' },
+    ],
+    problem: [
+      'Apparel manufacturing businesses often manage complex payroll processes involving large workforces, multiple salary components, attendance records and statutory deductions. Manual verification across these areas can create significant operational effort and increase the risk of errors, missed exceptions and delayed payroll processing.',
+      'The conceptual assessment identified several common challenges:',
+      '- More than **90 manual checks** required before payroll processing\n- Significant HR and payroll manpower involved in routine validation\n- Verification cycles extending up to **seven days**\n- Risk of errors in sensitive employee, banking and salary data\n- Limited visibility into payroll exceptions and control effectiveness',
+    ],
+    journey: {
+      title: 'Follow one payroll run',
+      steps: [
+        { title: 'Attendance and salary inputs arrive', text: 'A large workforce, many salary components and statutory deductions to process.' },
+        { title: 'More than 90 checks, done by hand', text: 'HR and payroll teams validate each area manually before processing.', fix: '94 validation and audit checks automated in Power BI with Power Query and DAX, across eight control areas.' },
+        { title: 'Bank and identity changes are easy to miss', text: 'Changed bank accounts, IFSC codes, PAN or Aadhaar sit inside sensitive data.', fix: 'Flags for bank and IFSC changes, duplicate accounts, and PAN or Aadhaar changes.' },
+        { title: 'Verification stretches to seven days', text: 'Exceptions surface late, if at all, and payroll is delayed.', fix: 'One dashboard for HR, Finance and Internal Audit to clear exceptions before disbursement.' },
+        { title: 'Little proof the controls are working', text: 'Control effectiveness is hard to show at audit time.', fix: 'Structured exception reporting that strengthens audit readiness.' },
+      ],
+    },
+    whatWeDid: [
+      'We developed a conceptual Power BI-based payroll compliance framework using Power Query and DAX to automate **94 payroll validation and internal audit checks**, structured across eight control areas:',
+      '- **Employee status:** joining and exit dates, employee status and employee ID validation\n- **Banking details:** bank account and IFSC changes, duplicate account identification\n- **Payroll processing:** PAN and Aadhaar changes, salary variances, overtime and leave adjustments\n- **Headcount:** month-on-month and department-level workforce comparisons\n- **Payroll components:** basic pay, DA, allowances, deductions and bonuses\n- **Leave and attendance:** leave balances, absences and leave encashment\n- **Tax and statutory compliance:** TDS, PF, ESI and tax exemption validation\n- **Internal audit controls:** duplicate payments, data integrity, change monitoring and exception reporting',
+      'The dashboard was designed to help HR, Finance and Internal Audit teams identify discrepancies before payroll disbursement.',
+    ],
+    outcome: [
+      'The framework demonstrates the potential to:',
+      '- Reduce payroll verification time from **seven days to two days**\n- Automate the review of **94 recurring checks**\n- Improve visibility into exceptions and payroll control performance\n- Reduce repetitive manual validation and free up HR resources for higher-value activities\n- Strengthen audit readiness through structured exception reporting',
+    ],
+    meta: 'Apparel manufacturing · Payroll',
+    note: 'This is an independently developed conceptual framework. All examples, figures and business scenarios are illustrative and are not presented as verified client implementation results.',
+    concept: true,
   },
 ];

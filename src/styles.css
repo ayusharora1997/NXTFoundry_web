@@ -987,3 +987,7 @@ a.story-tile:hover,a.story-tile:focus-visible{border-color:#4a5d1a;transform:tra
 .story-tile{min-height:0}
 .story-tile.lead .story-q+.story-hook{margin-bottom:18px}
 .story-tile:not(.lead) .story-q{margin-bottom:18px}
+.story-list{margin:0 0 20px;padding-left:22px;color:#d3dad5;font-size:17px;line-height:1.7}
+.story-list li{margin:0 0 8px}.story-list li::marker{color:var(--lime)}
+.story-list strong{color:#fff}
+@media(max-width:900px){.story-list{font-size:16px}}

@@ -152,7 +152,8 @@ function Footer(){return <footer><div className="footer-inner">
 const rich=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<strong key={i}>{x}</strong>:x);
 const richQ=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<em key={i}>{x}</em>:x);
 const storyText=(t:string)=>t.replace(/\*\*/g,'');
-function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.earlier&&<span className="chip-tag">EW</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
+const para=(p:string,k:number)=>p.startsWith('- ')?<ul className="story-list" key={k}>{p.slice(2).split('\n- ').map((x,i)=><li key={i}>{rich(x)}</li>)}</ul>:<p key={k}>{rich(p)}</p>;
+function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.concept&&<span className="chip-tag">Concept</span>}{s.concept&&' '}{s.earlier&&<span className="chip-tag">EW</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
 function Stories(){const [area,setArea]=useState('All');
   const areas=['All',...Array.from(new Set(stories.flatMap(s=>s.areas)))];
   const list=area==='All'?stories:stories.filter(s=>s.areas.includes(area));
@@ -162,13 +163,14 @@ function Stories(){const [area,setArea]=useState('All');
     <div className={'story-tiles'+(list.length===1?' single':'')}>{list.map((s,i)=>{const r=s.stats[s.stats.length-1];
       return <a className={'story-tile'+(i===0?' lead':'')} href={'#stories/'+s.id} key={s.id}><StoryTags s={s}/>
         <p className="story-q">{richQ(s.question)}</p>{i===0&&<p className="story-hook">{s.hook}</p>}
-        <div className="story-ans"><span>What changed</span><p className="story-did">{s.did}</p>{r&&<div className="story-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
+        <div className="story-ans"><span>{s.concept?'What it could change':'What changed'}</span><p className="story-did">{s.did}</p>{r&&<div className="story-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
         <span className="story-read">Read the story <ArrowRight size={14}/></span></a>})}
       {list.length<3&&<div className="story-tile soon" aria-hidden="true"><p className="story-q">More stories are being written.</p><div className="story-ans"><p>New ones are added here as clients agree to share them.</p></div></div>}
     </div>
   </section>}
 function StoryPage({s}:{s:Story}){
-  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey','Where it broke'] as [string,string]]:[]),['what','What we did'],['outcome','The outcome']];
+  const endLabel=s.concept?'Illustrative impact':'The outcome';
+  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey','Where it broke'] as [string,string]]:[]),['what','What we did'],['outcome',endLabel]];
   const [active,setActive]=useState('problem');
   React.useEffect(()=>{if(typeof IntersectionObserver==='undefined')return;const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)setActive(e.target.id.replace('ch-',''))})},{rootMargin:'-30% 0px -60% 0px'});chapters.forEach(([id])=>{const el=document.getElementById('ch-'+id);if(el)io.observe(el)});return()=>io.disconnect()},[s.id]);
   const go=(id:string)=>document.getElementById('ch-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -181,14 +183,14 @@ function StoryPage({s}:{s:Story}){
       <div className="story-chapters">
         <section className="story-ch" id="ch-problem"><h2>01 · The problem</h2><p>{rich(s.problem[0])}</p>
           {first&&<div className="story-pull"><b>{first.value}</b> <span>{first.label}</span></div>}
-          {s.problem.slice(1).map((p,i)=><p key={i}>{rich(p)}</p>)}</section>
+          {s.problem.slice(1).map((p,i)=>para(p,i))}</section>
         {s.journey&&<section className="story-ch" id="ch-journey"><h2>02 · Where it broke</h2><p className="story-jt">{s.journey.title}</p>
           <div className="story-legend"><span><i className="bad"/>Where it broke</span><span><i className="good"/>What we put in place</span></div>
           <ol className="story-steps">{s.journey.steps.map((st,i)=><li key={i} className={st.fix?'broke':''}><h3>{i+1} · {st.title}</h3><p>{st.text}</p>{st.fix&&<div className="story-fix"><b>Fix</b> {st.fix}</div>}</li>)}</ol></section>}
-        <section className="story-ch" id="ch-what"><h2>{s.journey?'03':'02'} · What we did</h2>{s.whatWeDid.map((p,i)=><p key={i}>{rich(p)}</p>)}</section>
-        <section className="story-ch" id="ch-outcome"><h2>{s.journey?'04':'03'} · The outcome</h2>
+        <section className="story-ch" id="ch-what"><h2>{s.journey?'03':'02'} · What we did</h2>{s.whatWeDid.map((p,i)=>para(p,i))}</section>
+        <section className="story-ch" id="ch-outcome"><h2>{s.journey?'04':'03'} · {endLabel}</h2>
           {last&&last!==first&&<div className="story-pull"><b>{last.value}</b> <span>{last.label}</span></div>}
-          {s.outcome.map((p,i)=><p key={i}>{rich(p)}</p>)}
+          {s.outcome.map((p,i)=>para(p,i))}
           <p className="story-meta">{s.meta}</p>{s.note&&<p className="story-note">{s.note}</p>}
         </section>
         <div className="story-cta"><p>Have a problem that sounds familiar?</p><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min call <ArrowUpRight size={15}/></a></div>

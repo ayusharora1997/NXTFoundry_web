@@ -762,6 +762,20 @@ of monthly stock transfers still open in disputes, after the fix
 
 Read the story
 
+Concept Payroll ControlsAutomationInternal Audit
+
+What if 90+ payroll checks didn’t take a week by hand?
+
+What it could change
+
+We built a conceptual Power BI framework that automates 94 payroll validation and audit checks across eight control areas.
+
+7 → 2 days
+
+illustrative payroll verification time with the checks automated
+
+Read the story
+
 ## [Closing ₹5 crore of revenue leakage in a fitness chain’s access controls](https://www.nxtfoundry.in/#stories/fitness-access-controls)
 
 URL: https://www.nxtfoundry.in/#stories/fitness-access-controls
@@ -911,6 +925,114 @@ The proportion of monthly stock transfers remaining open due to disputes between
 E-commerce · Warehouse Operations · Bengaluru, India
 
 Client identity and engagement details are withheld for confidentiality.
+
+Have a problem that sounds familiar?
+
+Book a 30-min call
+
+## [Automating 94 payroll checks for apparel manufacturers](https://www.nxtfoundry.in/#stories/payroll-compliance-framework)
+
+URL: https://www.nxtfoundry.in/#stories/payroll-compliance-framework
+
+All stories
+
+Concept Payroll ControlsAutomationInternal Audit
+
+### Automating 94 payroll checks for apparel manufacturers
+
+#### 01 · The problem
+
+Apparel manufacturing businesses often manage complex payroll processes involving large workforces, multiple salary components, attendance records and statutory deductions. Manual verification across these areas can create significant operational effort and increase the risk of errors, missed exceptions and delayed payroll processing.
+
+90+ manual checks before every payroll run, with verification taking up to seven days
+
+The conceptual assessment identified several common challenges:
+
+- More than 90 manual checks required before payroll processing
+
+- Significant HR and payroll manpower involved in routine validation
+
+- Verification cycles extending up to seven days
+
+- Risk of errors in sensitive employee, banking and salary data
+
+- Limited visibility into payroll exceptions and control effectiveness
+
+#### 02 · Where it broke
+
+Follow one payroll run
+
+Where it brokeWhat we put in place
+
+##### 1 · Attendance and salary inputs arrive
+
+A large workforce, many salary components and statutory deductions to process.
+
+##### 2 · More than 90 checks, done by hand
+
+HR and payroll teams validate each area manually before processing.
+
+Fix 94 validation and audit checks automated in Power BI with Power Query and DAX, across eight control areas.
+
+##### 3 · Bank and identity changes are easy to miss
+
+Changed bank accounts, IFSC codes, PAN or Aadhaar sit inside sensitive data.
+
+Fix Flags for bank and IFSC changes, duplicate accounts, and PAN or Aadhaar changes.
+
+##### 4 · Verification stretches to seven days
+
+Exceptions surface late, if at all, and payroll is delayed.
+
+Fix One dashboard for HR, Finance and Internal Audit to clear exceptions before disbursement.
+
+##### 5 · Little proof the controls are working
+
+Control effectiveness is hard to show at audit time.
+
+Fix Structured exception reporting that strengthens audit readiness.
+
+#### 03 · What we did
+
+We developed a conceptual Power BI-based payroll compliance framework using Power Query and DAX to automate 94 payroll validation and internal audit checks, structured across eight control areas:
+
+- Employee status: joining and exit dates, employee status and employee ID validation
+
+- Banking details: bank account and IFSC changes, duplicate account identification
+
+- Payroll processing: PAN and Aadhaar changes, salary variances, overtime and leave adjustments
+
+- Headcount: month-on-month and department-level workforce comparisons
+
+- Payroll components: basic pay, DA, allowances, deductions and bonuses
+
+- Leave and attendance: leave balances, absences and leave encashment
+
+- Tax and statutory compliance: TDS, PF, ESI and tax exemption validation
+
+- Internal audit controls: duplicate payments, data integrity, change monitoring and exception reporting
+
+The dashboard was designed to help HR, Finance and Internal Audit teams identify discrepancies before payroll disbursement.
+
+#### 04 · Illustrative impact
+
+7 → 2 days illustrative payroll verification time with the checks automated
+
+The framework demonstrates the potential to:
+
+- Reduce payroll verification time from seven days to two days
+
+- Automate the review of 94 recurring checks
+
+- Improve visibility into exceptions and payroll control performance
+
+- Reduce repetitive manual validation and free up HR resources for higher-value activities
+
+- Strengthen audit readiness through structured exception reporting
+
+Apparel manufacturing · Payroll
+
+This is an independently developed conceptual framework. All examples, figures and business scenarios are illustrative and are not presented as verified client implementation results.
 
 Have a problem that sounds familiar?
 
