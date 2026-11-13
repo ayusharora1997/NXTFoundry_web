@@ -14,6 +14,7 @@
 - [Our Approach](https://www.nxtfoundry.in/#approach)
 - [About](https://www.nxtfoundry.in/#about)
 - [Contact](https://www.nxtfoundry.in/#contact)
+- [Stories](https://www.nxtfoundry.in/#stories): Client stories: the problem, what we did and the outcome
 - [FAQ](https://www.nxtfoundry.in/faq.html): Fees, duration, remote work, NDAs and who does the work
 - [Privacy Policy](https://www.nxtfoundry.in/privacy.html)
 

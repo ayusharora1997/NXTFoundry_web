@@ -722,6 +722,54 @@ Use technology where it creates meaningful value.
 
 Build solutions that can evolve and scale.
 
+## [Stories](https://www.nxtfoundry.in/#stories)
+
+URL: https://www.nxtfoundry.in/#stories
+
+STORIES
+
+### Stories from the work.
+
+Real problems, what we found and what changed. Client names are withheld unless a client chooses otherwise.
+
+₹76 Cr of transferred stock without a verified receipt
+
+~5% of monthly transfers left open in disputes, after the fix
+
+Warehouse Operations · Supply Chain · Inventory Controls
+
+#### Bringing accountability to a ₹76 crore warehouse reconciliation gap
+
+##### The problem
+
+A large e-commerce business was struggling to reconcile stock transfers between its warehouses. Dispatching warehouses recorded the quantities sent, while receiving warehouses sometimes recorded different SKUs and quantities. Despite these mismatches, transfer orders were frequently closed based on expected quantities and email confirmations rather than verified receipts.
+
+An audit of six months of stock transfers identified approximately ₹76 crore worth of inventory dispatched under STOs for which the business no longer had clear visibility of the final receipt or whereabouts. The underlying process also exposed the business to estimated quarterly inventory losses equivalent to approximately 17% of transferred material value.
+
+The root cause was disconnected warehouse systems and a reconciliation process that largely depended on month-end reviews.
+
+##### What we did
+
+We supported the development of a separate reconciliation tool that brought greater accountability and visibility to inter-warehouse stock movements.
+
+The solution introduced advance notifications to receiving warehouses, followed by a four-hour reconciliation window after receipt. Unresolved discrepancies triggered automated escalations to warehouse managers and operations leadership, while open transfers remained visible in warehouse performance tracking.
+
+We also introduced transfer-specific SKU identification to strengthen audit traceability and incorporated remaining shelf-life information for perishable inventory, helping receiving warehouses prioritise older stock for fulfilment.
+
+##### The outcome
+
+The proportion of monthly stock transfers remaining open due to disputes between warehouses reduced to approximately 5%. The intervention significantly reduced inventory losses and improved the visibility, traceability and accountability of stock movements across warehouse locations.
+
+Show less
+
+E-commerce · Warehouse Operations · Bengaluru, India
+
+Client identity and engagement details are withheld for confidentiality.
+
+Have a problem that sounds familiar?
+
+Book a 30-min call
+
 ## [Contact](https://www.nxtfoundry.in/#contact)
 
 URL: https://www.nxtfoundry.in/#contact
