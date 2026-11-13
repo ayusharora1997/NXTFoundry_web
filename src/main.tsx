@@ -146,27 +146,55 @@ function Footer(){return <footer><div className="footer-inner">
 <div className="footer-bottom"><span>© 2026 NXT Foundry. Built around problems. Driven by possibilities.</span><span className="made-in">Made with <i className="heart" aria-label="love">♥</i> in <b lang="kn">ನಮ್ಮ</b> <span className="made-tr">(Namma)</span> Bengaluru, for the world</span></div>
 </div></footer>}
 
-// Stories (#stories): one card per entry in src/stories.ts. **text** is shown bold. With one story it opens in full;
-// with several, each shows a summary and expands on demand. Area filters appear once there are four or more.
+// Stories (#stories): question-first tiles, one per entry in src/stories.ts; the first gets the large tile.
+// Each story opens at #stories/<id>: a chaptered read (chapter menu on the left) with an optional
+// "Where it broke" chapter that follows one case step by step. **text** is highlighted.
 const rich=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<strong key={i}>{x}</strong>:x);
-function StoryCard({s,startOpen}:{s:Story;startOpen:boolean}){const [open,setOpen]=useState(startOpen);const body='story-body-'+s.id;
-  return <article className="story" id={'story-'+s.id}>
-    <aside className="story-stats">{s.stats.map(x=><div key={x.value}><b>{x.value}</b>{' '}<span>{x.label}</span></div>)}</aside>
-    <div className="story-main"><p className="story-areas">{s.earlier&&<span className="story-earlier">Earlier work</span>}{s.earlier&&' '}{s.areas.join(' · ')}</p><h2>{s.title}</h2>
-      {!open&&<p className="story-summary">{rich(s.summary)}</p>}
-      {open&&<div className="story-full" id={body}>{([['The problem',s.problem],['What we did',s.whatWeDid],['The outcome',s.outcome]] as [string,string[]][]).map(([h,ps])=><div className="story-part" key={h}><h3>{h}</h3>{ps.map((p,i)=><p key={i}>{rich(p)}</p>)}</div>)}</div>}
-      <button type="button" className="story-toggle" aria-expanded={open} aria-controls={body} onClick={()=>setOpen(!open)}>{open?'Show less':'Read the full story'} <ArrowRight size={14}/></button>
-      <p className="story-meta">{s.meta}</p>{s.earlier&&<p className="story-note">Work led by our team in an earlier advisory role, before NXT Foundry was founded.</p>}{s.note&&<p className="story-note">{s.note}</p>}
-    </div></article>}
-function Stories({allOpen=false}:{allOpen?:boolean}){const [area,setArea]=useState('All');
+const richQ=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<em key={i}>{x}</em>:x);
+const storyText=(t:string)=>t.replace(/\*\*/g,'');
+function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.earlier&&<span className="chip-tag">Earlier work</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
+function Stories(){const [area,setArea]=useState('All');
   const areas=['All',...Array.from(new Set(stories.flatMap(s=>s.areas)))];
   const list=area==='All'?stories:stories.filter(s=>s.areas.includes(area));
-  return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Stories from <em>the work.</em></h1>
-    <p className="page-lede">Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such. Client names are withheld unless a client chooses otherwise.</p>
+  return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Every story starts <em>with a question.</em></h1>
+    <p className="page-lede">Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such.</p>
     {stories.length>=4&&<div className="filter-row story-filters">{areas.map(x=><button type="button" className={area===x?'active':''} aria-pressed={area===x} onClick={()=>setArea(x)} key={x}>{x}</button>)}</div>}
-    <div className="story-list">{list.map(s=><StoryCard key={s.id} s={s} startOpen={allOpen||stories.length===1}/>)}</div>
-    <div className="story-cta"><p>Have a problem that sounds familiar?</p><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min call <ArrowUpRight size={15}/></a></div>
+    <div className={'story-tiles'+(list.length===1?' single':'')}>{list.map((s,i)=>{const r=s.stats[s.stats.length-1];
+      return <a className={'story-tile'+(i===0?' lead':'')} href={'#stories/'+s.id} key={s.id}><StoryTags s={s}/>
+        <p className="story-q">{richQ(s.question)}</p>{i===0&&<p className="story-hook">{s.hook}</p>}
+        <div className="story-ans"><span>What changed</span>{r&&<><b>{r.value}</b><p>{r.label}</p></>}</div>
+        <span className="story-read">Read the story <ArrowRight size={14}/></span></a>})}
+      {list.length<3&&<div className="story-tile soon" aria-hidden="true"><p className="story-q">More stories are being written.</p><div className="story-ans"><p>New ones are added here as clients agree to share them.</p></div></div>}
+    </div>
   </section>}
+function StoryPage({s}:{s:Story}){
+  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey','Where it broke'] as [string,string]]:[]),['what','What we did'],['outcome','The outcome']];
+  const [active,setActive]=useState('problem');
+  React.useEffect(()=>{if(typeof IntersectionObserver==='undefined')return;const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)setActive(e.target.id.replace('ch-',''))})},{rootMargin:'-30% 0px -60% 0px'});chapters.forEach(([id])=>{const el=document.getElementById('ch-'+id);if(el)io.observe(el)});return()=>io.disconnect()},[s.id]);
+  const go=(id:string)=>document.getElementById('ch-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
+  const first=s.stats[0], last=s.stats[s.stats.length-1];
+  return <article className="page section story-page" id="story-page">
+    <a className="story-back" href="#stories"><span aria-hidden="true">←</span> All stories</a>
+    <StoryTags s={s}/><h1>{s.title}</h1>
+    <div className="story-layout">
+      <nav className="story-rail" aria-label="Chapters">{chapters.map(([id,label],i)=><button type="button" key={id} className={active===id?'on':''} aria-current={active===id?'true':undefined} onClick={()=>go(id)}><small>{String(i+1).padStart(2,'0')}</small>{label}</button>)}</nav>
+      <div className="story-chapters">
+        <section className="story-ch" id="ch-problem"><h2>01 · The problem</h2><p>{rich(s.problem[0])}</p>
+          {first&&<div className="story-pull"><b>{first.value}</b> <span>{first.label}</span></div>}
+          {s.problem.slice(1).map((p,i)=><p key={i}>{rich(p)}</p>)}</section>
+        {s.journey&&<section className="story-ch" id="ch-journey"><h2>02 · Where it broke</h2><p className="story-jt">{s.journey.title}</p>
+          <div className="story-legend"><span><i className="bad"/>Where it broke</span><span><i className="good"/>What we put in place</span></div>
+          <ol className="story-steps">{s.journey.steps.map((st,i)=><li key={i} className={st.fix?'broke':''}><h3>{i+1} · {st.title}</h3><p>{st.text}</p>{st.fix&&<div className="story-fix"><b>Fix</b> {st.fix}</div>}</li>)}</ol></section>}
+        <section className="story-ch" id="ch-what"><h2>{s.journey?'03':'02'} · What we did</h2>{s.whatWeDid.map((p,i)=><p key={i}>{rich(p)}</p>)}</section>
+        <section className="story-ch" id="ch-outcome"><h2>{s.journey?'04':'03'} · The outcome</h2>
+          {last&&last!==first&&<div className="story-pull"><b>{last.value}</b> <span>{last.label}</span></div>}
+          {s.outcome.map((p,i)=><p key={i}>{rich(p)}</p>)}
+          <p className="story-meta">{s.meta}</p>{s.earlier&&<p className="story-note">Work led by our team in an earlier advisory role, before NXT Foundry was founded.</p>}{s.note&&<p className="story-note">{s.note}</p>}
+        </section>
+        <div className="story-cta"><p>Have a problem that sounds familiar?</p><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min call <ArrowUpRight size={15}/></a></div>
+      </div>
+    </div>
+  </article>}
 function Home(){return <><section className="hero" id="top"><div className="hero-copy"><Label>BUSINESS / TECHNOLOGY / INNOVATION</Label><h1>We solve real business problems and build <em>what comes next.</em></h1><p>We combine domain expertise, hands-on execution, and innovation to improve how businesses operate, grow, and make decisions.</p><div className="hero-actions"><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min diagnostic <ArrowRight size={17}/></a><a className="text-link" href="#approach">Our approach <ArrowUpRight size={16}/></a></div><p className="cta-note">No sales pitch. Bring a problem; leave with a view on it.</p></div><div className="hero-image"><img src="/images/hero-operations-v2.png" alt="Dark industrial operations interior"/><div className="hero-caption">01 / FOUNDATIONS FOR WHAT’S NEXT</div></div></section><section className="intro section"><div className="split"><div><Label>01 — WHAT WE DO</Label><h2>Good ideas matter.<br/><em>Good execution</em> changes things.</h2></div><div className="intro-copy"><p className="large">NXT Foundry brings together the commercial, operational, and technical thinking needed to move from a business problem to a solution that works in the real world.</p><ArrowLink href="#solutions">Explore our capabilities</ArrowLink></div></div><div className="cap-grid">{capabilities.map(([n,t,d])=><div className="cap" key={n}><span className="num">{n}</span><h3>{t}</h3><p>{d}</p></div>)}</div></section><section className="focus section" id="focus"><div className="split"><div><Label>02 — AREAS OF FOCUS</Label><h2>Where business meets <em>possibility.</em></h2></div><div className="intro-copy"><p>We start where the friction is. These are the business areas we focus on — our advisory, execution, and technology services are applied to each of them.</p><ArrowLink href="#solutions">See how we help</ArrowLink></div></div><div className="focus-list">{focus.map((x,i)=><a className="focus-row" href="#solutions" key={x}><span>0{i+1}</span><h3>{x}</h3><ArrowUpRight size={19}/></a>)}</div></section><section className="process section" id="impact"><div className="process-head"><Label>03 — HOW WE CREATE IMPACT</Label><h2>Understand → Design → Execute → <em>Scale.</em></h2></div><div className="stage-grid">{stages.map(([n,t,d])=><div className="stage" key={n}><span className="num">{n}</span><h3>{t}</h3><p>{d}</p></div>)}</div></section>{SHOW_INSIGHTS&&<section className="insight-strip section" id="thinking"><div><Label>04 — OUR THINKING</Label><h2>Ideas for building <em>better businesses.</em></h2><p className="section-note">Short, useful thinking on operations, controls, technology, and the work of building a company.</p></div><div className="insight-grid">{['Business operations','Finance & controls','Technology & innovation'].map((x,i)=><div className="insight-placeholder" key={x}><span>0{i+1} / {x}</span><h3>Article coming soon.</h3><ArrowLink href="#insights">Read the note</ArrowLink></div>)}</div></section>}<section className="help section"><Label>{SHOW_INSIGHTS?'05':'04'} — WHO WE ARE BUILT TO HELP</Label><div className="help-grid"><h2>For businesses where growth has made the operating model harder to see.</h2><div><p className="fit-label">We’re a good fit if you’re:</p><ul className="fit-list">{fitSignals.map(x=><li key={x}>{x}</li>)}</ul></div></div></section><CTA/></>}
 // Pages are hash routes, so in-page jumps scroll directly instead of changing the hash.
 const jump=(id:string)=>(e:React.MouseEvent)=>{e.preventDefault(); document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'})};
@@ -385,7 +413,7 @@ function SiteInsights({hash}:{hash:string}){if(OFFLINE_BUILD)return null;const r
 function App(){const [hash,setHash]=useState(window.location.hash); React.useEffect(()=>{const f=()=>setHash(window.location.hash);window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
 // Each hash is a separate page, so start it at the top — except #contact-form, which is a jump to the form itself.
 React.useLayoutEffect(()=>{const target=(hash==='#contact-form'||hash.startsWith('#products-')||hash.startsWith('#prog-'))&&document.getElementById(hash.slice(1)); if(target)target.scrollIntoView({behavior:'instant' as ScrollBehavior}); else window.scrollTo({top:0,behavior:'instant' as ScrollBehavior})},[hash]);
-let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash==='#stories')content=stories.length?<Stories/>:<ComingSoon label="STORIES" id="stories-page" title={<>We’re building the <em>narrative</em></>} lede="Stories from the work — the problem, what we found and what changed — will be told here soon."/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>}
+let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash.startsWith('#stories/')&&stories.some(st=>'#stories/'+st.id===hash))content=<StoryPage s={stories.find(st=>'#stories/'+st.id===hash)!}/>; else if(hash==='#stories'||hash.startsWith('#stories/'))content=stories.length?<Stories/>:<ComingSoon label="STORIES" id="stories-page" title={<>We’re building the <em>narrative</em></>} lede="Stories from the work — the problem, what we found and what changed — will be told here soon."/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>}
 // Pages rendered to text at build time for /llms-full.txt (scripts/llms-full.tsx). Keep in step with the routes in App.
 export const LLM_PAGES:[string,string,React.ReactNode][] = [
   ['Home','https://www.nxtfoundry.in/',<Home/>],
@@ -393,7 +421,8 @@ export const LLM_PAGES:[string,string,React.ReactNode][] = [
   ['Products','https://www.nxtfoundry.in/#products',<Products/>],
   ['Our Approach','https://www.nxtfoundry.in/#approach',<Approach/>],
   ['About','https://www.nxtfoundry.in/#about',<About/>],
-  ...(stories.length?[['Stories','https://www.nxtfoundry.in/#stories',<Stories allOpen/>] as [string,string,React.ReactNode]]:[]),
+  ...(stories.length?[['Stories','https://www.nxtfoundry.in/#stories',<Stories/>] as [string,string,React.ReactNode]]:[]),
+  ...stories.map(st=>[storyText(st.title),'https://www.nxtfoundry.in/#stories/'+st.id,<StoryPage s={st}/>] as [string,string,React.ReactNode]),
   ['Contact','https://www.nxtfoundry.in/#contact',<><CTA/><Contact/></>],
 ];
 if(!import.meta.env.SSR)createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);

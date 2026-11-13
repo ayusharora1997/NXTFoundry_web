@@ -728,27 +728,71 @@ URL: https://www.nxtfoundry.in/#stories
 
 STORIES
 
-### Stories from the work.
+### Every story starts with a question.
 
-Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such. Client names are withheld unless a client chooses otherwise.
+Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such.
 
-₹76 Cr of transferred stock without a verified receipt
+Earlier work Warehouse OperationsSupply ChainInventory Controls
 
-~5% of monthly transfers left open in disputes, after the fix
+Where did ₹76 crore of stock go between two warehouses?
 
-Earlier work Warehouse Operations · Supply Chain · Inventory Controls
+Transfers were closed on expected quantities and email confirmations — not on what actually arrived.
 
-#### Bringing accountability to a ₹76 crore warehouse reconciliation gap
+What changed~5%
 
-##### The problem
+of monthly stock transfers still open in disputes, after the fix
+
+Read the story
+
+## [Bringing accountability to a ₹76 crore warehouse reconciliation gap](https://www.nxtfoundry.in/#stories/warehouse-stock-transfers)
+
+URL: https://www.nxtfoundry.in/#stories/warehouse-stock-transfers
+
+All stories
+
+Earlier work Warehouse OperationsSupply ChainInventory Controls
+
+### Bringing accountability to a ₹76 crore warehouse reconciliation gap
+
+#### 01 · The problem
 
 A large e-commerce business was struggling to reconcile stock transfers between its warehouses. Dispatching warehouses recorded the quantities sent, while receiving warehouses sometimes recorded different SKUs and quantities. Despite these mismatches, transfer orders were frequently closed based on expected quantities and email confirmations rather than verified receipts.
+
+₹76 Cr of stock dispatched between warehouses in six months, with no verified receipt
 
 An audit of six months of stock transfers identified approximately ₹76 crore worth of inventory dispatched under STOs for which the business no longer had clear visibility of the final receipt or whereabouts. The underlying process also exposed the business to estimated quarterly inventory losses equivalent to approximately 17% of transferred material value.
 
 The root cause was disconnected warehouse systems and a reconciliation process that largely depended on month-end reviews.
 
-##### What we did
+#### 02 · Where it broke
+
+Follow one stock transfer
+
+Where it brokeWhat we put in place
+
+##### 1 · Warehouse A dispatches
+
+Records the SKUs and quantities sent under a stock transfer order.
+
+##### 2 · Warehouse B receives — different SKUs, different count
+
+Nobody is told to expect it, so mismatches aren’t caught at the dock.
+
+Fix Advance notice to the receiving warehouse, with transfer-specific SKU IDs and shelf-life data.
+
+##### 3 · Transfer closed on an email
+
+Closed on the expected quantity, not the verified receipt.
+
+Fix A four-hour reconciliation window after receipt; unresolved gaps escalate automatically.
+
+##### 4 · Found at month-end — if at all
+
+By then, stock and accountability are hard to trace.
+
+Fix Open transfers stay visible in each warehouse’s performance tracking.
+
+#### 03 · What we did
 
 We supported the development of a separate reconciliation tool that brought greater accountability and visibility to inter-warehouse stock movements.
 
@@ -756,11 +800,11 @@ The solution introduced advance notifications to receiving warehouses, followed 
 
 We also introduced transfer-specific SKU identification to strengthen audit traceability and incorporated remaining shelf-life information for perishable inventory, helping receiving warehouses prioritise older stock for fulfilment.
 
-##### The outcome
+#### 04 · The outcome
+
+~5% of monthly stock transfers still open in disputes, after the fix
 
 The proportion of monthly stock transfers remaining open due to disputes between warehouses reduced to approximately 5%. The intervention significantly reduced inventory losses and improved the visibility, traceability and accountability of stock movements across warehouse locations.
-
-Show less
 
 E-commerce · Warehouse Operations · Bengaluru, India
 
