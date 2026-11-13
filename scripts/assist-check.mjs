@@ -39,6 +39,13 @@ test('switched off without a key: GET says disabled, POST refuses, no model call
   eq((await call({ task: 'explain', facts: FACTS })).status, 503); eq(seen.length, 0);
 });
 
+test('key set but AI_FEATURES_ENABLED not true: still disabled, no model call', async () => {
+  process.env.ANTHROPIC_API_KEY = 'test-key'; delete process.env.AI_FEATURES_ENABLED;
+  eq(await GET().json(), { enabled: false });
+  eq((await call({ task: 'explain', facts: FACTS })).status, 503); eq(seen.length, 0);
+  process.env.AI_FEATURES_ENABLED = 'true';
+});
+
 test('request guards: origin, content type, visitor IP, size, PDF magic bytes, unknown task', async () => {
   process.env.ANTHROPIC_API_KEY = 'test-key';
   eq(await GET().json(), { enabled: true });

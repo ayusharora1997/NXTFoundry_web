@@ -5,7 +5,7 @@ The tool's ✦ chips mark where AI helps. They are honest about their state:
 | State | What visitors see |
 |---|---|
 | **Switched off** (no API key) | Dimmed ✦ chips saying **"in training"**. Clicking explains what the feature will do. The product page shows "✦ AI sous-chef: in training". |
-| **Switched on** (`ANTHROPIC_API_KEY` set in Vercel) | ✦ **Explain this gap** (dashboard, a vendor with a difference) and ✦ **Read this PDF** (credit mapping, after attaching a PDF) work for real. ✦ *Why this match?* stays "in training". |
+| **Switched on** (`AI_FEATURES_ENABLED=true` **and** `ANTHROPIC_API_KEY` set in Vercel) | ✦ **Explain this gap** (dashboard, a vendor with a difference) and ✦ **Read this PDF** (credit mapping, after attaching a PDF) work for real. ✦ *Why this match?* stays "in training". |
 
 Switching on needs no code change or redeploy beyond the env var. Vercel picks it up on the next deployment, and `GET /api/assist` then reports `enabled: true`.
 
@@ -13,7 +13,7 @@ Switching on needs no code change or redeploy beyond the env var. Vercel picks i
 
 1. Create an API key at **console.anthropic.com → API keys**. Use a separate workspace for the website if you can.
 2. **Set a monthly spend limit for that workspace** in the Console (Limits). This is the hard cost cap.
-3. In Vercel, open **Settings → Environment Variables** and add `ANTHROPIC_API_KEY` (Production only, marked **Sensitive**). Then redeploy, or push any commit.
+3. In Vercel, open **Settings → Environment Variables** and add `ANTHROPIC_API_KEY` (Production only, marked **Sensitive**) and `AI_FEATURES_ENABLED` = `true`. **Update the privacy policy (`public/privacy.html`) first**: it currently says no AI processing happens. Then redeploy, or push any commit.
 4. On the live site, open the tool and expand a vendor with a difference on the dashboard. **✦ Explain this gap** should now be a solid chip without "in training".
 
 To turn it off, delete the env var and redeploy. The chips go back to "in training".
@@ -52,4 +52,4 @@ This runs the real function and SDK against a local fake of the Claude API, so n
 - structured output and the arithmetic check;
 - refusals, upstream errors and rate limits.
 
-To try it locally with a real key, add `ANTHROPIC_API_KEY` and `ENQUIRY_ALLOWED_ORIGINS=http://localhost:5173` to `.env.local`, then run `npm run dev`.
+To try it locally with a real key, add `ANTHROPIC_API_KEY`, `AI_FEATURES_ENABLED=true` and `ENQUIRY_ALLOWED_ORIGINS=http://localhost:5173` to `.env.local`, then run `npm run dev`.

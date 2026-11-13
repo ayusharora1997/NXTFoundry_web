@@ -10,13 +10,17 @@
 // origin allowlist, input size caps, a small per-visitor limit, short outputs, generic errors, nothing logged but
 // categories. The hard monthly spend cap lives in the Anthropic Console (workspace spend limit).
 //
-// Env vars: ANTHROPIC_API_KEY (required to enable), ENQUIRY_IP_HASH_KEY (shared with /api/enquiry),
+// Env vars: AI_FEATURES_ENABLED=true and ANTHROPIC_API_KEY (both required to enable), ENQUIRY_IP_HASH_KEY (shared with /api/enquiry),
 //           ENQUIRY_ALLOWED_ORIGINS (optional extra origins, as for /api/enquiry).
 import Anthropic from '@anthropic-ai/sdk';
 
 declare const process: { env: Record<string, string | undefined> };
 
 const MODEL = 'claude-opus-5-5';
+// Master switch: AI runs only when AI_FEATURES_ENABLED is exactly 'true' AND ANTHROPIC_API_KEY is set. Otherwise the chips
+// stay 'in training' and nothing is sent to Anthropic. The privacy policy (public/privacy.html) currently says no AI
+// processing happens: update it before setting AI_FEATURES_ENABLED=true in Vercel.
+const aiOn = () => process.env.AI_FEATURES_ENABLED === 'true' && !!process.env.ANTHROPIC_API_KEY;
 const PRODUCTION_ORIGINS = ['https://nxtfoundry.in', 'https://www.nxtfoundry.in'];
 const MAX_FACTS_CHARS = 6_000;
 const MAX_PDF_BYTES = 3 * 1024 * 1024;            // keeps the base64 body under Vercel's 4.5 MB request limit
@@ -110,11 +114,11 @@ async function ask(params: { system: string; content: Anthropic.Beta.BetaContent
 const textOf = (m: Anthropic.Beta.BetaMessage) => m.content.filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === 'text').map(b => b.text).join('').trim();
 
 export function GET(): Response {
-  return reply(200, { enabled: !!process.env.ANTHROPIC_API_KEY });
+  return reply(200, { enabled: aiOn() });
 }
 
 export async function POST(request: Request): Promise<Response> {
-  if (!process.env.ANTHROPIC_API_KEY) return reply(503, { ok: false, error: 'not_enabled' });
+  if (!aiOn()) return reply(503, { ok: false, error: 'not_enabled' });
   if (!allowedOrigin(request)) return reply(403, { ok: false, error: 'forbidden' });
   if (!(request.headers.get('content-type') || '').includes('application/json')) return reply(415, { ok: false, error: 'bad_request' });
   const key = await visitorKey(request);
