@@ -152,17 +152,17 @@ const rich=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<strong key={i}>
 function StoryCard({s,startOpen}:{s:Story;startOpen:boolean}){const [open,setOpen]=useState(startOpen);const body='story-body-'+s.id;
   return <article className="story" id={'story-'+s.id}>
     <aside className="story-stats">{s.stats.map(x=><div key={x.value}><b>{x.value}</b>{' '}<span>{x.label}</span></div>)}</aside>
-    <div className="story-main"><p className="story-areas">{s.areas.join(' · ')}</p><h2>{s.title}</h2>
+    <div className="story-main"><p className="story-areas">{s.earlier&&<span className="story-earlier">Earlier work</span>}{s.earlier&&' '}{s.areas.join(' · ')}</p><h2>{s.title}</h2>
       {!open&&<p className="story-summary">{rich(s.summary)}</p>}
       {open&&<div className="story-full" id={body}>{([['The problem',s.problem],['What we did',s.whatWeDid],['The outcome',s.outcome]] as [string,string[]][]).map(([h,ps])=><div className="story-part" key={h}><h3>{h}</h3>{ps.map((p,i)=><p key={i}>{rich(p)}</p>)}</div>)}</div>}
       <button type="button" className="story-toggle" aria-expanded={open} aria-controls={body} onClick={()=>setOpen(!open)}>{open?'Show less':'Read the full story'} <ArrowRight size={14}/></button>
-      <p className="story-meta">{s.meta}</p>{s.note&&<p className="story-note">{s.note}</p>}
+      <p className="story-meta">{s.meta}</p>{s.earlier&&<p className="story-note">Work led by our team in an earlier advisory role, before NXT Foundry was founded.</p>}{s.note&&<p className="story-note">{s.note}</p>}
     </div></article>}
 function Stories({allOpen=false}:{allOpen?:boolean}){const [area,setArea]=useState('All');
   const areas=['All',...Array.from(new Set(stories.flatMap(s=>s.areas)))];
   const list=area==='All'?stories:stories.filter(s=>s.areas.includes(area));
   return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Stories from <em>the work.</em></h1>
-    <p className="page-lede">Real problems, what we found and what changed. Client names are withheld unless a client chooses otherwise.</p>
+    <p className="page-lede">Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such. Client names are withheld unless a client chooses otherwise.</p>
     {stories.length>=4&&<div className="filter-row story-filters">{areas.map(x=><button type="button" className={area===x?'active':''} aria-pressed={area===x} onClick={()=>setArea(x)} key={x}>{x}</button>)}</div>}
     <div className="story-list">{list.map(s=><StoryCard key={s.id} s={s} startOpen={allOpen||stories.length===1}/>)}</div>
     <div className="story-cta"><p>Have a problem that sounds familiar?</p><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min call <ArrowUpRight size={15}/></a></div>

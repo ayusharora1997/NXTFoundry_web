@@ -730,13 +730,13 @@ STORIES
 
 ### Stories from the work.
 
-Real problems, what we found and what changed. Client names are withheld unless a client chooses otherwise.
+Real problems, what we found and what changed — from NXT Foundry engagements and our team’s earlier advisory work, marked as such. Client names are withheld unless a client chooses otherwise.
 
 ₹76 Cr of transferred stock without a verified receipt
 
 ~5% of monthly transfers left open in disputes, after the fix
 
-Warehouse Operations · Supply Chain · Inventory Controls
+Earlier work Warehouse Operations · Supply Chain · Inventory Controls
 
 #### Bringing accountability to a ₹76 crore warehouse reconciliation gap
 
@@ -763,6 +763,8 @@ The proportion of monthly stock transfers remaining open due to disputes between
 Show less
 
 E-commerce · Warehouse Operations · Bengaluru, India
+
+Work led by our team in an earlier advisory role, before NXT Foundry was founded.
 
 Client identity and engagement details are withheld for confidentiality.
 

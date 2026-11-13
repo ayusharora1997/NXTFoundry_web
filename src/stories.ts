@@ -12,6 +12,7 @@ export type Story = {
   outcome: string[];
   meta: string;               // e.g. "E-commerce · Bengaluru, India"
   note?: string;              // e.g. confidentiality line
+  earlier?: boolean;          // true = done by our team in an earlier role, before NXT Foundry; shown as "Earlier work"
 };
 
 export const stories: Story[] = [
@@ -39,5 +40,6 @@ export const stories: Story[] = [
     ],
     meta: 'E-commerce · Warehouse Operations · Bengaluru, India',
     note: 'Client identity and engagement details are withheld for confidentiality.',
+    earlier: true,
   },
 ];
