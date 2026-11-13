@@ -138,8 +138,27 @@
   ]
 }
 </script>
+<style>
+/* Loading splash: covers the page until the app has started, so visitors never see the plain-text fallback.
+   The app removes it on start (App in src/main.tsx). NXT and the wave fade in only after 0.25s, so fast loads
+   are a clean black-to-site transition. Safety nets: it fades out by itself after 6s, and without JavaScript
+   it is never shown (noscript below). The fallback text underneath stays in the HTML for crawlers. */
+#splash{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;background:#050807;transition:opacity .35s ease,visibility .35s;animation:splash-out .4s ease 6s forwards}
+#splash.gone{opacity:0;visibility:hidden}
+#splash .sp-in{display:flex;flex-direction:column;align-items:center;gap:22px;opacity:0;animation:splash-in .4s ease .25s forwards}
+#splash .sp-logo{color:#d7ff32;font:800 64px/1 Manrope,"Arial Black",Arial,sans-serif;letter-spacing:-.04em}
+#splash svg{width:230px;height:36px;overflow:visible}
+#splash .sp-base{fill:none;stroke:#1d2622;stroke-width:3.5;stroke-linecap:round}
+#splash .sp-run{fill:none;stroke:#d7ff32;stroke-width:3.5;stroke-linecap:round;stroke-dasharray:46 300;animation:splash-run 1.3s linear infinite}
+@keyframes splash-run{from{stroke-dashoffset:346}to{stroke-dashoffset:0}}
+@keyframes splash-in{to{opacity:1}}
+@keyframes splash-out{to{opacity:0;visibility:hidden}}
+@media(prefers-reduced-motion:reduce){#splash .sp-run{animation:none;stroke-dasharray:none}}
+</style>
+<noscript><style>#splash{display:none}</style></noscript>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><div class="sp-in"><div class="sp-logo">NXT</div><svg viewBox="0 0 180 28"><path class="sp-base" d="M2 14 Q 13.25 2 24.5 14 T 47 14 T 69.5 14 T 92 14 T 114.5 14 T 137 14 T 159.5 14 T 178 14"/><path class="sp-run" d="M2 14 Q 13.25 2 24.5 14 T 47 14 T 69.5 14 T 92 14 T 114.5 14 T 137 14 T 159.5 14 T 178 14"/></svg></div></div>
 <!-- Static content for crawlers and no-JS visitors. React's createRoot().render() replaces everything inside #root on load. -->
 <div id="root"><main data-fallback style="max-width:720px;margin:0 auto;padding:48px 16px;font-family:system-ui,sans-serif;line-height:1.6">
 <h1>NXT Foundry</h1>

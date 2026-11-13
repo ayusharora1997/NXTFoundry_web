@@ -6,6 +6,8 @@
   function check() {
     var root = document.getElementById('root');
     if (!root || !root.querySelector('[data-fallback]')) return;      // the app is running
+    var splash = document.getElementById('splash');                  // the app didn't start: show the fallback text
+    if (splash) splash.className = 'gone';
     try {
       var last = +sessionStorage.getItem('nxt-reloaded') || 0;
       if (Date.now() - last < 60000) return;                          // already tried recently
