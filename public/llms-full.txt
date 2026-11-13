@@ -738,7 +738,11 @@ How was one member checking in at two centres at once?
 
 Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.
 
-What changed1 device
+What changed
+
+We limited each membership to one device and one sign-in method, and put gate barriers under monitoring.
+
+1 device
 
 per membership, with any change approved through Customer Experience
 
@@ -748,7 +752,11 @@ EW Warehouse OperationsSupply ChainInventory Controls
 
 Where did ₹76 crore of stock go between two warehouses?
 
-What changed~5%
+What changed
+
+We helped build a reconciliation tool with advance notice, a four-hour window and automatic escalation.
+
+~5%
 
 of monthly stock transfers still open in disputes, after the fix
 

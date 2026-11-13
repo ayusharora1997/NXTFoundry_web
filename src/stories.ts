@@ -12,6 +12,7 @@ export type Story = {
   title: string;              // story page heading
   question: string;           // the tile headline on the Stories tab, phrased as the client's question
   hook: string;               // one or two lines under the question on the tile
+  did: string;                // one sentence on the tile, under "What changed": what we did
   areas: string[];            // tags; also used as filters once there are a few stories
   stats: { value: string; label: string }[];   // first = the problem in a number, last = the result (shown on the tile)
   problem: string[];          // paragraphs; the first number appears after the first paragraph
@@ -29,6 +30,7 @@ export const stories: Story[] = [
     title: 'Closing ₹5 crore of revenue leakage in a fitness chain’s access controls',
     question: 'How was one member checking in at **two centres at once**?',
     hook: 'Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.',
+    did: 'We limited each membership to one device and one sign-in method, and put gate barriers under monitoring.',
     areas: ['Revenue Leakage', 'Access Controls', 'Internal Audit'],
     stats: [
       { value: '₹5 Cr', label: 'in revenue leakage exposure across access and operational control gaps' },
@@ -70,6 +72,7 @@ export const stories: Story[] = [
     title: 'Bringing accountability to a ₹76 crore warehouse reconciliation gap',
     question: 'Where did **₹76 crore** of stock go between two warehouses?',
     hook: 'Transfers were closed on expected quantities and email confirmations — not on what actually arrived.',
+    did: 'We helped build a reconciliation tool with advance notice, a four-hour window and automatic escalation.',
     areas: ['Warehouse Operations', 'Supply Chain', 'Inventory Controls'],
     stats: [
       { value: '₹76 Cr', label: 'of stock dispatched between warehouses in six months, with no verified receipt' },

@@ -162,7 +162,7 @@ function Stories(){const [area,setArea]=useState('All');
     <div className={'story-tiles'+(list.length===1?' single':'')}>{list.map((s,i)=>{const r=s.stats[s.stats.length-1];
       return <a className={'story-tile'+(i===0?' lead':'')} href={'#stories/'+s.id} key={s.id}><StoryTags s={s}/>
         <p className="story-q">{richQ(s.question)}</p>{i===0&&<p className="story-hook">{s.hook}</p>}
-        <div className="story-ans"><span>What changed</span>{r&&<><b>{r.value}</b><p>{r.label}</p></>}</div>
+        <div className="story-ans"><span>What changed</span><p className="story-did">{s.did}</p>{r&&<div className="story-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
         <span className="story-read">Read the story <ArrowRight size={14}/></span></a>})}
       {list.length<3&&<div className="story-tile soon" aria-hidden="true"><p className="story-q">More stories are being written.</p><div className="story-ans"><p>New ones are added here as clients agree to share them.</p></div></div>}
     </div>
