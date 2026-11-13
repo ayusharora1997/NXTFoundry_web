@@ -20,6 +20,15 @@ export type Story = {
   stats: { value: string; label: string }[];   // first = the problem in a number, last = the result (shown on the tile)
   problem: string[];          // paragraphs; the first number appears after the first paragraph
   journey?: { title: string; steps: JourneyStep[] };   // optional "Where it broke" chapter, followed step by step
+  journeyLabel?: string;      // optional chapter title instead of "Where it broke" (concepts: steps show "Risk signal" / "Response")
+  whatIf?: {                  // optional interactive chart chapter: pick two criteria, points reposition on a 0–10 grid
+    chapter: string;          // chapter title, e.g. "Try the what-if"
+    intro: string;
+    dims: string[];           // the criteria (scores in each point follow this order)
+    defaultX?: number; defaultY?: number;
+    points: { label: string; group: string; s: number[] }[];
+    note: string;             // shown under the chart, e.g. "Illustrative data"
+  };
   whatWeDid: string[];
   outcome: string[];          // the result number appears before these paragraphs
   meta: string;               // e.g. "E-commerce · Bengaluru, India"
@@ -235,6 +244,111 @@ export const stories: Story[] = [
     ],
     meta: 'Apparel manufacturing · Payroll',
     note: 'This is an independently developed conceptual framework. All examples, figures and business scenarios are illustrative and are not presented as verified client implementation results.',
+    concept: true,
+  },
+  {
+    id: 'global-location-strategy',
+    industry: 'Banking & financial services',
+    type: 'Concept',
+    title: 'Choosing where to build: a what-if framework for 17 cities',
+    question: 'Where should the next centre go if **talent matters more than cost**?',
+    hook: 'Leaders were comparing cities through disconnected reports, so trade-offs were hard to see — and harder to agree on.',
+    did: 'We built a conceptual Power BI framework that scores 17 cities on one 0–10 scale and lets leaders test trade-offs live.',
+    areas: ['Location Strategy', 'Decision Support', 'Power BI'],
+    stats: [
+      { value: '17', label: 'cities, including five Indian metros, compared on five strategic dimensions' },
+      { value: '10', label: 'what-if pairings of the five criteria, from cost vs talent to security vs cost' },
+    ],
+    problem: [
+      'Organisations evaluating new operational or innovation centres across multiple countries must balance cost, talent availability, regulatory requirements and geopolitical risks.',
+      'Comparing locations using disconnected reports and inconsistent data makes it difficult for leadership teams to assess trade-offs and establish a consistent basis for decision-making. The conceptual framework evaluated **17 global cities**, including five major Indian metropolitan cities, across five strategic dimensions:',
+      '- Cost attractiveness\n- Data storage and security\n- Political and regulatory environment\n- Talent availability\n- Geopolitical stability',
+    ],
+    whatWeDid: [
+      'We developed an interactive Power BI city evaluation dashboard to consolidate multi-source research into a consistent, comparable decision-support framework. The solution included:',
+      '- **Standardised city scoring:** normalised different quantitative and qualitative indicators onto a common 0–10 scoring scale\n- **City comparison scorecards:** side-by-side assessment of cities across all five strategic dimensions\n- **Global and India views:** switch between the international shortlist and Indian city comparisons\n- **Interactive ranking and heatmaps:** relative strengths and weaknesses across the 17 locations\n- **What-if scenario analysis:** select two evaluation criteria and dynamically reposition cities on an interactive scatter plot\n- **Strategic fit matrix:** cities grouped into a 3×3 matrix to highlight strong candidates and locations involving significant trade-offs',
+    ],
+    whatIf: {
+      chapter: 'Try the what-if',
+      intro: 'The most useful part isn’t the scorecard — it’s the what-if view. A leadership team can change its priorities and see how the relative attractiveness of cities shifts. Try **cost vs talent**, **data security vs cost**, or **geopolitical stability vs talent**.',
+      dims: ['Cost attractiveness', 'Data storage and security', 'Political and regulatory environment', 'Talent availability', 'Geopolitical stability'],
+      defaultX: 0,
+      defaultY: 3,
+      points: [
+        { label: 'IN-1', group: 'Indian metro', s: [8.6, 6.1, 6.0, 8.8, 6.8] },
+        { label: 'IN-2', group: 'Indian metro', s: [8.9, 5.8, 5.7, 8.1, 6.6] },
+        { label: 'IN-3', group: 'Indian metro', s: [9.1, 5.5, 5.9, 7.4, 6.7] },
+        { label: 'IN-4', group: 'Indian metro', s: [8.2, 6.4, 6.2, 7.9, 6.9] },
+        { label: 'IN-5', group: 'Indian metro', s: [9.3, 5.2, 5.4, 6.6, 6.5] },
+        { label: 'G-1', group: 'Global city', s: [3.1, 8.9, 8.7, 9.0, 8.8] },
+        { label: 'G-2', group: 'Global city', s: [2.6, 9.2, 9.0, 8.4, 9.1] },
+        { label: 'G-3', group: 'Global city', s: [4.2, 8.4, 8.2, 7.6, 8.3] },
+        { label: 'G-4', group: 'Global city', s: [5.8, 7.2, 7.0, 6.9, 7.6] },
+        { label: 'G-5', group: 'Global city', s: [6.9, 6.6, 6.4, 7.2, 7.0] },
+        { label: 'G-6', group: 'Global city', s: [7.6, 5.4, 5.0, 6.3, 5.6] },
+        { label: 'G-7', group: 'Global city', s: [3.8, 8.8, 8.9, 6.8, 9.0] },
+        { label: 'G-8', group: 'Global city', s: [5.2, 7.8, 7.6, 8.1, 7.9] },
+        { label: 'G-9', group: 'Global city', s: [7.2, 4.9, 4.6, 5.8, 4.8] },
+        { label: 'G-10', group: 'Global city', s: [6.4, 7.0, 6.9, 5.9, 7.4] },
+        { label: 'G-11', group: 'Global city', s: [8.0, 5.0, 4.8, 5.2, 5.4] },
+        { label: 'G-12', group: 'Global city', s: [4.8, 8.1, 7.9, 7.1, 8.4] },
+      ],
+      note: 'Illustrative data: anonymised locations and scores, not real city ratings.',
+    },
+    outcome: [
+      'The framework was designed to help leadership teams:',
+      '- Compare global expansion locations using a consistent evaluation methodology\n- Understand trade-offs between cost, talent, security and geopolitical considerations\n- Test different strategic priorities through interactive scenario analysis\n- Shortlist locations for deeper feasibility assessments and business-case development\n- Communicate location-selection rationale through a common visual framework',
+    ],
+    meta: 'Location strategy · 17 cities · 5 dimensions',
+    note: 'This is an independently developed conceptual framework. The cities, scoring methodology and examples are illustrative and do not represent an actual banking institution’s expansion decisions.',
+    impactLabel: 'Strategic value',
+    concept: true,
+  },
+  {
+    id: 'marketplace-anti-counterfeit',
+    industry: 'E-commerce',
+    type: 'Concept',
+    title: 'Spotting counterfeit risk on a marketplace before customers do',
+    question: 'How do you catch a **banned seller** coming back under a new name?',
+    hook: 'Listings change constantly, and rule-based checks and customer complaints only flag problems after customers are affected.',
+    did: 'We designed a conceptual framework that scores listings and sellers on many signals and routes the riskiest to investigation.',
+    areas: ['Brand Protection', 'Risk Analytics', 'Marketplace Trust'],
+    stats: [
+      { value: '5', label: 'risk areas, from listing manipulation to seller re-entry' },
+      { value: '3 tiers', label: 'of risk — low, medium and high — each with its own review route' },
+    ],
+    problem: [
+      'Large e-commerce marketplaces operate across extensive seller networks, product categories and constantly changing listings. Traditional rule-based monitoring and reactive customer complaints can make it difficult to identify suspicious sellers and potentially counterfeit products before they affect customers.',
+      'The conceptual assessment identified several risk areas:',
+      '- **Listing manipulation:** frequent changes to product descriptions, MRP and listing attributes could help suspicious sellers evade conventional monitoring\n- **Seller re-entry:** previously delisted sellers could attempt to return through alternate accounts, devices or addresses\n- **Unusual pricing behaviour:** abnormal MRP fluctuations and discount patterns could indicate deceptive pricing or suspicious listing activity\n- **Returns and complaint anomalies:** unusually high return rates, negative feedback and counterfeit complaints could signal potentially problematic products or sellers\n- **Fragmented risk intelligence:** seller, listing, transaction, customer feedback and device data were not being considered together in a unified risk assessment',
+    ],
+    journeyLabel: 'How a risk is caught',
+    journey: {
+      title: 'Follow one suspicious listing',
+      steps: [
+        { title: 'A seller lists a product', text: 'Descriptions, MRP and attributes can change at any time.' },
+        { title: 'The listing keeps shifting', text: 'Frequent changes to descriptions, MRP and discounts help it slip past fixed rules.', fix: 'Listing monitoring tracks MRP changes, pricing volatility, listing quality, ratings and returns over time.' },
+        { title: 'Returns and complaints start to rise', text: 'High returns, negative reviews and counterfeit complaints build up — risk signals, not proof.', fix: 'Review sentiment analysis and anomaly detection feed a composite score that places the listing in a low, medium or high risk tier.' },
+        { title: 'The seller looks familiar', text: 'A delisted seller may try to return through new accounts, devices or addresses.', fix: 'Behavioural matching against previously flagged sellers. A shared IP or similar address prompts investigation — on its own it doesn’t prove two accounts are linked.' },
+        { title: 'High risk triggers a review, not removal', text: 'A person decides what happens next.', fix: 'Alerts go to manual investigation and enforcement, and verified outcomes feed back into the detection models.' },
+      ],
+    },
+    whatWeDid: [
+      'We designed a conceptual anti-counterfeit intelligence framework combining listing-level monitoring, seller behaviour analysis and risk-based investigation. It covered four capabilities:',
+      '- **Listing risk identification:** monitored listing quality, MRP changes, pricing volatility, customer ratings and return patterns to identify suspicious product listings\n- **Seller behaviour intelligence:** compared active seller profiles against previously flagged seller patterns using pricing behaviour, category activity, complaint history, addresses and device-level signals\n- **Composite risk scoring:** combined multiple risk indicators into a structured scoring model to classify listings and sellers into low-, medium- and high-risk categories\n- **Investigation and feedback:** a workflow for risk alerts, manual investigation, enforcement actions and feeding verified outcomes back into the detection framework',
+      'The proposed architecture combined:',
+      '- SQL-based data extraction and integration\n- Python-based anomaly detection using techniques such as Isolation Forest and DBSCAN\n- Similarity analysis to identify seller behaviour patterns\n- Time-series analysis of pricing and MRP movements\n- NLP-based customer review and sentiment analysis\n- Power BI dashboards for risk monitoring, exception tracking and investigation prioritisation',
+      'Three things set it apart:',
+      '- **Behavioural seller matching:** going beyond individual listing checks to identify patterns associated with previously flagged sellers\n- **Multi-signal risk scoring:** combining pricing, returns, complaints, listing quality and seller history rather than relying on one indicator\n- **Closed-loop risk management:** feeding verified investigation outcomes back into the detection models to improve future identification',
+    ],
+    outcome: [
+      'The framework was designed to help marketplaces:',
+      '- Identify suspicious listings and sellers earlier\n- Prioritise investigations based on risk severity\n- Detect repeat offenders and potential seller re-entry\n- Improve visibility into counterfeit-related returns and complaints\n- Support regulatory compliance monitoring\n- Strengthen marketplace trust and brand protection through proactive monitoring',
+      'A suspicious price movement or a high return rate is a risk signal, not proof that a product is counterfeit. The framework is built to prioritise human review, not to replace it.',
+    ],
+    meta: 'E-commerce marketplace · Brand protection',
+    note: 'This is an independently developed conceptual framework. The models, thresholds, expected improvements and examples are illustrative and are not verified implementation results.',
+    impactLabel: 'Intended impact',
     concept: true,
   },
 ];

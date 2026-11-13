@@ -734,63 +734,125 @@ Real problems, what we found and what changed.
 
 Industry
 
-All5Automotive1Fitness & wellness1E-commerce2Apparel manufacturing1
+All7Automotive1Fitness & wellness1E-commerce3Apparel manufacturing1Banking & financial services1
 
 Type
 
-All5Consulting project2Tech implementation2Concept1
+All7Consulting project2Tech implementation2Concept3
 
-Showing 5 of 5
+Showing 7 of 7
 
-01AutomotiveTech implementationEW
+AutomotiveTech implementationEW
 
 Which of €42 million in purchase orders had nobody mapped?
 
+PO and invoice data was spread across SAP exports, Excel files and team trackers — with no single view of the lifecycle.
+
+What changed
+
 We built a Power BI dashboard that tracks every PO from approval to payment and surfaces the exceptions.
 
-Procure to Pay · Financial Controls · IT Operations
+−70.7%
 
-−70.7%unmapped PO value, down from €42 million to €12.3 millionWhat changed
+unmapped PO value, down from €42 million to €12.3 million
 
-02Fitness & wellnessConsulting projectEW
+Read the story
+
+Fitness & wellnessConsulting projectEW
 
 How was one member checking in at two centres at once?
 
+Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.
+
+What changed
+
 We limited each membership to one device and one sign-in method, and put gate barriers under monitoring.
 
-Revenue Leakage · Access Controls · Internal Audit
+1 device
 
-1 deviceper membership, with any change approved through Customer ExperienceWhat changed
+per membership, with any change approved through Customer Experience
 
-03E-commerceTech implementationEW
+Read the story
+
+E-commerceTech implementationEW
 
 Where did ₹76 crore of stock go between two warehouses?
 
+Transfers were closed on expected quantities and email confirmations — not on what actually arrived.
+
+What changed
+
 We helped build a reconciliation tool with advance notice, a four-hour window and automatic escalation.
 
-Warehouse Operations · Supply Chain · Inventory Controls
+~5%
 
-~5%of monthly stock transfers still open in disputes, after the fixWhat changed
+of monthly stock transfers still open in disputes, after the fix
 
-04E-commerceConsulting projectEW
+Read the story
+
+E-commerceConsulting projectEW
 
 Why was the business buying more of stock it couldn’t sell?
 
+Aged inventory kept piling up while fresh purchase orders went out. The books were provisioned; the warehouses weren’t cleared.
+
+What we set out to change
+
 We reworked how demand, buying and stock connect — from forecasting and PO controls to redistribution between regions.
 
-Inventory Health · Procurement Controls · Demand Planning
+6 fixes
 
-6 fixesacross forecasting, buying, redistribution and stock visibilityWhat we set out to change
+across forecasting, buying, redistribution and stock visibility
 
-05Apparel manufacturingConcept
+Read the story
+
+Apparel manufacturingConcept
 
 What if 90+ payroll checks didn’t take a week by hand?
 
+Large workforces, many salary components and statutory deductions — all verified manually before every payroll run.
+
+What it could change
+
 We built a conceptual Power BI framework that automates 94 payroll validation and audit checks across eight control areas.
 
-Payroll Controls · Automation · Internal Audit
+7 → 2 days
 
-7 → 2 daysillustrative payroll verification time with the checks automatedWhat it could change
+illustrative payroll verification time with the checks automated
+
+Read the story
+
+Banking & financial servicesConcept
+
+Where should the next centre go if talent matters more than cost?
+
+Leaders were comparing cities through disconnected reports, so trade-offs were hard to see — and harder to agree on.
+
+What it could change
+
+We built a conceptual Power BI framework that scores 17 cities on one 0–10 scale and lets leaders test trade-offs live.
+
+10
+
+what-if pairings of the five criteria, from cost vs talent to security vs cost
+
+Read the story
+
+E-commerceConcept
+
+How do you catch a banned seller coming back under a new name?
+
+Listings change constantly, and rule-based checks and customer complaints only flag problems after customers are affected.
+
+What it could change
+
+We designed a conceptual framework that scores listings and sellers on many signals and routes the riskiest to investigation.
+
+3 tiers
+
+of risk — low, medium and high — each with its own review route
+
+Read the story
 
 ## [Cutting €42 million of unmapped purchase orders to €12.3 million](https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle)
 
@@ -1146,7 +1208,7 @@ All stories
 
 Apparel manufacturingConcept
 
-Concept Payroll ControlsAutomationInternal Audit
+Payroll ControlsAutomationInternal Audit
 
 ### Automating 94 payroll checks for apparel manufacturers
 
@@ -1243,6 +1305,220 @@ The framework demonstrates the potential to:
 Apparel manufacturing · Payroll
 
 This is an independently developed conceptual framework. All examples, figures and business scenarios are illustrative and are not presented as verified client implementation results.
+
+Have a problem that sounds familiar?
+
+Book a 30-min call
+
+## [Choosing where to build: a what-if framework for 17 cities](https://www.nxtfoundry.in/#stories/global-location-strategy)
+
+URL: https://www.nxtfoundry.in/#stories/global-location-strategy
+
+All stories
+
+Banking & financial servicesConcept
+
+Location StrategyDecision SupportPower BI
+
+### Choosing where to build: a what-if framework for 17 cities
+
+#### 01 · The problem
+
+Organisations evaluating new operational or innovation centres across multiple countries must balance cost, talent availability, regulatory requirements and geopolitical risks.
+
+17 cities, including five Indian metros, compared on five strategic dimensions
+
+Comparing locations using disconnected reports and inconsistent data makes it difficult for leadership teams to assess trade-offs and establish a consistent basis for decision-making. The conceptual framework evaluated 17 global cities, including five major Indian metropolitan cities, across five strategic dimensions:
+
+- Cost attractiveness
+
+- Data storage and security
+
+- Political and regulatory environment
+
+- Talent availability
+
+- Geopolitical stability
+
+#### 02 · What we did
+
+We developed an interactive Power BI city evaluation dashboard to consolidate multi-source research into a consistent, comparable decision-support framework. The solution included:
+
+- Standardised city scoring: normalised different quantitative and qualitative indicators onto a common 0–10 scoring scale
+
+- City comparison scorecards: side-by-side assessment of cities across all five strategic dimensions
+
+- Global and India views: switch between the international shortlist and Indian city comparisons
+
+- Interactive ranking and heatmaps: relative strengths and weaknesses across the 17 locations
+
+- What-if scenario analysis: select two evaluation criteria and dynamically reposition cities on an interactive scatter plot
+
+- Strategic fit matrix: cities grouped into a 3×3 matrix to highlight strong candidates and locations involving significant trade-offs
+
+#### 03 · Try the what-if
+
+The most useful part isn’t the scorecard — it’s the what-if view. A leadership team can change its priorities and see how the relative attractiveness of cities shifts. Try cost vs talent, data security vs cost, or geopolitical stability vs talent.
+
+Across (x)Up (y)
+
+Indian metroGlobal cityIllustrative data: anonymised locations and scores, not real city ratings.Best fit for this pairing
+
+- IN-1Indian metro · 8.6 + 8.8
+
+- IN-2Indian metro · 8.9 + 8.1
+
+- IN-3Indian metro · 9.1 + 7.4
+
+5 of 17 land in the top-right cell, strong on both criteria.
+
+Change either criterion and the shortlist moves with it — that’s the trade-off made visible.
+
+#### 04 · Strategic value
+
+10 what-if pairings of the five criteria, from cost vs talent to security vs cost
+
+The framework was designed to help leadership teams:
+
+- Compare global expansion locations using a consistent evaluation methodology
+
+- Understand trade-offs between cost, talent, security and geopolitical considerations
+
+- Test different strategic priorities through interactive scenario analysis
+
+- Shortlist locations for deeper feasibility assessments and business-case development
+
+- Communicate location-selection rationale through a common visual framework
+
+Location strategy · 17 cities · 5 dimensions
+
+This is an independently developed conceptual framework. The cities, scoring methodology and examples are illustrative and do not represent an actual banking institution’s expansion decisions.
+
+Have a problem that sounds familiar?
+
+Book a 30-min call
+
+## [Spotting counterfeit risk on a marketplace before customers do](https://www.nxtfoundry.in/#stories/marketplace-anti-counterfeit)
+
+URL: https://www.nxtfoundry.in/#stories/marketplace-anti-counterfeit
+
+All stories
+
+E-commerceConcept
+
+Brand ProtectionRisk AnalyticsMarketplace Trust
+
+### Spotting counterfeit risk on a marketplace before customers do
+
+#### 01 · The problem
+
+Large e-commerce marketplaces operate across extensive seller networks, product categories and constantly changing listings. Traditional rule-based monitoring and reactive customer complaints can make it difficult to identify suspicious sellers and potentially counterfeit products before they affect customers.
+
+5 risk areas, from listing manipulation to seller re-entry
+
+The conceptual assessment identified several risk areas:
+
+- Listing manipulation: frequent changes to product descriptions, MRP and listing attributes could help suspicious sellers evade conventional monitoring
+
+- Seller re-entry: previously delisted sellers could attempt to return through alternate accounts, devices or addresses
+
+- Unusual pricing behaviour: abnormal MRP fluctuations and discount patterns could indicate deceptive pricing or suspicious listing activity
+
+- Returns and complaint anomalies: unusually high return rates, negative feedback and counterfeit complaints could signal potentially problematic products or sellers
+
+- Fragmented risk intelligence: seller, listing, transaction, customer feedback and device data were not being considered together in a unified risk assessment
+
+#### 02 · How a risk is caught
+
+Follow one suspicious listing
+
+Risk signalHow the framework responds
+
+##### 1 · A seller lists a product
+
+Descriptions, MRP and attributes can change at any time.
+
+##### 2 · The listing keeps shifting
+
+Frequent changes to descriptions, MRP and discounts help it slip past fixed rules.
+
+Response Listing monitoring tracks MRP changes, pricing volatility, listing quality, ratings and returns over time.
+
+##### 3 · Returns and complaints start to rise
+
+High returns, negative reviews and counterfeit complaints build up — risk signals, not proof.
+
+Response Review sentiment analysis and anomaly detection feed a composite score that places the listing in a low, medium or high risk tier.
+
+##### 4 · The seller looks familiar
+
+A delisted seller may try to return through new accounts, devices or addresses.
+
+Response Behavioural matching against previously flagged sellers. A shared IP or similar address prompts investigation — on its own it doesn’t prove two accounts are linked.
+
+##### 5 · High risk triggers a review, not removal
+
+A person decides what happens next.
+
+Response Alerts go to manual investigation and enforcement, and verified outcomes feed back into the detection models.
+
+#### 03 · What we did
+
+We designed a conceptual anti-counterfeit intelligence framework combining listing-level monitoring, seller behaviour analysis and risk-based investigation. It covered four capabilities:
+
+- Listing risk identification: monitored listing quality, MRP changes, pricing volatility, customer ratings and return patterns to identify suspicious product listings
+
+- Seller behaviour intelligence: compared active seller profiles against previously flagged seller patterns using pricing behaviour, category activity, complaint history, addresses and device-level signals
+
+- Composite risk scoring: combined multiple risk indicators into a structured scoring model to classify listings and sellers into low-, medium- and high-risk categories
+
+- Investigation and feedback: a workflow for risk alerts, manual investigation, enforcement actions and feeding verified outcomes back into the detection framework
+
+The proposed architecture combined:
+
+- SQL-based data extraction and integration
+
+- Python-based anomaly detection using techniques such as Isolation Forest and DBSCAN
+
+- Similarity analysis to identify seller behaviour patterns
+
+- Time-series analysis of pricing and MRP movements
+
+- NLP-based customer review and sentiment analysis
+
+- Power BI dashboards for risk monitoring, exception tracking and investigation prioritisation
+
+Three things set it apart:
+
+- Behavioural seller matching: going beyond individual listing checks to identify patterns associated with previously flagged sellers
+
+- Multi-signal risk scoring: combining pricing, returns, complaints, listing quality and seller history rather than relying on one indicator
+
+- Closed-loop risk management: feeding verified investigation outcomes back into the detection models to improve future identification
+
+#### 04 · Intended impact
+
+3 tiers of risk — low, medium and high — each with its own review route
+
+The framework was designed to help marketplaces:
+
+- Identify suspicious listings and sellers earlier
+
+- Prioritise investigations based on risk severity
+
+- Detect repeat offenders and potential seller re-entry
+
+- Improve visibility into counterfeit-related returns and complaints
+
+- Support regulatory compliance monitoring
+
+- Strengthen marketplace trust and brand protection through proactive monitoring
+
+A suspicious price movement or a high return rate is a risk signal, not proof that a product is counterfeit. The framework is built to prioritise human review, not to replace it.
+
+E-commerce marketplace · Brand protection
+
+This is an independently developed conceptual framework. The models, thresholds, expected improvements and examples are illustrative and are not verified implementation results.
 
 Have a problem that sounds familiar?
 

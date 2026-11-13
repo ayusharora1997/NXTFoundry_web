@@ -153,7 +153,7 @@ const rich=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<strong key={i}>
 const richQ=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<em key={i}>{x}</em>:x);
 const storyText=(t:string)=>t.replace(/\*\*/g,'');
 const para=(p:string,k:number)=>p.startsWith('- ')?<ul className="story-list" key={k}>{p.slice(2).split('\n- ').map((x,i)=><li key={i}>{rich(x)}</li>)}</ul>:<p key={k}>{rich(p)}</p>;
-function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.concept&&<span className="chip-tag">Concept</span>}{s.concept&&' '}{s.earlier&&<span className="chip-tag">EW</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
+function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.earlier&&<span className="chip-tag">EW</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
 function Stories(){const [ind,setInd]=useState('All');const [type,setType]=useState('All');
   const inds=['All',...Array.from(new Set(stories.map(s=>s.industry)))];
   const types=['All',...(['Consulting project','Tech implementation','Concept'] as const).filter(t=>stories.some(s=>s.type===t))];
@@ -164,18 +164,44 @@ function Stories(){const [ind,setInd]=useState('All');const [type,setType]=useSt
     <p className="page-lede">Real problems, what we found and what changed.</p>
     <div className="sx-filters"><Group label="Industry" opts={inds} val={ind} set={setInd} k="industry"/><Group label="Type" opts={types} val={type} set={setType} k="type"/>
       <div className="sx-status" aria-live="polite"><span>Showing {list.length} of {stories.length}</span>{(ind!=='All'||type!=='All')&&<button type="button" onClick={()=>{setInd('All');setType('All')}}>Clear filters</button>}</div></div>
-    <div className="sx-head" aria-hidden="true"><span>Sector · Type</span><span>The question</span><span>Result</span></div>
-    <ol className="sx-list">{list.map(s=>{const r=s.stats[s.stats.length-1];const n=stories.indexOf(s)+1;
-      return <li key={s.id}><a className="sx-row" href={'#stories/'+s.id}>
-        <div className="sx-meta"><span className="sx-n">{String(n).padStart(2,'0')}</span><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span>{s.earlier&&<span className="chip-tag">EW</span>}</div>
-        <div className="sx-main"><p className="sx-q">{richQ(s.question)}</p><p className="sx-did">{s.did}</p><p className="sx-areas">{s.areas.join(' · ')}</p></div>
-        <div className="sx-res">{r&&<><b>{r.value}</b><span>{r.label}</span></>}<em>{s.changeLabel??(s.concept?'What it could change':'What changed')}</em></div>
-        <span className="sx-go" aria-hidden="true"><ArrowUpRight size={18}/></span></a></li>})}</ol>
+    <div className="bricks">{list.map((s,i)=>{const r=s.stats[s.stats.length-1];const lead=i===0;
+      return <a className={'brick'+(lead?' lead':'')} href={'#stories/'+s.id} key={s.id}>
+        <p className="brick-kind"><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span>{s.earlier&&<span className="chip-tag">EW</span>}</p>
+        <p className="brick-q">{richQ(s.question)}</p>
+        <p className="brick-hook">{s.hook}</p>
+        <div className="brick-ans"><span>{s.changeLabel??(s.concept?'What it could change':'What changed')}</span><p className="brick-did">{s.did}</p>{r&&<div className="brick-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
+        <span className="brick-read">Read the story <ArrowRight size={14}/></span></a>})}</div>
     {!list.length&&<p className="sx-empty">No stories match these filters yet. <button type="button" onClick={()=>{setInd('All');setType('All')}}>Show all stories</button></p>}
   </section>}
+// What-if chart (story chapter "Try the what-if"): pick any two criteria; points reposition on a 0–10 scatter
+// split into a 3×3 strategic-fit grid. Data comes from the story's whatIf block in src/stories.ts.
+function WhatIf({w}:{w:NonNullable<Story['whatIf']>}){const [x,setX]=useState(w.defaultX??0);const [y,setY]=useState(w.defaultY??1);
+  const W=560,H=440,P={l:46,r:16,t:16,b:44};const px=(v:number)=>P.l+(v/10)*(W-P.l-P.r);const py=(v:number)=>H-P.b-(v/10)*(H-P.t-P.b);
+  const groups=Array.from(new Set(w.points.map(p=>p.group)));
+  const top=[...w.points].sort((a,b)=>(b.s[x]+b.s[y])-(a.s[x]+a.s[y])).slice(0,3);
+  const cell=(v:number)=>v>=20/3?2:v>=10/3?1:0;
+  const strong=w.points.filter(p=>cell(p.s[x])===2&&cell(p.s[y])===2).length;
+  const sel=(label:string,val:number,set:(n:number)=>void,other:number)=><label className="wi-sel"><span>{label}</span><select value={val} onChange={e=>set(+e.target.value)}>{w.dims.map((d,i)=><option key={d} value={i} disabled={i===other}>{d}</option>)}</select></label>;
+  return <div className="wi">
+    <div className="wi-controls">{sel('Across (x)',x,setX,y)}{sel('Up (y)',y,setY,x)}</div>
+    <div className="wi-body">
+      <figure className="wi-fig"><svg viewBox={`0 0 ${W} ${H}`} role="img" aria-label={`${w.dims[y]} against ${w.dims[x]} for ${w.points.length} locations`}>
+        <rect x={px(20/3)} y={py(10)} width={px(10)-px(20/3)} height={py(20/3)-py(10)} className="wi-best"/>
+        {[0,10/3,20/3,10].map(v=><g key={v}><line x1={px(v)} x2={px(v)} y1={py(0)} y2={py(10)} className={v===0||v===10?'wi-axis':'wi-grid'}/><line x1={px(0)} x2={px(10)} y1={py(v)} y2={py(v)} className={v===0||v===10?'wi-axis':'wi-grid'}/></g>)}
+        {[0,2,4,6,8,10].map(v=><g key={'t'+v}><text x={px(v)} y={H-P.b+18} className="wi-tick" textAnchor="middle">{v}</text><text x={P.l-10} y={py(v)+4} className="wi-tick" textAnchor="end">{v}</text></g>)}
+        <text x={px(10)-8} y={py(10)+18} className="wi-best-l" textAnchor="end">Strong on both</text>
+        <text x={(px(0)+px(10))/2} y={H-6} className="wi-axl" textAnchor="middle">{w.dims[x]} →</text>
+        <text transform={`translate(13 ${(py(0)+py(10))/2}) rotate(-90)`} className="wi-axl" textAnchor="middle">{w.dims[y]} →</text>
+        {w.points.map(p=>{const g=groups.indexOf(p.group);return <g key={p.label} className={'wi-pt g'+g} style={{transform:`translate(${px(p.s[x])}px,${py(p.s[y])}px)`}}><title>{`${p.label} (${p.group}): ${w.dims[x]} ${p.s[x]}, ${w.dims[y]} ${p.s[y]}`}</title><circle r="7"/><text x="10" y="4">{p.label}</text></g>})}
+      </svg>
+      <figcaption className="wi-legend">{groups.map((g,i)=><span key={g}><i className={'g'+i}/>{g}</span>)}<span className="wi-ill">{w.note}</span></figcaption></figure>
+      <aside className="wi-side"><span className="wi-k">Best fit for this pairing</span><ol>{top.map(p=><li key={p.label}><b>{p.label}</b><span>{p.group} · {p.s[x]} + {p.s[y]}</span></li>)}</ol>
+        <p><b>{strong}</b> of {w.points.length} land in the top-right cell, strong on both criteria.</p><p className="wi-hint">Change either criterion and the shortlist moves with it — that’s the trade-off made visible.</p></aside>
+    </div></div>}
 function StoryPage({s}:{s:Story}){
   const endLabel=s.impactLabel??(s.concept?'Illustrative impact':'The outcome');
-  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey','Where it broke'] as [string,string]]:[]),['what','What we did'],['outcome',endLabel]];
+  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey',s.journeyLabel??'Where it broke'] as [string,string]]:[]),['what','What we did'],...(s.whatIf?[['whatif',s.whatIf.chapter] as [string,string]]:[]),['outcome',endLabel]];
+  const num=(id:string)=>String(chapters.findIndex(c=>c[0]===id)+1).padStart(2,'0');
   const [active,setActive]=useState('problem');
   React.useEffect(()=>{if(typeof IntersectionObserver==='undefined')return;const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)setActive(e.target.id.replace('ch-',''))})},{rootMargin:'-30% 0px -60% 0px'});chapters.forEach(([id])=>{const el=document.getElementById('ch-'+id);if(el)io.observe(el)});return()=>io.disconnect()},[s.id]);
   const go=(id:string)=>document.getElementById('ch-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
@@ -185,16 +211,17 @@ function StoryPage({s}:{s:Story}){
     <p className="story-kind"><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span></p>
     <StoryTags s={s}/><h1>{s.title}</h1>
     <div className="story-layout">
-      <nav className="story-rail" aria-label="Chapters">{chapters.map(([id,label],i)=><button type="button" key={id} className={active===id?'on':''} aria-current={active===id?'true':undefined} onClick={()=>go(id)}><small>{String(i+1).padStart(2,'0')}</small>{label}</button>)}</nav>
+      <nav className="story-rail" aria-label="Chapters">{chapters.map(([id,label])=><button type="button" key={id} className={active===id?'on':''} aria-current={active===id?'true':undefined} onClick={()=>go(id)}><small>{num(id)}</small>{label}</button>)}</nav>
       <div className="story-chapters">
-        <section className="story-ch" id="ch-problem"><h2>01 · The problem</h2><p>{rich(s.problem[0])}</p>
+        <section className="story-ch" id="ch-problem"><h2>{num('problem')} · The problem</h2><p>{rich(s.problem[0])}</p>
           {first&&<div className="story-pull"><b>{first.value}</b> <span>{first.label}</span></div>}
           {s.problem.slice(1).map((p,i)=>para(p,i))}</section>
-        {s.journey&&<section className="story-ch" id="ch-journey"><h2>02 · Where it broke</h2><p className="story-jt">{s.journey.title}</p>
-          <div className="story-legend"><span><i className="bad"/>Where it broke</span><span><i className="good"/>What we put in place</span></div>
-          <ol className="story-steps">{s.journey.steps.map((st,i)=><li key={i} className={st.fix?'broke':''}><h3>{i+1} · {st.title}</h3><p>{st.text}</p>{st.fix&&<div className="story-fix"><b>Fix</b> {st.fix}</div>}</li>)}</ol></section>}
-        <section className="story-ch" id="ch-what"><h2>{s.journey?'03':'02'} · What we did</h2>{s.whatWeDid.map((p,i)=>para(p,i))}</section>
-        <section className="story-ch" id="ch-outcome"><h2>{s.journey?'04':'03'} · {endLabel}</h2>
+        {s.journey&&<section className="story-ch" id="ch-journey"><h2>{num('journey')} · {s.journeyLabel??'Where it broke'}</h2><p className="story-jt">{s.journey.title}</p>
+          <div className="story-legend"><span><i className="bad"/>{s.journeyLabel?'Risk signal':'Where it broke'}</span><span><i className="good"/>{s.journeyLabel?'How the framework responds':'What we put in place'}</span></div>
+          <ol className="story-steps">{s.journey.steps.map((st,i)=><li key={i} className={st.fix?'broke':''}><h3>{i+1} · {st.title}</h3><p>{st.text}</p>{st.fix&&<div className="story-fix"><b>{s.journeyLabel?'Response':'Fix'}</b> {st.fix}</div>}</li>)}</ol></section>}
+        <section className="story-ch" id="ch-what"><h2>{num('what')} · What we did</h2>{s.whatWeDid.map((p,i)=>para(p,i))}</section>
+        {s.whatIf&&<section className="story-ch" id="ch-whatif"><h2>{num('whatif')} · {s.whatIf.chapter}</h2><p>{rich(s.whatIf.intro)}</p><WhatIf w={s.whatIf}/></section>}
+        <section className="story-ch" id="ch-outcome"><h2>{num('outcome')} · {endLabel}</h2>
           {last&&last!==first&&<div className="story-pull"><b>{last.value}</b> <span>{last.label}</span></div>}
           {s.outcome.map((p,i)=>para(p,i))}
           <p className="story-meta">{s.meta}</p>{s.note&&<p className="story-note">{s.note}</p>}
