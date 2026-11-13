@@ -860,21 +860,135 @@ EW Procure to PayFinancial ControlsIT Operations
 
 #### 01 · The problem
 
-A large automotive organisation’s IT operations involved multiple service areas, including Data Centre, Network, SAP, Workplace, Information Security and Service Desk.
+A large automotive organisation’s IT operations spanned several service areas, including Data Centre, Network, SAP, Workplace, Information Security and Service Desk. Keeping control of the full purchase-order lifecycle — from creation through payment — mattered for reconciliation, governance and cash flow.
 
 €42M sitting in unmapped purchase orders across IT service areas
 
-Purchase order and invoice information was distributed across SAP exports, Excel files and stakeholder-maintained trackers. Finance, procurement and delivery teams lacked a consolidated view of the PO lifecycle, making it difficult to identify unmapped purchase orders, reconcile invoices and resolve outstanding exceptions. This resulted in:
+Purchase order and invoice information was spread across SAP exports, Excel files and stakeholder-maintained trackers, each in its own format. Finance, procurement and delivery teams had no consolidated view, so mismatches and delays between POs and invoices surfaced late. This resulted in:
 
 - Significant value sitting in unmapped purchase orders
 
-- Manual reconciliation across fragmented data sources
+- Reconciliation queries taking 3–4 days on average to answer
 
-- Delays in identifying invoice and service-confirmation mismatches
+- High manual effort to resolve mismatches
 
-- Limited ownership and visibility of outstanding financial exceptions
+- Delays in invoice clearance, affecting cash flow and vendor relationships
 
-#### 02 · Where the value sat
+- Fragmented engagement across finance, procurement and delivery
+
+#### 02 · Where POs got stuck
+
+Every PO has to clear five gates before revenue is recognised
+
+Total POs
+
+Pending submissionSubmitted
+
+Pending approvalApproved
+
+UnmappedMapped
+
+Pending invoiceInvoice raised
+
+Unpaid or partially paidCompletely paid
+
+Total recognised revenue
+
+Where a PO can stallMoves to the next stage
+
+The dashboard shows how much value sits at each gate, so teams can see exactly where a PO has stalled and who needs to move it.
+
+#### 03 · The exceptions
+
+Four edge cases that broke simple PO-to-invoice matching
+
+- AMC contracts
+
+GapA single service spread across several staggered POs.
+
+FixLogic to group POs into families and recognise them together.
+
+- Multi-service bundles
+
+GapOne invoice applied to several service lines.
+
+FixService-type attribution using keywords.
+
+- Partial payments
+
+GapOne PO linked to split payments.
+
+FixDynamic tracking of pending versus cleared amounts.
+
+- Unlinked confirmations
+
+GapService confirmed, but no invoice raised.
+
+FixFlagged as “Pending billing”, with escalations triggered.
+
+The rules were codified in Power Query before the data reached the dashboard, so every exception is classified the same way each week.
+
+#### 04 · How the dashboard works
+
+From scattered files to one view
+
+- 01Excel files and SAP exportsFinanceProcurementDelivery
+
+- 02Consolidated databaseStandard field namesPO-to-invoice joins
+
+- 03Cleaning and analysis in Power BIPower QueryException logic
+
+- 04DashboardsOutcomesExceptions
+
+Missing or delayed inputs are flagged rather than dropped, so gaps in the data are visible too.
+
+Five dashboard modules
+
+01PO lifecycle tracker
+
+Each PO from creation to payment: submitted → approved → confirmed → invoiced → paid
+
+02Exception overview
+
+Mismatches and unmapped POs, categorised and quantified
+
+03Aging heatmap
+
+How long unmapped POs have been pending, by service type and region
+
+04Payment reconciliation
+
+Invoice against payment, including overdue and partial payments
+
+05PO drill-down
+
+PO-level tracing by service line, region, value bracket, status and exception type
+
+KPI tiles show total PO value, % mapped versus unmapped and the total pending amount; anything pending for more than 90 days turns red.
+
+#### 05 · What we did
+
+We designed and built a Power BI-based PO and invoice lifecycle dashboard — not as a static report, but as an operations layer for reconciliation, escalations and planning. The work ran in four phases:
+
+- Planning and scoping: requirements gathered with finance controllers, procurement heads, delivery tower leads, the PMO and business analysts; lifecycle stages, KPIs, a data-mapping matrix and an exception typology defined up front
+
+- Data ingestion and exception handling: an integration pipeline that standardised field names (PO ID, invoice number, confirmation and payment status), joined PO, invoice and confirmation data, and classified edge cases
+
+- Dashboard design: a multi-layered Power BI dashboard with KPI tiles, bar and waterfall charts of PO value by status, and filters by region, service line, PO amount bracket and exception category
+
+- Monitoring and adoption: the dashboard became a core tool for weekly financial and delivery governance, with exception logic and filters refined as new edge cases emerged
+
+A fixed weekly rhythm kept it current and acted on:
+
+- Monday to Wednesday: data uploads from stakeholders
+
+- Monday and Wednesday: dashboard refresh and validation
+
+- Friday: PO governance review with finance, delivery and the PMO
+
+- As needed: exception triage, with ad hoc escalations and weekly deep dives
+
+#### 06 · The results
 
 Unmapped purchase-order value
 
@@ -888,43 +1002,37 @@ After
 
 −70.7% as teams worked through the exceptions the dashboard surfaced.
 
-The PO lifecycle, and where exceptions hid
+Exception-flagged PO value
 
-- 01PO created and approvedUnmapped POs
+Before
 
-- 02Service confirmationUnlinked confirmations
+€23M
 
-- 03InvoicingMulti-service contractsInvoice mismatches
+After
 
-- 04PaymentPartial payments
+€1.3M
 
-One view across every stage, with long-pending values aged by service area — Data Centre, Network, SAP, Workplace, Information Security and Service Desk.
+−94% once exceptions were classified, owned and reviewed every week.
 
-#### 03 · What we did
+Time to answer a reconciliation query
 
-We developed a Power BI-based PO and invoice lifecycle dashboard to bring together information from finance, procurement and delivery teams. The solution included:
+Before
 
-- PO lifecycle tracking: consolidated visibility from PO creation and approval through service confirmation, invoicing and payment
+3–4 days
 
-- Exception management: identified unmapped POs, partial payments, multi-service contracts and unlinked service confirmations
+After
 
-- Financial reconciliation: compared PO values, invoiced amounts and payments to identify outstanding balances and discrepancies
+<24 hrs
 
-- Aging analysis: highlighted long-pending and unresolved PO values across service areas
+Same-day answers with one source of truth for finance, procurement and delivery.
 
-- Stakeholder-level reporting: enabled teams to filter and investigate exceptions by service line, region, PO value and status
-
-- Governance and monitoring: supported recurring reviews with finance, procurement, delivery and PMO stakeholders
-
-#### 04 · The outcome
+#### 07 · The outcome
 
 −70.7% unmapped PO value, down from €42 million to €12.3 million
 
-The dashboard improved financial visibility and helped teams systematically investigate and resolve outstanding PO mapping issues.
+Unmapped PO value fell from €42 million to €12.3 million — a reduction of about 70.7% — and exception-flagged PO value from €23 million to €1.3 million. Reconciliation queries that took 3–4 days were answered within 24 hours.
 
-Unmapped PO value reduced from €42 million to €12.3 million, a reduction of approximately 70.7%.
-
-The initiative also established a more structured approach to PO tracking, invoice reconciliation and cross-functional exception management.
+The dashboard was used in weekly working-capital and cash-flow calls, helped delivery heads follow up on unbilled services, and let finance controllers spot blockers to invoice clearance. Manual reconciliation dropped, and stakeholder engagement moved from reactive and fragmented to proactive and shared.
 
 Automotive · IT operations · Procure to pay
 

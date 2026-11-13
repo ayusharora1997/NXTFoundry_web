@@ -43,6 +43,7 @@ export type Story = {
 
 export type VisualChapter = {
     chapter: string;
+    after?: boolean;          // true = show after "What we did" (e.g. results), instead of before it
     blocks: (
       | { kind: 'shift'; title: string; before: { label: string; value: number; display: string }; after: { label: string; value: number; display: string }; change: string; caption: string }
       | { kind: 'lifecycle'; title: string; stages: { name: string; flags?: string[] }[]; caption: string; neutral?: boolean }   // neutral: tags are tools, not problems
@@ -52,6 +53,7 @@ export type VisualChapter = {
       | { kind: 'split'; title: string; parts: { label: string; value: number; display: string }[]; total: string; caption: string }
       | { kind: 'score'; title: string; signals: string[]; tiers: { name: string; route: string }[]; loop: string }
       | { kind: 'venn'; title: string; sets: { name: string; items: string[] }[]; centre: string; caption?: string }
+      | { kind: 'stairs'; title: string; start: string; steps: { stuck: string; next: string }[]; end: string; caption?: string }
       | { kind: 'mrp'; title: string; listings: { name: string; mrp: number; price: number }[]; caption: string }
     )[];
 };
@@ -71,30 +73,71 @@ export const stories: Story[] = [
       { value: '−70.7%', label: 'unmapped PO value, down from €42 million to €12.3 million' },
     ],
     problem: [
-      'A large automotive organisation’s IT operations involved multiple service areas, including Data Centre, Network, SAP, Workplace, Information Security and Service Desk.',
-      'Purchase order and invoice information was distributed across SAP exports, Excel files and stakeholder-maintained trackers. Finance, procurement and delivery teams lacked a consolidated view of the PO lifecycle, making it difficult to identify unmapped purchase orders, reconcile invoices and resolve outstanding exceptions. This resulted in:',
-      '- **Significant value** sitting in unmapped purchase orders\n- Manual reconciliation across fragmented data sources\n- Delays in identifying invoice and service-confirmation mismatches\n- Limited ownership and visibility of outstanding financial exceptions',
+      'A large automotive organisation’s IT operations spanned several service areas, including Data Centre, Network, SAP, Workplace, Information Security and Service Desk. Keeping control of the full purchase-order lifecycle — from creation through payment — mattered for reconciliation, governance and cash flow.',
+      'Purchase order and invoice information was spread across SAP exports, Excel files and stakeholder-maintained trackers, each in its own format. Finance, procurement and delivery teams had no consolidated view, so mismatches and delays between POs and invoices surfaced late. This resulted in:',
+      '- **Significant value** sitting in unmapped purchase orders\n- Reconciliation queries taking **3–4 days** on average to answer\n- High manual effort to resolve mismatches\n- Delays in invoice clearance, affecting cash flow and vendor relationships\n- Fragmented engagement across finance, procurement and delivery',
     ],
-    visual: {
-      chapter: 'Where the value sat',
-      blocks: [
-        { kind: 'shift', title: 'Unmapped purchase-order value', before: { label: 'Before', value: 42, display: '€42M' }, after: { label: 'After', value: 12.3, display: '€12.3M' }, change: '−70.7%', caption: 'as teams worked through the exceptions the dashboard surfaced.' },
-        { kind: 'lifecycle', title: 'The PO lifecycle, and where exceptions hid', stages: [
-          { name: 'PO created and approved', flags: ['Unmapped POs'] },
-          { name: 'Service confirmation', flags: ['Unlinked confirmations'] },
-          { name: 'Invoicing', flags: ['Multi-service contracts', 'Invoice mismatches'] },
-          { name: 'Payment', flags: ['Partial payments'] },
-        ], caption: 'One view across every stage, with long-pending values aged by service area — Data Centre, Network, SAP, Workplace, Information Security and Service Desk.' },
-      ],
-    },
+    visual: [
+      {
+        chapter: 'Where POs got stuck',
+        blocks: [
+          { kind: 'stairs', title: 'Every PO has to clear five gates before revenue is recognised', start: 'Total POs', steps: [
+            { stuck: 'Pending submission', next: 'Submitted' },
+            { stuck: 'Pending approval', next: 'Approved' },
+            { stuck: 'Unmapped', next: 'Mapped' },
+            { stuck: 'Pending invoice', next: 'Invoice raised' },
+            { stuck: 'Unpaid or partially paid', next: 'Completely paid' },
+          ], end: 'Total recognised revenue', caption: 'The dashboard shows how much value sits at each gate, so teams can see exactly where a PO has stalled and who needs to move it.' },
+        ],
+      },
+      {
+        chapter: 'The exceptions',
+        blocks: [
+          { kind: 'points', title: 'Four edge cases that broke simple PO-to-invoice matching', nodes: [
+            { name: 'AMC contracts', gap: 'A single service spread across several staggered POs.', fix: 'Logic to group POs into families and recognise them together.' },
+            { name: 'Multi-service bundles', gap: 'One invoice applied to several service lines.', fix: 'Service-type attribution using keywords.' },
+            { name: 'Partial payments', gap: 'One PO linked to split payments.', fix: 'Dynamic tracking of pending versus cleared amounts.' },
+            { name: 'Unlinked confirmations', gap: 'Service confirmed, but no invoice raised.', fix: 'Flagged as “Pending billing”, with escalations triggered.' },
+          ], caption: 'The rules were codified in Power Query before the data reached the dashboard, so every exception is classified the same way each week.' },
+        ],
+      },
+      {
+        chapter: 'How the dashboard works',
+        blocks: [
+          { kind: 'lifecycle', title: 'From scattered files to one view', stages: [
+            { name: 'Excel files and SAP exports', flags: ['Finance', 'Procurement', 'Delivery'] },
+            { name: 'Consolidated database', flags: ['Standard field names', 'PO-to-invoice joins'] },
+            { name: 'Cleaning and analysis in Power BI', flags: ['Power Query', 'Exception logic'] },
+            { name: 'Dashboards', flags: ['Outcomes', 'Exceptions'] },
+          ], caption: 'Missing or delayed inputs are flagged rather than dropped, so gaps in the data are visible too.', neutral: true },
+          { kind: 'controls', title: 'Five dashboard modules', items: [
+            { name: 'PO lifecycle tracker', checks: 'Each PO from creation to payment: submitted → approved → confirmed → invoiced → paid' },
+            { name: 'Exception overview', checks: 'Mismatches and unmapped POs, categorised and quantified' },
+            { name: 'Aging heatmap', checks: 'How long unmapped POs have been pending, by service type and region' },
+            { name: 'Payment reconciliation', checks: 'Invoice against payment, including overdue and partial payments' },
+            { name: 'PO drill-down', checks: 'PO-level tracing by service line, region, value bracket, status and exception type' },
+          ], caption: 'KPI tiles show total PO value, % mapped versus unmapped and the total pending amount; anything pending for more than 90 days turns red.' },
+        ],
+      },
+      {
+        chapter: 'The results',
+        after: true,
+        blocks: [
+          { kind: 'shift', title: 'Unmapped purchase-order value', before: { label: 'Before', value: 42, display: '€42M' }, after: { label: 'After', value: 12.3, display: '€12.3M' }, change: '−70.7%', caption: 'as teams worked through the exceptions the dashboard surfaced.' },
+          { kind: 'shift', title: 'Exception-flagged PO value', before: { label: 'Before', value: 23, display: '€23M' }, after: { label: 'After', value: 1.3, display: '€1.3M' }, change: '−94%', caption: 'once exceptions were classified, owned and reviewed every week.' },
+          { kind: 'shift', title: 'Time to answer a reconciliation query', before: { label: 'Before', value: 3.5, display: '3–4 days' }, after: { label: 'After', value: 1, display: '<24 hrs' }, change: 'Same-day answers', caption: 'with one source of truth for finance, procurement and delivery.' },
+        ],
+      },
+    ],
     whatWeDid: [
-      'We developed a Power BI-based PO and invoice lifecycle dashboard to bring together information from finance, procurement and delivery teams. The solution included:',
-      '- **PO lifecycle tracking:** consolidated visibility from PO creation and approval through service confirmation, invoicing and payment\n- **Exception management:** identified unmapped POs, partial payments, multi-service contracts and unlinked service confirmations\n- **Financial reconciliation:** compared PO values, invoiced amounts and payments to identify outstanding balances and discrepancies\n- **Aging analysis:** highlighted long-pending and unresolved PO values across service areas\n- **Stakeholder-level reporting:** enabled teams to filter and investigate exceptions by service line, region, PO value and status\n- **Governance and monitoring:** supported recurring reviews with finance, procurement, delivery and PMO stakeholders',
+      'We designed and built a Power BI-based PO and invoice lifecycle dashboard — not as a static report, but as an operations layer for reconciliation, escalations and planning. The work ran in four phases:',
+      '- **Planning and scoping:** requirements gathered with finance controllers, procurement heads, delivery tower leads, the PMO and business analysts; lifecycle stages, KPIs, a data-mapping matrix and an exception typology defined up front\n- **Data ingestion and exception handling:** an integration pipeline that standardised field names (PO ID, invoice number, confirmation and payment status), joined PO, invoice and confirmation data, and classified edge cases\n- **Dashboard design:** a multi-layered Power BI dashboard with KPI tiles, bar and waterfall charts of PO value by status, and filters by region, service line, PO amount bracket and exception category\n- **Monitoring and adoption:** the dashboard became a core tool for weekly financial and delivery governance, with exception logic and filters refined as new edge cases emerged',
+      'A fixed weekly rhythm kept it current and acted on:',
+      '- **Monday to Wednesday:** data uploads from stakeholders\n- **Monday and Wednesday:** dashboard refresh and validation\n- **Friday:** PO governance review with finance, delivery and the PMO\n- **As needed:** exception triage, with ad hoc escalations and weekly deep dives',
     ],
     outcome: [
-      'The dashboard improved financial visibility and helped teams systematically investigate and resolve outstanding PO mapping issues.',
-      'Unmapped PO value reduced from **€42 million to €12.3 million**, a reduction of approximately **70.7%**.',
-      'The initiative also established a more structured approach to PO tracking, invoice reconciliation and cross-functional exception management.',
+      'Unmapped PO value fell from **€42 million to €12.3 million** — a reduction of about **70.7%** — and exception-flagged PO value from **€23 million to €1.3 million**. Reconciliation queries that took 3–4 days were answered within 24 hours.',
+      'The dashboard was used in weekly working-capital and cash-flow calls, helped delivery heads follow up on unbilled services, and let finance controllers spot blockers to invoice clearance. Manual reconciliation dropped, and stakeholder engagement moved from reactive and fragmented to proactive and shared.',
     ],
     meta: 'Automotive · IT operations · Procure to pay',
     note: 'Client identity and confidential operational details have been withheld.',

@@ -206,6 +206,12 @@ function VisualBlock({v}:{v:StoryVisual}){
       <div className="vz-mlist">{v.listings.map((l,i)=>{const off=Math.round((l.mrp-l.price)/l.mrp*100);return <div key={l.name} className={'m'+i}><span className="vz-k">{l.name}</span><p className="vz-mp"><s>MRP {inr(l.mrp)}</s></p><p className="vz-pp">{inr(l.price)}</p><p className="vz-off">{off}% off</p></div>})}</div>
       <p className="vz-formula">Discount % = (MRP − selling price) ÷ MRP × 100</p>
       <p className="vz-cap">{v.caption}</p></div>}
+  if(v.kind==='stairs')return <div className="vz vz-stairs"><p className="vz-t">{v.title}</p>
+      <div className="st-box st-start">{v.start}</div>
+      {v.steps.map((st,i)=><div className="st-row" key={st.next} style={{'--i':i} as React.CSSProperties}><span className="st-stuck">{st.stuck}</span><span className="st-next">{st.next}</span></div>)}
+      <div className="st-box st-end" style={{'--i':v.steps.length} as React.CSSProperties}>{v.end}</div>
+      <div className="vz-legend2"><span><i className="bad"/>Where a PO can stall</span><span><i className="good"/>Moves to the next stage</span></div>
+      {v.caption&&<p className="vz-cap">{v.caption}</p>}</div>;
   if(v.kind==='points')return <div className="vz vz-points"><p className="vz-t">{v.title}</p>
       <ol className="vz-nodes plain">{v.nodes.map(n=><li key={n.name}><b>{n.name}</b><p className="vz-gap"><span>Gap</span>{n.gap}</p><p className="vz-fix"><span>Fix</span>{n.fix}</p></li>)}</ol>
       {v.caption&&<p className="vz-cap">{v.caption}</p>}</div>;
@@ -252,7 +258,7 @@ function WhatIf({w}:{w:NonNullable<Story['whatIf']>}){const [x,setX]=useState(w.
 function StoryPage({s}:{s:Story}){
   const vis=s.visual?(Array.isArray(s.visual)?s.visual:[s.visual]):[];
   const endLabel=s.impactLabel??(s.concept?'Illustrative impact':'The outcome');
-  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey',s.journeyLabel??'Where it broke'] as [string,string]]:[]),...vis.map((v,i)=>['visual'+i,v.chapter] as [string,string]),['what','What we did'],...(s.whatIf?[['whatif',s.whatIf.chapter] as [string,string]]:[]),['outcome',endLabel]];
+  const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey',s.journeyLabel??'Where it broke'] as [string,string]]:[]),...vis.map((v,i)=>[v,i] as const).filter(([v])=>!v.after).map(([v,i])=>['visual'+i,v.chapter] as [string,string]),['what','What we did'],...(s.whatIf?[['whatif',s.whatIf.chapter] as [string,string]]:[]),...vis.map((v,i)=>[v,i] as const).filter(([v])=>v.after).map(([v,i])=>['visual'+i,v.chapter] as [string,string]),['outcome',endLabel]];
   const num=(id:string)=>String(chapters.findIndex(c=>c[0]===id)+1).padStart(2,'0');
   const [active,setActive]=useState('problem');
   React.useEffect(()=>{if(typeof IntersectionObserver==='undefined')return;const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)setActive(e.target.id.replace('ch-',''))})},{rootMargin:'-30% 0px -60% 0px'});chapters.forEach(([id])=>{const el=document.getElementById('ch-'+id);if(el)io.observe(el)});return()=>io.disconnect()},[s.id]);
@@ -271,9 +277,10 @@ function StoryPage({s}:{s:Story}){
         {s.journey&&<section className="story-ch" id="ch-journey"><h2>{num('journey')} · {s.journeyLabel??'Where it broke'}</h2><p className="story-jt">{s.journey.title}</p>
           <div className="story-legend"><span><i className="bad"/>{s.journeyLabel?'Risk signal':'Where it broke'}</span><span><i className="good"/>{s.journeyLabel?'How the framework responds':'What we put in place'}</span></div>
           <ol className="story-steps">{s.journey.steps.map((st,i)=><li key={i} className={st.fix?'broke':''}><h3>{i+1} · {st.title}</h3><p>{st.text}</p>{st.fix&&<div className="story-fix"><b>{s.journeyLabel?'Response':'Fix'}</b> {st.fix}</div>}</li>)}</ol></section>}
-        {vis.map((c,ci)=><section className="story-ch" id={'ch-visual'+ci} key={ci}><h2>{num('visual'+ci)} · {c.chapter}</h2>{c.blocks.map((v,i)=><VisualBlock v={v} key={i}/>)}</section>)}
+        {vis.map((c,ci)=>!c.after?<section className="story-ch" id={'ch-visual'+ci} key={ci}><h2>{num('visual'+ci)} · {c.chapter}</h2>{c.blocks.map((v,i)=><VisualBlock v={v} key={i}/>)}</section>:null)}
         <section className="story-ch" id="ch-what"><h2>{num('what')} · What we did</h2>{s.whatWeDid.map((p,i)=>para(p,i))}</section>
         {s.whatIf&&<section className="story-ch" id="ch-whatif"><h2>{num('whatif')} · {s.whatIf.chapter}</h2><p>{rich(s.whatIf.intro)}</p><WhatIf w={s.whatIf}/></section>}
+        {vis.map((c,ci)=>c.after?<section className="story-ch" id={'ch-visual'+ci} key={ci}><h2>{num('visual'+ci)} · {c.chapter}</h2>{c.blocks.map((v,i)=><VisualBlock v={v} key={i}/>)}</section>:null)}
         <section className="story-ch" id="ch-outcome"><h2>{num('outcome')} · {endLabel}</h2>
           {last&&last!==first&&<div className="story-pull"><b>{last.value}</b> <span>{last.label}</span></div>}
           {s.outcome.map((p,i)=>para(p,i))}

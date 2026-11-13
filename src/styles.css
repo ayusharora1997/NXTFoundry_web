@@ -1129,3 +1129,17 @@ footer .made-in .heart{color:var(--lime)}
 .vz-stages{grid-auto-flow:row}
 @media(max-width:900px){.vz-vbody{grid-template-columns:1fr}.vz-vsvg{max-width:300px;margin:0 auto}.vz-mlist{grid-template-columns:1fr}}
 .vz-life.neutral .vz-stages em{border-color:#2c3833;background:#080d0c;color:#c7d0c9}
+
+/* Staircase (PO status tree) */
+.vz-stairs .st-box{display:inline-block;padding:10px 16px;border:1px solid #3a4540;border-radius:8px;background:#080d0c;font-weight:700;font-size:14.5px}
+.vz-stairs .st-start{margin-bottom:10px}
+.vz-stairs .st-row{display:grid;grid-template-columns:repeat(2,minmax(0,170px));gap:8px;margin:0 0 10px calc(var(--i) * 9%)}
+.vz-stairs .st-row span{padding:10px 12px;border-radius:8px;font-size:13.5px;font-weight:600;line-height:1.35}
+.st-stuck{border:1px solid #5a2a2a;background:#1a0f0f;color:#f0a8a8}
+.st-next{position:relative;border:1px solid #4a5d1a;background:#121a06;color:#e2ff8a}
+.st-next:after{content:"↓";position:absolute;right:10px;bottom:-15px;color:#5d6863;font-size:14px}
+.vz-stairs .st-end{margin-left:calc(var(--i) * 9%);border-color:var(--lime);color:var(--lime)}
+.vz-legend2{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px;color:var(--muted);font-size:12.5px}
+.vz-legend2 i{display:inline-block;width:10px;height:10px;margin-right:7px;border-radius:2px;vertical-align:-1px}
+.vz-legend2 i.bad{background:#5a2a2a}.vz-legend2 i.good{background:#4a5d1a}
+@media(max-width:900px){.vz-stairs .st-row{margin-left:calc(var(--i) * 10px);grid-template-columns:1fr 1fr}.vz-stairs .st-end{margin-left:calc(var(--i) * 10px)}}
