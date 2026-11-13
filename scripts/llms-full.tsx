@@ -113,10 +113,22 @@ writeFileSync(`${ROOT}/public/llms-full.txt`, doc);
 
 // llms.txt: list every story (with its industry and type) between the Pages and Contact sections.
 const plain = (t: string) => t.replace(/\*\*/g, '');
-const storyLines = stories.map(st => `- [${plain(st.title)}](https://www.nxtfoundry.in/#stories/${st.id}): ${st.industry} · ${st.type}${st.earlier ? ' · earlier work' : ''}. ${plain(st.did)}`);
+const storyLines = stories.map(st => `- [${plain(st.title)}](https://www.nxtfoundry.in/stories/${st.id}.html): ${st.industry} · ${st.type}${st.earlier ? ' · earlier work' : ''}. ${plain(st.did)}`);
 const llmsPath = `${ROOT}/public/llms.txt`;
 let llms = readFileSync(llmsPath, 'utf8').replace(/\n## Stories\n[\s\S]*?(?=\n## )/, '');
 llms = llms.replace('\n## Contact', `\n## Stories\nCase stories and concept frameworks. Concepts are independently developed and their figures are illustrative.\n${storyLines.join('\n')}\n\n## Contact`);
-writeFileSync(llmsPath, llms);
+writeFileSync(llmsPath, llms.replace('(https://www.nxtfoundry.in/#stories)', '(https://www.nxtfoundry.in/stories/)'));
+
+// sitemap.xml: the real pages, including every story page (generated after the build by scripts/story-pages.tsx).
+const today = new Date().toISOString().slice(0, 10);
+const urls = ['/', '/stories/', ...stories.map(st => `/stories/${st.id}.html`), '/faq.html', '/privacy.html'];
+writeFileSync(`${ROOT}/public/sitemap.xml`, `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls.map(u => `  <url>
+    <loc>https://www.nxtfoundry.in${u}</loc>
+    <lastmod>${today}</lastmod>
+  </url>`).join('\n')}
+</urlset>
+`);
 
 console.log(`llms-full.txt: ${pages.length} pages, ${doc.length.toLocaleString('en')} characters`);

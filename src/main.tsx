@@ -27,6 +27,10 @@ const OFFLINE_BUILD = import.meta.env.BASE_URL === './';
 // Static page in public/; the offline bundle has no server, so it links to the live copy.
 // 30-minute diagnostic call (Cal.com). Opens in a new tab.
 const BOOKING_URL = 'https://cal.com/ayush-arora-ubgsbp/30min';
+// Stories have real pages (/stories/<id>.html, generated after each build by scripts/story-pages.tsx);
+// the offline bundle has no server, so there they stay as in-app links.
+const STORY_URL=(id:string)=>OFFLINE_BUILD?'#stories/'+id:'/stories/'+id+'.html';
+const STORIES_URL=OFFLINE_BUILD?'#stories':'/stories/';
 const PRIVACY_URL = OFFLINE_BUILD ? 'https://www.nxtfoundry.in/privacy.html' : '/privacy.html';
 const FAQ_URL = OFFLINE_BUILD ? 'https://www.nxtfoundry.in/faq.html' : '/faq.html';
 // Insights is hidden until there is at least one real article. Flip to true to re-enable the homepage strip.
@@ -158,7 +162,7 @@ function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.earlier&
 // (each column a little slower or faster than the next). Hovering or focusing a story pauses its column.
 // Phones, reduced-motion settings and filters with fewer than four stories get a still layout instead.
 function Brick({s,lead,hidden}:{s:Story;lead?:boolean;hidden?:boolean}){const r=s.stats[s.stats.length-1];
-  return <a className={'brick'+(lead?' lead':'')} href={'#stories/'+s.id} {...(hidden?{'aria-hidden':true,tabIndex:-1}:{})}>
+  return <a className={'brick'+(lead?' lead':'')} href={STORY_URL(s.id)} {...(hidden?{'aria-hidden':true,tabIndex:-1}:{})}>
     <p className="brick-kind"><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span>{s.earlier&&<span className="chip-tag">EW</span>}</p>
     <p className="brick-q">{richQ(s.question)}</p>
     <p className="brick-hook">{s.hook}</p>
@@ -265,7 +269,7 @@ function StoryPage({s}:{s:Story}){
   const go=(id:string)=>document.getElementById('ch-'+id)?.scrollIntoView({behavior:'smooth',block:'start'});
   const first=s.stats[0], last=s.stats[s.stats.length-1];
   return <article className="page section story-page" id="story-page">
-    <a className="story-back" href="#stories"><span aria-hidden="true">←</span> All stories</a>
+    <a className="story-back" href={STORIES_URL}><span aria-hidden="true">←</span> All stories</a>
     <p className="story-kind"><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span></p>
     <StoryTags s={s}/><h1>{s.title}</h1>
     <div className="story-layout">
@@ -508,7 +512,8 @@ function SiteInsights({hash}:{hash:string}){if(OFFLINE_BUILD)return null;const r
 function App(){const [hash,setHash]=useState(window.location.hash); React.useEffect(()=>{const f=()=>setHash(window.location.hash);window.addEventListener('hashchange',f);return()=>window.removeEventListener('hashchange',f)},[]);
 // Each hash is a separate page, so start it at the top — except #contact-form, which is a jump to the form itself.
 React.useLayoutEffect(()=>{const target=(hash==='#contact-form'||hash.startsWith('#products-')||hash.startsWith('#prog-'))&&document.getElementById(hash.slice(1)); if(target)target.scrollIntoView({behavior:'instant' as ScrollBehavior}); else window.scrollTo({top:0,behavior:'instant' as ScrollBehavior})},[hash]);
-let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash.startsWith('#stories/')&&stories.some(st=>'#stories/'+st.id===hash))content=<StoryPage s={stories.find(st=>'#stories/'+st.id===hash)!}/>; else if(hash==='#stories'||hash.startsWith('#stories/'))content=stories.length?<Stories/>:<ComingSoon label="STORIES" id="stories-page" title={<>We’re building the <em>narrative</em></>} lede="Stories from the work — the problem, what we found and what changed — will be told here soon."/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>}
+let content=<Home/>; if(hash==='#products'||hash.startsWith('#products-'))content=<Products/>; else if(hash.startsWith('#reconciliation-lab'))content=<ReconciliationLab/>; else if(hash==='#approach')content=<Approach/>; else if(hash==='#insights'||hash.startsWith('#insights/'))content=INSIGHTS_PAGE_LIVE?(hash==='#insights'?<Insights/>:<InsightPost slug={hash.slice(10)}/>):<ComingSoon label="INSIGHTS" id="insights-page"/>; else if(hash==='#resources')content=RESOURCES_PAGE_LIVE?<Resources/>:<ComingSoon label="RESOURCES" id="resources-page"/>; else if(hash.startsWith('#stories/')&&stories.some(st=>'#stories/'+st.id===hash))content=<StoryPage s={stories.find(st=>'#stories/'+st.id===hash)!}/>; else if(hash==='#stories'||hash.startsWith('#stories/'))content=stories.length?<Stories/>:<ComingSoon label="STORIES" id="stories-page" title={<>We’re building the <em>narrative</em></>} lede="Stories from the work — the problem, what we found and what changed — will be told here soon."/>; else if(hash==='#about')content=<About/>; else if(hash==='#contact'||hash==='#contact-form')content=<><CTA/><Contact/></>; else if(hash==='#solutions'||hash==='#solutions-page'||hash.startsWith('#prog-'))content=<Solutions/>; if(!hash&&!OFFLINE_BUILD){const p=window.location.pathname;const m=p.match(/^\/stories\/([a-z0-9-]+)\.html$/);const st=m?stories.find(x=>x.id===m[1]):undefined;if(st)content=<StoryPage s={st}/>;else if(/^\/stories\/(index\.html)?$/.test(p))content=<Stories/>;}
+content=<PageErrorBoundary key={hash.split('/')[0]}>{content}</PageErrorBoundary>; if(hash.startsWith('#reconciliation-lab'))return <><main className="tool-only">{content}</main><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>; return <><Header/><main>{content}</main><Footer/><SiteInsights hash={hash}/>{!OFFLINE_BUILD&&<Consent/>}</>}
 // Pages rendered to text at build time for /llms-full.txt (scripts/llms-full.tsx). Keep in step with the routes in App.
 export const LLM_PAGES:[string,string,React.ReactNode][] = [
   ['Home','https://www.nxtfoundry.in/',<Home/>],
@@ -516,8 +521,10 @@ export const LLM_PAGES:[string,string,React.ReactNode][] = [
   ['Products','https://www.nxtfoundry.in/#products',<Products/>],
   ['Our Approach','https://www.nxtfoundry.in/#approach',<Approach/>],
   ['About','https://www.nxtfoundry.in/#about',<About/>],
-  ...(stories.length?[['Stories','https://www.nxtfoundry.in/#stories',<Stories/>] as [string,string,React.ReactNode]]:[]),
-  ...stories.map(st=>[storyText(st.title),'https://www.nxtfoundry.in/#stories/'+st.id,<StoryPage s={st}/>] as [string,string,React.ReactNode]),
+  ...(stories.length?[['Stories','https://www.nxtfoundry.in/stories/',<Stories/>] as [string,string,React.ReactNode]]:[]),
+  ...stories.map(st=>[storyText(st.title),'https://www.nxtfoundry.in/stories/'+st.id+'.html',<StoryPage s={st}/>] as [string,string,React.ReactNode]),
   ['Contact','https://www.nxtfoundry.in/#contact',<><CTA/><Contact/></>],
 ];
+// Used by scripts/story-pages.tsx to write each story's static page.
+export const STATIC_PARTS={Header,Footer,StoryPage,Stories};
 if(!import.meta.env.SSR)createRoot(document.getElementById('root')!).render(<React.StrictMode><App/></React.StrictMode>);

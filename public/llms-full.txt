@@ -722,9 +722,9 @@ Use technology where it creates meaningful value.
 
 Build solutions that can evolve and scale.
 
-## [Stories](https://www.nxtfoundry.in/#stories)
+## [Stories](https://www.nxtfoundry.in/stories/)
 
-URL: https://www.nxtfoundry.in/#stories
+URL: https://www.nxtfoundry.in/stories/
 
 STORIES
 
@@ -846,9 +846,9 @@ what-if pairings of the five criteria, from cost vs talent to security vs cost
 
 Read the story
 
-## [A PO lifecycle dashboard for unmapped purchase orders and invoice exceptions](https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle)
+## [A PO lifecycle dashboard for unmapped purchase orders and invoice exceptions](https://www.nxtfoundry.in/stories/automotive-po-invoice-lifecycle.html)
 
-URL: https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle
+URL: https://www.nxtfoundry.in/stories/automotive-po-invoice-lifecycle.html
 
 All stories
 
@@ -1042,9 +1042,9 @@ Have a problem that sounds familiar?
 
 Book a 30-min call
 
-## [Closing ₹5 crore of revenue leakage in a fitness chain’s access controls](https://www.nxtfoundry.in/#stories/fitness-access-controls)
+## [Closing ₹5 crore of revenue leakage in a fitness chain’s access controls](https://www.nxtfoundry.in/stories/fitness-access-controls.html)
 
-URL: https://www.nxtfoundry.in/#stories/fitness-access-controls
+URL: https://www.nxtfoundry.in/stories/fitness-access-controls.html
 
 All stories
 
@@ -1126,9 +1126,9 @@ Have a problem that sounds familiar?
 
 Book a 30-min call
 
-## [Bringing accountability to a ₹76 crore warehouse reconciliation gap](https://www.nxtfoundry.in/#stories/warehouse-stock-transfers)
+## [Bringing accountability to a ₹76 crore warehouse reconciliation gap](https://www.nxtfoundry.in/stories/warehouse-stock-transfers.html)
 
-URL: https://www.nxtfoundry.in/#stories/warehouse-stock-transfers
+URL: https://www.nxtfoundry.in/stories/warehouse-stock-transfers.html
 
 All stories
 
@@ -1198,9 +1198,9 @@ Have a problem that sounds familiar?
 
 Book a 30-min call
 
-## [Breaking the cycle of slow and non-moving inventory in B2B wholesale](https://www.nxtfoundry.in/#stories/wholesale-slow-moving-inventory)
+## [Breaking the cycle of slow and non-moving inventory in B2B wholesale](https://www.nxtfoundry.in/stories/wholesale-slow-moving-inventory.html)
 
-URL: https://www.nxtfoundry.in/#stories/wholesale-slow-moving-inventory
+URL: https://www.nxtfoundry.in/stories/wholesale-slow-moving-inventory.html
 
 All stories
 
@@ -1290,9 +1290,9 @@ Have a problem that sounds familiar?
 
 Book a 30-min call
 
-## [Automating 94 payroll checks for apparel manufacturers](https://www.nxtfoundry.in/#stories/payroll-compliance-framework)
+## [Automating 94 payroll checks for apparel manufacturers](https://www.nxtfoundry.in/stories/payroll-compliance-framework.html)
 
-URL: https://www.nxtfoundry.in/#stories/payroll-compliance-framework
+URL: https://www.nxtfoundry.in/stories/payroll-compliance-framework.html
 
 All stories
 
@@ -1416,9 +1416,9 @@ Have a problem that sounds familiar?
 
 Book a 30-min call
 
-## [Choosing where to build: a what-if framework for 17 cities](https://www.nxtfoundry.in/#stories/global-location-strategy)
+## [Choosing where to build: a what-if framework for 17 cities](https://www.nxtfoundry.in/stories/global-location-strategy.html)
 
-URL: https://www.nxtfoundry.in/#stories/global-location-strategy
+URL: https://www.nxtfoundry.in/stories/global-location-strategy.html
 
 All stories
 
@@ -1504,9 +1504,9 @@ Have a problem that sounds familiar?
 
 Book a 30-min call
 
-## [Spotting counterfeit risk on a marketplace before customers do](https://www.nxtfoundry.in/#stories/marketplace-anti-counterfeit)
+## [Spotting counterfeit risk on a marketplace before customers do](https://www.nxtfoundry.in/stories/marketplace-anti-counterfeit.html)
 
-URL: https://www.nxtfoundry.in/#stories/marketplace-anti-counterfeit
+URL: https://www.nxtfoundry.in/stories/marketplace-anti-counterfeit.html
 
 All stories
 
