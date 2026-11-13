@@ -1,4 +1,4 @@
-// Writes a real, crawlable page for every story — dist/stories/<id>.html — plus dist/stories/index.html.
+// Writes a real, crawlable page for every story — dist/stories/<id>.html — plus dist/stories/index.html and dist/faq.html.
 // Runs after `vite build` (npm run build), using the built index.html as the template so each page loads the
 // same hashed CSS and JS. Each page has its own title, description, canonical URL, share preview and JSON-LD,
 // and the full story is already in the HTML (header, story, footer) for crawlers that don't run JavaScript.
@@ -8,10 +8,11 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { STATIC_PARTS } from '../src/main';
 import { stories, type Story } from '../src/stories';
+import { faqs } from '../src/faqs';
 
 const ROOT = process.cwd();
 const SITE = 'https://www.nxtfoundry.in';
-const { Header, Footer, StoryPage, Stories } = STATIC_PARTS;
+const { Header, Footer, StoryPage, Stories, FAQPageView } = STATIC_PARTS;
 const g = globalThis as unknown as { window?: unknown };
 g.window ??= { location: { hash: '', pathname: '/stories/', search: '' }, matchMedia: () => ({ matches: false }) };
 
@@ -73,4 +74,12 @@ writeFileSync(`${ROOT}/dist/stories/index.html`, page({
   description: 'Case stories and concept frameworks from NXT Foundry: real problems, what we found and what changed.',
   body: shell(<Stories/>),
 }));
-console.log(`story-pages: ${stories.length} stories + index`);
+// FAQ page (/faq.html), linked from the footer.
+writeFileSync(`${ROOT}/dist/faq.html`, page({
+  url: `${SITE}/faq.html`, title: 'Frequently asked questions — NXT Foundry', type: 'website',
+  description: 'Answers to common questions about NXT Foundry: fees, how long engagements last, which programme to start with, remote work, NDAs and who does the work.',
+  ld: { '@context': 'https://schema.org', '@type': 'FAQPage', '@id': `${SITE}/faq.html#faq`, url: `${SITE}/faq.html`, name: 'Frequently asked questions — NXT Foundry',
+    publisher: { '@id': `${SITE}/#organization` }, mainEntity: faqs.map(([q, a]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: a } })) },
+  body: shell(<FAQPageView/>),
+}));
+console.log(`story-pages: ${stories.length} stories + index + faq`);

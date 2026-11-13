@@ -1143,3 +1143,6 @@ footer .made-in .heart{color:var(--lime)}
 .vz-legend2 i{display:inline-block;width:10px;height:10px;margin-right:7px;border-radius:2px;vertical-align:-1px}
 .vz-legend2 i.bad{background:#5a2a2a}.vz-legend2 i.good{background:#4a5d1a}
 @media(max-width:900px){.vz-stairs .st-row{margin-left:calc(var(--i) * 10px);grid-template-columns:1fr 1fr}.vz-stairs .st-end{margin-left:calc(var(--i) * 10px)}}
+/* FAQ page (/faq.html) */
+.faq-page .faq-page-body{max-width:860px;margin-top:40px}
+.faq-page .story-cta{max-width:860px;margin-top:40px}
