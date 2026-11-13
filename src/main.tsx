@@ -124,7 +124,7 @@ function ComingSoon({label,id,title,lede='It will be posted here soon.'}:{label:
 function Label({children}:{children:React.ReactNode}){return <div className="eyebrow"><span className="dot"/>{children}</div>}
 
 function ArrowLink({children,href='#'}:{children:React.ReactNode,href?:string}){return <a className="arrow-link" href={href}>{children}<ArrowUpRight size={17}/></a>}
-// Footer: brand, Explore (pages not shown elsewhere in the footer), Products with their status, and Connect.
+// Footer products. Only live ones (last field true) are shown; the rest stay listed here for when they launch.
 const FOOTER_PRODUCTS:[string,string,string,string,boolean?][] = [
   ['Vendor Payable Reconciliation','#reconciliation-lab','live','Live',true],
   ['Customer Reconciliation','#products-customer','cooking','Cooking'],
@@ -135,10 +135,10 @@ const FOOTER_PRODUCTS:[string,string,string,string,boolean?][] = [
 ];
 function Footer(){return <footer><div className="footer-inner">
 <div className="footer-top"><div className="footer-brand"><Logo/><p className="footer-copy">A business and technology company building practical solutions for real-world complexity.</p></div>
-<div className="footer-cta"><p className="footer-cta-title">Start with a conversation</p><p className="footer-cta-line">Bring a problem; leave with a view on it. We reply within 1 business day.</p><div className="footer-cta-actions"><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min call <ArrowUpRight size={14}/></a><a className="footer-ghost" href="#contact-form">Request a proposal</a></div><a className="footer-mail" href={'mailto:'+CONTACT_EMAIL}>{CONTACT_EMAIL}</a></div></div>
+<div className="footer-cta"><div><p className="footer-cta-title">Start with a conversation</p><p className="footer-cta-line">We reply within 1 business day · <a className="footer-mail" href={'mailto:'+CONTACT_EMAIL}>{CONTACT_EMAIL}</a></p></div><div className="footer-cta-actions"><a className="button" href={BOOKING_URL} target="_blank" rel="noopener">Book a 30-min call <ArrowUpRight size={14}/></a><a className="footer-ghost" href="#contact-form">Request a proposal</a></div></div></div>
 <div className="footer-main">
 <div className="footer-col"><span className="footer-label">Explore</span>{nav.filter(([,id])=>id!=='about'&&id!=='products').map(([l,id])=><a href={'#'+id} key={id}>{l}</a>)}</div>
-<div className="footer-col footer-products"><span className="footer-label">Products</span>{FOOTER_PRODUCTS.map(([name,href,,,live])=><a key={href} href={href} {...(live?{target:'_blank',rel:'noopener'}:{})}>{name}<em className={live?'fp-live':'fp-wip'}>{live?'Live':'In progress'}</em></a>)}<a className="footer-more" href="#products">All products <ArrowRight size={13}/></a></div>
+<div className="footer-col footer-products"><span className="footer-label">Products <a className="footer-more" href="#products">All <ArrowRight size={12}/></a></span><div className="fp-grid">{FOOTER_PRODUCTS.filter(p=>p[4]).map(([name,href,,,live])=><a key={href} href={href} {...(live?{target:'_blank',rel:'noopener'}:{})}>{name}<em className={live?'fp-live':'fp-wip'}>{live?'Live':'In progress'}</em></a>)}</div></div>
 <div className="footer-col"><span className="footer-label">Company</span><a href="#about">About</a><a href={FAQ_URL}>FAQ</a><a href="#contact">Contact</a></div>
 <div className="footer-col"><span className="footer-label">Legal</span><a href={PRIVACY_URL}>Privacy Policy</a>{!OFFLINE_BUILD&&<button type="button" className="footer-cookie" onClick={openConsent}>Cookie settings</button>}</div>
 </div>
