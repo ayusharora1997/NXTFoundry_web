@@ -22,12 +22,52 @@ export type Story = {
   outcome: string[];          // the result number appears before these paragraphs
   meta: string;               // e.g. "E-commerce · Bengaluru, India"
   note?: string;              // e.g. confidentiality line
+  changeLabel?: string;       // optional tile label instead of "What changed", e.g. "What we set out to change"
+  impactLabel?: string;       // optional last-chapter title instead of "The outcome", e.g. "Intended impact"
   concept?: boolean;          // true = an independently developed concept, not client work: "Concept" tag,
                               // "What it could change" on the tile and "Illustrative impact" as the last chapter
   earlier?: boolean;          // true = shows the "EW" tag (fuller wording to be added once agreed)
 };
 
 export const stories: Story[] = [
+  {
+    id: 'automotive-po-invoice-lifecycle',
+    title: 'Cutting €42 million of unmapped purchase orders to €12.3 million',
+    question: 'Which of **€42 million** in purchase orders had nobody mapped?',
+    hook: 'PO and invoice data was spread across SAP exports, Excel files and team trackers — with no single view of the lifecycle.',
+    did: 'We built a Power BI dashboard that tracks every PO from approval to payment and surfaces the exceptions.',
+    areas: ['Procure to Pay', 'Financial Controls', 'IT Operations'],
+    stats: [
+      { value: '€42M', label: 'sitting in unmapped purchase orders across IT service areas' },
+      { value: '−70.7%', label: 'unmapped PO value, down from €42 million to €12.3 million' },
+    ],
+    problem: [
+      'A large automotive organisation’s IT operations involved multiple service areas, including Data Centre, Network, SAP, Workplace, Information Security and Service Desk.',
+      'Purchase order and invoice information was distributed across SAP exports, Excel files and stakeholder-maintained trackers. Finance, procurement and delivery teams lacked a consolidated view of the PO lifecycle, making it difficult to identify unmapped purchase orders, reconcile invoices and resolve outstanding exceptions. This resulted in:',
+      '- **Significant value** sitting in unmapped purchase orders\n- Manual reconciliation across fragmented data sources\n- Delays in identifying invoice and service-confirmation mismatches\n- Limited ownership and visibility of outstanding financial exceptions',
+    ],
+    journey: {
+      title: 'Follow one purchase order',
+      steps: [
+        { title: 'A PO is raised and approved', text: 'For one of several IT service areas — Data Centre, Network, SAP, Workplace and more.' },
+        { title: 'It never gets mapped to a service', text: 'PO data sits in SAP exports and spreadsheets, so nobody sees it’s unmapped.', fix: 'One lifecycle view, from PO creation and approval through service confirmation, invoicing and payment.' },
+        { title: 'Invoice and service confirmation don’t match', text: 'Partial payments, multi-service contracts and unlinked confirmations go unnoticed.', fix: 'Exception flags, plus reconciliation of PO value, invoiced amount and payment to show what’s outstanding.' },
+        { title: 'The exception ages without an owner', text: 'Long-pending values build up across service areas.', fix: 'Aging analysis, filters by service line, region, value and status, and recurring reviews with finance, procurement, delivery and PMO.' },
+      ],
+    },
+    whatWeDid: [
+      'We developed a Power BI-based PO and invoice lifecycle dashboard to bring together information from finance, procurement and delivery teams. The solution included:',
+      '- **PO lifecycle tracking:** consolidated visibility from PO creation and approval through service confirmation, invoicing and payment\n- **Exception management:** identified unmapped POs, partial payments, multi-service contracts and unlinked service confirmations\n- **Financial reconciliation:** compared PO values, invoiced amounts and payments to identify outstanding balances and discrepancies\n- **Aging analysis:** highlighted long-pending and unresolved PO values across service areas\n- **Stakeholder-level reporting:** enabled teams to filter and investigate exceptions by service line, region, PO value and status\n- **Governance and monitoring:** supported recurring reviews with finance, procurement, delivery and PMO stakeholders',
+    ],
+    outcome: [
+      'The dashboard improved financial visibility and helped teams systematically investigate and resolve outstanding PO mapping issues.',
+      'Unmapped PO value reduced from **€42 million to €12.3 million**, a reduction of approximately **70.7%**.',
+      'The initiative also established a more structured approach to PO tracking, invoice reconciliation and cross-functional exception management.',
+    ],
+    meta: 'Automotive · IT operations · Procure to pay',
+    note: 'Client identity and confidential operational details have been withheld.',
+    earlier: true,
+  },
   {
     id: 'fitness-access-controls',
     title: 'Closing ₹5 crore of revenue leakage in a fitness chain’s access controls',
@@ -105,6 +145,45 @@ export const stories: Story[] = [
     ],
     meta: 'E-commerce · Warehouse Operations · Bengaluru, India',
     note: 'Client identity and engagement details are withheld for confidentiality.',
+    earlier: true,
+  },
+  {
+    id: 'wholesale-slow-moving-inventory',
+    title: 'Breaking the cycle of slow and non-moving inventory in B2B wholesale',
+    question: 'Why was the business **buying more** of stock it couldn’t sell?',
+    hook: 'Aged inventory kept piling up while fresh purchase orders went out. The books were provisioned; the warehouses weren’t cleared.',
+    did: 'We reworked how demand, buying and stock connect — from forecasting and PO controls to redistribution between regions.',
+    areas: ['Inventory Health', 'Procurement Controls', 'Demand Planning'],
+    stats: [
+      { value: '30–40%', label: 'forecast accuracy, driving manual overrides and excess buying' },
+      { value: '6 fixes', label: 'across forecasting, buying, redistribution and stock visibility' },
+    ],
+    problem: [
+      'A large B2B wholesale e-commerce business was experiencing a growing accumulation of slow and non-moving (SNM) inventory across multiple categories and warehouses.',
+      'Despite having inventory provisioning policies and demand-planning processes, aged inventory continued to accumulate while fresh purchase orders were being raised. Financial provisioning was taking place, but the underlying stock was not being cleared. The assessment highlighted four interconnected challenges:',
+      '- **Inventory accumulation:** significant working capital remained locked in inventory aged beyond 180 days\n- **Weak procurement controls:** Open-to-Buy (OTB), SKU run-rate limits and unhealthy-item restrictions were not consistently enforced\n- **Forecasting gaps:** forecast accuracy remained around 30–40%, increasing reliance on manual overrides and contributing to excess procurement\n- **Regional inventory imbalance:** stock remained idle in low-demand locations while other regions experienced shortages, with no systematic trigger for redistribution',
+    ],
+    journey: {
+      title: 'Follow one purchase decision',
+      steps: [
+        { title: 'The forecast comes in', text: 'At 30–40% accuracy, planners override it by hand.', fix: 'Models recalibrated with seasonal and regional signals, MAPE tracked, and overrides limited to defined exceptions.' },
+        { title: 'A fresh PO goes out', text: 'OTB, run-rate and unhealthy-item limits aren’t consistently enforced.', fix: 'Automated checks, PO restrictions and escalation of significant policy breaches.' },
+        { title: 'Stock lands where demand is low', text: 'Other regions run short, and nothing triggers a transfer.', fix: 'SKU-level ageing and sales-velocity comparisons to move stock before ordering more.' },
+        { title: 'It ages past 180 days', text: 'Provisioned in the books, but still sitting in the warehouse.', fix: 'A Power BI view of provisioned stock, ageing and liquidation opportunities.' },
+      ],
+    },
+    whatWeDid: [
+      'We assessed the inventory planning, procurement and replenishment processes and identified opportunities to strengthen the feedback loop between demand, buying and inventory execution. The proposed improvements covered six areas:',
+      '- **Inter-warehouse redistribution:** SKU-level inventory ageing and sales-velocity comparisons to identify stock that could be transferred from low-demand to high-demand regions before placing fresh orders\n- **Forecasting improvements:** recalibrating forecasting models using seasonal and regional demand signals, introducing MAPE as a performance measure and restricting manual overrides to defined exceptions\n- **Purchase-order controls:** stronger OTB, SKU run-rate and unhealthy-list controls through automated checks, PO restrictions and escalation of significant policy breaches\n- **Provisioning and liquidation visibility:** a Power BI dashboard to track provisioned inventory, ageing and liquidation opportunities, helping teams distinguish financial provisioning from actual stock clearance\n- **Inventory classification governance:** stronger controls over A/B/C/D/O inventory classification, including approval requirements and purchase restrictions for selected inventory categories\n- **Sales-plan and procurement alignment:** an ASP–MSP–PO variance monitoring approach to identify deviations between sales plans and actual purchasing decisions',
+    ],
+    outcome: [
+      'The interventions were designed to improve inventory health and working-capital efficiency by:',
+      '- Reducing avoidable procurement of slow-moving inventory\n- Improving stock availability through regional redistribution\n- Strengthening compliance with purchasing policies\n- Improving visibility into inventory ageing and liquidation requirements\n- Establishing clearer accountability for forecast deviations and procurement decisions',
+    ],
+    meta: 'B2B wholesale e-commerce · Inventory and procurement',
+    note: 'Client identity and confidential engagement details have been withheld. Specific improvement opportunities and control mechanisms are described at a high level.',
+    changeLabel: 'What we set out to change',
+    impactLabel: 'Intended impact',
     earlier: true,
   },
   {

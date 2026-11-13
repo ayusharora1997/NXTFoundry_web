@@ -159,17 +159,17 @@ function Stories(){const [area,setArea]=useState('All');
   const list=area==='All'?stories:stories.filter(s=>s.areas.includes(area));
   return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Every story starts <em>with a question.</em></h1>
     <p className="page-lede">Real problems, what we found and what changed.</p>
-    {stories.length>=4&&<div className="filter-row story-filters">{areas.map(x=><button type="button" className={area===x?'active':''} aria-pressed={area===x} onClick={()=>setArea(x)} key={x}>{x}</button>)}</div>}
+    {stories.length>=6&&<div className="filter-row story-filters">{areas.map(x=><button type="button" className={area===x?'active':''} aria-pressed={area===x} onClick={()=>setArea(x)} key={x}>{x}</button>)}</div>}
     <div className={'story-tiles'+(list.length===1?' single':'')}>{list.map((s,i)=>{const r=s.stats[s.stats.length-1];
       return <a className={'story-tile'+(i===0?' lead':'')} href={'#stories/'+s.id} key={s.id}><StoryTags s={s}/>
         <p className="story-q">{richQ(s.question)}</p>{i===0&&<p className="story-hook">{s.hook}</p>}
-        <div className="story-ans"><span>{s.concept?'What it could change':'What changed'}</span><p className="story-did">{s.did}</p>{r&&<div className="story-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
+        <div className="story-ans"><span>{s.changeLabel??(s.concept?'What it could change':'What changed')}</span><p className="story-did">{s.did}</p>{r&&<div className="story-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
         <span className="story-read">Read the story <ArrowRight size={14}/></span></a>})}
       {list.length<3&&<div className="story-tile soon" aria-hidden="true"><p className="story-q">More stories are being written.</p><div className="story-ans"><p>New ones are added here as clients agree to share them.</p></div></div>}
     </div>
   </section>}
 function StoryPage({s}:{s:Story}){
-  const endLabel=s.concept?'Illustrative impact':'The outcome';
+  const endLabel=s.impactLabel??(s.concept?'Illustrative impact':'The outcome');
   const chapters:[string,string][]=[['problem','The problem'],...(s.journey?[['journey','Where it broke'] as [string,string]]:[]),['what','What we did'],['outcome',endLabel]];
   const [active,setActive]=useState('problem');
   React.useEffect(()=>{if(typeof IntersectionObserver==='undefined')return;const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)setActive(e.target.id.replace('ch-',''))})},{rootMargin:'-30% 0px -60% 0px'});chapters.forEach(([id])=>{const el=document.getElementById('ch-'+id);if(el)io.observe(el)});return()=>io.disconnect()},[s.id]);

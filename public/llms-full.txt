@@ -732,11 +732,25 @@ STORIES
 
 Real problems, what we found and what changed.
 
+EW Procure to PayFinancial ControlsIT Operations
+
+Which of €42 million in purchase orders had nobody mapped?
+
+PO and invoice data was spread across SAP exports, Excel files and team trackers — with no single view of the lifecycle.
+
+What changed
+
+We built a Power BI dashboard that tracks every PO from approval to payment and surfaces the exceptions.
+
+−70.7%
+
+unmapped PO value, down from €42 million to €12.3 million
+
+Read the story
+
 EW Revenue LeakageAccess ControlsInternal Audit
 
 How was one member checking in at two centres at once?
-
-Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.
 
 What changed
 
@@ -762,6 +776,20 @@ of monthly stock transfers still open in disputes, after the fix
 
 Read the story
 
+EW Inventory HealthProcurement ControlsDemand Planning
+
+Why was the business buying more of stock it couldn’t sell?
+
+What we set out to change
+
+We reworked how demand, buying and stock connect — from forecasting and PO controls to redistribution between regions.
+
+6 fixes
+
+across forecasting, buying, redistribution and stock visibility
+
+Read the story
+
 Concept Payroll ControlsAutomationInternal Audit
 
 What if 90+ payroll checks didn’t take a week by hand?
@@ -775,6 +803,94 @@ We built a conceptual Power BI framework that automates 94 payroll validation an
 illustrative payroll verification time with the checks automated
 
 Read the story
+
+## [Cutting €42 million of unmapped purchase orders to €12.3 million](https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle)
+
+URL: https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle
+
+All stories
+
+EW Procure to PayFinancial ControlsIT Operations
+
+### Cutting €42 million of unmapped purchase orders to €12.3 million
+
+#### 01 · The problem
+
+A large automotive organisation’s IT operations involved multiple service areas, including Data Centre, Network, SAP, Workplace, Information Security and Service Desk.
+
+€42M sitting in unmapped purchase orders across IT service areas
+
+Purchase order and invoice information was distributed across SAP exports, Excel files and stakeholder-maintained trackers. Finance, procurement and delivery teams lacked a consolidated view of the PO lifecycle, making it difficult to identify unmapped purchase orders, reconcile invoices and resolve outstanding exceptions. This resulted in:
+
+- Significant value sitting in unmapped purchase orders
+
+- Manual reconciliation across fragmented data sources
+
+- Delays in identifying invoice and service-confirmation mismatches
+
+- Limited ownership and visibility of outstanding financial exceptions
+
+#### 02 · Where it broke
+
+Follow one purchase order
+
+Where it brokeWhat we put in place
+
+##### 1 · A PO is raised and approved
+
+For one of several IT service areas — Data Centre, Network, SAP, Workplace and more.
+
+##### 2 · It never gets mapped to a service
+
+PO data sits in SAP exports and spreadsheets, so nobody sees it’s unmapped.
+
+Fix One lifecycle view, from PO creation and approval through service confirmation, invoicing and payment.
+
+##### 3 · Invoice and service confirmation don’t match
+
+Partial payments, multi-service contracts and unlinked confirmations go unnoticed.
+
+Fix Exception flags, plus reconciliation of PO value, invoiced amount and payment to show what’s outstanding.
+
+##### 4 · The exception ages without an owner
+
+Long-pending values build up across service areas.
+
+Fix Aging analysis, filters by service line, region, value and status, and recurring reviews with finance, procurement, delivery and PMO.
+
+#### 03 · What we did
+
+We developed a Power BI-based PO and invoice lifecycle dashboard to bring together information from finance, procurement and delivery teams. The solution included:
+
+- PO lifecycle tracking: consolidated visibility from PO creation and approval through service confirmation, invoicing and payment
+
+- Exception management: identified unmapped POs, partial payments, multi-service contracts and unlinked service confirmations
+
+- Financial reconciliation: compared PO values, invoiced amounts and payments to identify outstanding balances and discrepancies
+
+- Aging analysis: highlighted long-pending and unresolved PO values across service areas
+
+- Stakeholder-level reporting: enabled teams to filter and investigate exceptions by service line, region, PO value and status
+
+- Governance and monitoring: supported recurring reviews with finance, procurement, delivery and PMO stakeholders
+
+#### 04 · The outcome
+
+−70.7% unmapped PO value, down from €42 million to €12.3 million
+
+The dashboard improved financial visibility and helped teams systematically investigate and resolve outstanding PO mapping issues.
+
+Unmapped PO value reduced from €42 million to €12.3 million, a reduction of approximately 70.7%.
+
+The initiative also established a more structured approach to PO tracking, invoice reconciliation and cross-functional exception management.
+
+Automotive · IT operations · Procure to pay
+
+Client identity and confidential operational details have been withheld.
+
+Have a problem that sounds familiar?
+
+Book a 30-min call
 
 ## [Closing ₹5 crore of revenue leakage in a fitness chain’s access controls](https://www.nxtfoundry.in/#stories/fitness-access-controls)
 
@@ -925,6 +1041,102 @@ The proportion of monthly stock transfers remaining open due to disputes between
 E-commerce · Warehouse Operations · Bengaluru, India
 
 Client identity and engagement details are withheld for confidentiality.
+
+Have a problem that sounds familiar?
+
+Book a 30-min call
+
+## [Breaking the cycle of slow and non-moving inventory in B2B wholesale](https://www.nxtfoundry.in/#stories/wholesale-slow-moving-inventory)
+
+URL: https://www.nxtfoundry.in/#stories/wholesale-slow-moving-inventory
+
+All stories
+
+EW Inventory HealthProcurement ControlsDemand Planning
+
+### Breaking the cycle of slow and non-moving inventory in B2B wholesale
+
+#### 01 · The problem
+
+A large B2B wholesale e-commerce business was experiencing a growing accumulation of slow and non-moving (SNM) inventory across multiple categories and warehouses.
+
+30–40% forecast accuracy, driving manual overrides and excess buying
+
+Despite having inventory provisioning policies and demand-planning processes, aged inventory continued to accumulate while fresh purchase orders were being raised. Financial provisioning was taking place, but the underlying stock was not being cleared. The assessment highlighted four interconnected challenges:
+
+- Inventory accumulation: significant working capital remained locked in inventory aged beyond 180 days
+
+- Weak procurement controls: Open-to-Buy (OTB), SKU run-rate limits and unhealthy-item restrictions were not consistently enforced
+
+- Forecasting gaps: forecast accuracy remained around 30–40%, increasing reliance on manual overrides and contributing to excess procurement
+
+- Regional inventory imbalance: stock remained idle in low-demand locations while other regions experienced shortages, with no systematic trigger for redistribution
+
+#### 02 · Where it broke
+
+Follow one purchase decision
+
+Where it brokeWhat we put in place
+
+##### 1 · The forecast comes in
+
+At 30–40% accuracy, planners override it by hand.
+
+Fix Models recalibrated with seasonal and regional signals, MAPE tracked, and overrides limited to defined exceptions.
+
+##### 2 · A fresh PO goes out
+
+OTB, run-rate and unhealthy-item limits aren’t consistently enforced.
+
+Fix Automated checks, PO restrictions and escalation of significant policy breaches.
+
+##### 3 · Stock lands where demand is low
+
+Other regions run short, and nothing triggers a transfer.
+
+Fix SKU-level ageing and sales-velocity comparisons to move stock before ordering more.
+
+##### 4 · It ages past 180 days
+
+Provisioned in the books, but still sitting in the warehouse.
+
+Fix A Power BI view of provisioned stock, ageing and liquidation opportunities.
+
+#### 03 · What we did
+
+We assessed the inventory planning, procurement and replenishment processes and identified opportunities to strengthen the feedback loop between demand, buying and inventory execution. The proposed improvements covered six areas:
+
+- Inter-warehouse redistribution: SKU-level inventory ageing and sales-velocity comparisons to identify stock that could be transferred from low-demand to high-demand regions before placing fresh orders
+
+- Forecasting improvements: recalibrating forecasting models using seasonal and regional demand signals, introducing MAPE as a performance measure and restricting manual overrides to defined exceptions
+
+- Purchase-order controls: stronger OTB, SKU run-rate and unhealthy-list controls through automated checks, PO restrictions and escalation of significant policy breaches
+
+- Provisioning and liquidation visibility: a Power BI dashboard to track provisioned inventory, ageing and liquidation opportunities, helping teams distinguish financial provisioning from actual stock clearance
+
+- Inventory classification governance: stronger controls over A/B/C/D/O inventory classification, including approval requirements and purchase restrictions for selected inventory categories
+
+- Sales-plan and procurement alignment: an ASP–MSP–PO variance monitoring approach to identify deviations between sales plans and actual purchasing decisions
+
+#### 04 · Intended impact
+
+6 fixes across forecasting, buying, redistribution and stock visibility
+
+The interventions were designed to improve inventory health and working-capital efficiency by:
+
+- Reducing avoidable procurement of slow-moving inventory
+
+- Improving stock availability through regional redistribution
+
+- Strengthening compliance with purchasing policies
+
+- Improving visibility into inventory ageing and liquidation requirements
+
+- Establishing clearer accountability for forecast deviations and procurement decisions
+
+B2B wholesale e-commerce · Inventory and procurement
+
+Client identity and confidential engagement details have been withheld. Specific improvement opportunities and control mechanisms are described at a high level.
 
 Have a problem that sounds familiar?
 
