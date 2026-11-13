@@ -14,6 +14,8 @@ export type Story = {
   question: string;           // the tile headline on the Stories tab, phrased as the client's question
   hook: string;               // one or two lines under the question on the tile
   did: string;                // one sentence on the tile, under "What changed": what we did
+  industry: string;           // Stories filter, e.g. "Automotive", "E-commerce"
+  type: 'Consulting project' | 'Tech implementation' | 'Concept';   // Stories filter
   areas: string[];            // tags; also used as filters once there are a few stories
   stats: { value: string; label: string }[];   // first = the problem in a number, last = the result (shown on the tile)
   problem: string[];          // paragraphs; the first number appears after the first paragraph
@@ -32,6 +34,8 @@ export type Story = {
 export const stories: Story[] = [
   {
     id: 'automotive-po-invoice-lifecycle',
+    industry: 'Automotive',
+    type: 'Tech implementation',
     title: 'Cutting €42 million of unmapped purchase orders to €12.3 million',
     question: 'Which of **€42 million** in purchase orders had nobody mapped?',
     hook: 'PO and invoice data was spread across SAP exports, Excel files and team trackers — with no single view of the lifecycle.',
@@ -70,6 +74,8 @@ export const stories: Story[] = [
   },
   {
     id: 'fitness-access-controls',
+    industry: 'Fitness & wellness',
+    type: 'Consulting project',
     title: 'Closing ₹5 crore of revenue leakage in a fitness chain’s access controls',
     question: 'How was one member checking in at **two centres at once**?',
     hook: 'Shared devices, managers’ logins and housekeeping gate remotes were letting people in outside the membership process.',
@@ -112,6 +118,8 @@ export const stories: Story[] = [
   },
   {
     id: 'warehouse-stock-transfers',
+    industry: 'E-commerce',
+    type: 'Tech implementation',
     title: 'Bringing accountability to a ₹76 crore warehouse reconciliation gap',
     question: 'Where did **₹76 crore** of stock go between two warehouses?',
     hook: 'Transfers were closed on expected quantities and email confirmations — not on what actually arrived.',
@@ -149,6 +157,8 @@ export const stories: Story[] = [
   },
   {
     id: 'wholesale-slow-moving-inventory',
+    industry: 'E-commerce',
+    type: 'Consulting project',
     title: 'Breaking the cycle of slow and non-moving inventory in B2B wholesale',
     question: 'Why was the business **buying more** of stock it couldn’t sell?',
     hook: 'Aged inventory kept piling up while fresh purchase orders went out. The books were provisioned; the warehouses weren’t cleared.',
@@ -188,6 +198,8 @@ export const stories: Story[] = [
   },
   {
     id: 'payroll-compliance-framework',
+    industry: 'Apparel manufacturing',
+    type: 'Concept',
     title: 'Automating 94 payroll checks for apparel manufacturers',
     question: 'What if **90+ payroll checks** didn’t take a week by hand?',
     hook: 'Large workforces, many salary components and statutory deductions — all verified manually before every payroll run.',

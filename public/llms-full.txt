@@ -732,83 +732,73 @@ STORIES
 
 Real problems, what we found and what changed.
 
-EW Procure to PayFinancial ControlsIT Operations
+Industry
+
+All5Automotive1Fitness & wellness1E-commerce2Apparel manufacturing1
+
+Type
+
+All5Consulting project2Tech implementation2Concept1
+
+Showing 5 of 5
+
+01AutomotiveTech implementationEW
 
 Which of €42 million in purchase orders had nobody mapped?
 
-PO and invoice data was spread across SAP exports, Excel files and team trackers — with no single view of the lifecycle.
-
-What changed
-
 We built a Power BI dashboard that tracks every PO from approval to payment and surfaces the exceptions.
 
-−70.7%
+Procure to Pay · Financial Controls · IT Operations
 
-unmapped PO value, down from €42 million to €12.3 million
+−70.7%unmapped PO value, down from €42 million to €12.3 millionWhat changed
 
-Read the story
-
-EW Revenue LeakageAccess ControlsInternal Audit
+02Fitness & wellnessConsulting projectEW
 
 How was one member checking in at two centres at once?
 
-What changed
-
 We limited each membership to one device and one sign-in method, and put gate barriers under monitoring.
 
-1 device
+Revenue Leakage · Access Controls · Internal Audit
 
-per membership, with any change approved through Customer Experience
+1 deviceper membership, with any change approved through Customer ExperienceWhat changed
 
-Read the story
-
-EW Warehouse OperationsSupply ChainInventory Controls
+03E-commerceTech implementationEW
 
 Where did ₹76 crore of stock go between two warehouses?
 
-What changed
-
 We helped build a reconciliation tool with advance notice, a four-hour window and automatic escalation.
 
-~5%
+Warehouse Operations · Supply Chain · Inventory Controls
 
-of monthly stock transfers still open in disputes, after the fix
+~5%of monthly stock transfers still open in disputes, after the fixWhat changed
 
-Read the story
-
-EW Inventory HealthProcurement ControlsDemand Planning
+04E-commerceConsulting projectEW
 
 Why was the business buying more of stock it couldn’t sell?
 
-What we set out to change
-
 We reworked how demand, buying and stock connect — from forecasting and PO controls to redistribution between regions.
 
-6 fixes
+Inventory Health · Procurement Controls · Demand Planning
 
-across forecasting, buying, redistribution and stock visibility
+6 fixesacross forecasting, buying, redistribution and stock visibilityWhat we set out to change
 
-Read the story
-
-Concept Payroll ControlsAutomationInternal Audit
+05Apparel manufacturingConcept
 
 What if 90+ payroll checks didn’t take a week by hand?
 
-What it could change
-
 We built a conceptual Power BI framework that automates 94 payroll validation and audit checks across eight control areas.
 
-7 → 2 days
+Payroll Controls · Automation · Internal Audit
 
-illustrative payroll verification time with the checks automated
-
-Read the story
+7 → 2 daysillustrative payroll verification time with the checks automatedWhat it could change
 
 ## [Cutting €42 million of unmapped purchase orders to €12.3 million](https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle)
 
 URL: https://www.nxtfoundry.in/#stories/automotive-po-invoice-lifecycle
 
 All stories
+
+AutomotiveTech implementation
 
 EW Procure to PayFinancial ControlsIT Operations
 
@@ -898,6 +888,8 @@ URL: https://www.nxtfoundry.in/#stories/fitness-access-controls
 
 All stories
 
+Fitness & wellnessConsulting project
+
 EW Revenue LeakageAccess ControlsInternal Audit
 
 ### Closing ₹5 crore of revenue leakage in a fitness chain’s access controls
@@ -982,6 +974,8 @@ URL: https://www.nxtfoundry.in/#stories/warehouse-stock-transfers
 
 All stories
 
+E-commerceTech implementation
+
 EW Warehouse OperationsSupply ChainInventory Controls
 
 ### Bringing accountability to a ₹76 crore warehouse reconciliation gap
@@ -1051,6 +1045,8 @@ Book a 30-min call
 URL: https://www.nxtfoundry.in/#stories/wholesale-slow-moving-inventory
 
 All stories
+
+E-commerceConsulting project
 
 EW Inventory HealthProcurement ControlsDemand Planning
 
@@ -1147,6 +1143,8 @@ Book a 30-min call
 URL: https://www.nxtfoundry.in/#stories/payroll-compliance-framework
 
 All stories
+
+Apparel manufacturingConcept
 
 Concept Payroll ControlsAutomationInternal Audit
 

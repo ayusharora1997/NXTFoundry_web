@@ -154,19 +154,24 @@ const richQ=(t:string)=>t.split(/\*\*(.+?)\*\*/g).map((x,i)=>i%2?<em key={i}>{x}
 const storyText=(t:string)=>t.replace(/\*\*/g,'');
 const para=(p:string,k:number)=>p.startsWith('- ')?<ul className="story-list" key={k}>{p.slice(2).split('\n- ').map((x,i)=><li key={i}>{rich(x)}</li>)}</ul>:<p key={k}>{rich(p)}</p>;
 function StoryTags({s}:{s:Story}){return <div className="story-tags">{s.concept&&<span className="chip-tag">Concept</span>}{s.concept&&' '}{s.earlier&&<span className="chip-tag">EW</span>}{s.earlier&&' '}{s.areas.map(a=><span className="chip-tag area" key={a}>{a}</span>)}</div>}
-function Stories(){const [area,setArea]=useState('All');
-  const areas=['All',...Array.from(new Set(stories.flatMap(s=>s.areas)))];
-  const list=area==='All'?stories:stories.filter(s=>s.areas.includes(area));
+function Stories(){const [ind,setInd]=useState('All');const [type,setType]=useState('All');
+  const inds=['All',...Array.from(new Set(stories.map(s=>s.industry)))];
+  const types=['All',...(['Consulting project','Tech implementation','Concept'] as const).filter(t=>stories.some(s=>s.type===t))];
+  const list=stories.filter(s=>(ind==='All'||s.industry===ind)&&(type==='All'||s.type===type));
+  const count=(k:'industry'|'type',v:string)=>v==='All'?stories.length:stories.filter(s=>s[k]===v).length;
+  const Group=({label,opts,val,set,k}:{label:string;opts:string[];val:string;set:(v:string)=>void;k:'industry'|'type'})=><div className="sx-group" role="group" aria-label={label}><span className="sx-label">{label}</span><div className="sx-opts">{opts.map(o=><button type="button" key={o} className={val===o?'on':''} aria-pressed={val===o} onClick={()=>set(o)}>{o}<sup>{count(k,o)}</sup></button>)}</div></div>;
   return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Every story starts <em>with a question.</em></h1>
     <p className="page-lede">Real problems, what we found and what changed.</p>
-    {stories.length>=6&&<div className="filter-row story-filters">{areas.map(x=><button type="button" className={area===x?'active':''} aria-pressed={area===x} onClick={()=>setArea(x)} key={x}>{x}</button>)}</div>}
-    <div className={'story-tiles'+(list.length===1?' single':'')}>{list.map((s,i)=>{const r=s.stats[s.stats.length-1];
-      return <a className={'story-tile'+(i===0?' lead':'')} href={'#stories/'+s.id} key={s.id}><StoryTags s={s}/>
-        <p className="story-q">{richQ(s.question)}</p>{i===0&&<p className="story-hook">{s.hook}</p>}
-        <div className="story-ans"><span>{s.changeLabel??(s.concept?'What it could change':'What changed')}</span><p className="story-did">{s.did}</p>{r&&<div className="story-res"><b>{r.value}</b><p>{r.label}</p></div>}</div>
-        <span className="story-read">Read the story <ArrowRight size={14}/></span></a>})}
-      {list.length<3&&<div className="story-tile soon" aria-hidden="true"><p className="story-q">More stories are being written.</p><div className="story-ans"><p>New ones are added here as clients agree to share them.</p></div></div>}
-    </div>
+    <div className="sx-filters"><Group label="Industry" opts={inds} val={ind} set={setInd} k="industry"/><Group label="Type" opts={types} val={type} set={setType} k="type"/>
+      <div className="sx-status" aria-live="polite"><span>Showing {list.length} of {stories.length}</span>{(ind!=='All'||type!=='All')&&<button type="button" onClick={()=>{setInd('All');setType('All')}}>Clear filters</button>}</div></div>
+    <div className="sx-head" aria-hidden="true"><span>Sector · Type</span><span>The question</span><span>Result</span></div>
+    <ol className="sx-list">{list.map(s=>{const r=s.stats[s.stats.length-1];const n=stories.indexOf(s)+1;
+      return <li key={s.id}><a className="sx-row" href={'#stories/'+s.id}>
+        <div className="sx-meta"><span className="sx-n">{String(n).padStart(2,'0')}</span><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span>{s.earlier&&<span className="chip-tag">EW</span>}</div>
+        <div className="sx-main"><p className="sx-q">{richQ(s.question)}</p><p className="sx-did">{s.did}</p><p className="sx-areas">{s.areas.join(' · ')}</p></div>
+        <div className="sx-res">{r&&<><b>{r.value}</b><span>{r.label}</span></>}<em>{s.changeLabel??(s.concept?'What it could change':'What changed')}</em></div>
+        <span className="sx-go" aria-hidden="true"><ArrowUpRight size={18}/></span></a></li>})}</ol>
+    {!list.length&&<p className="sx-empty">No stories match these filters yet. <button type="button" onClick={()=>{setInd('All');setType('All')}}>Show all stories</button></p>}
   </section>}
 function StoryPage({s}:{s:Story}){
   const endLabel=s.impactLabel??(s.concept?'Illustrative impact':'The outcome');
@@ -177,6 +182,7 @@ function StoryPage({s}:{s:Story}){
   const first=s.stats[0], last=s.stats[s.stats.length-1];
   return <article className="page section story-page" id="story-page">
     <a className="story-back" href="#stories"><span aria-hidden="true">←</span> All stories</a>
+    <p className="story-kind"><b>{s.industry}</b><span className={'sx-type t-'+(s.type==='Concept'?'concept':s.type==='Tech implementation'?'tech':'consult')}>{s.type}</span></p>
     <StoryTags s={s}/><h1>{s.title}</h1>
     <div className="story-layout">
       <nav className="story-rail" aria-label="Chapters">{chapters.map(([id,label],i)=><button type="button" key={id} className={active===id?'on':''} aria-current={active===id?'true':undefined} onClick={()=>go(id)}><small>{String(i+1).padStart(2,'0')}</small>{label}</button>)}</nav>
