@@ -32,6 +32,7 @@ table{width:100%;border-collapse:collapse;margin:12px 0;font-size:15px}
 th,td{text-align:left;vertical-align:top;padding:8px 10px;border:1px solid var(--line)}
 th{color:var(--fg);background:#101b17}
 .table-wrap{overflow-x:auto}
+@media(max-width:600px){table.stack,table.stack tbody,table.stack tr,table.stack td{display:block;width:100%}table.stack tr:first-child{display:none}table.stack tr{border:1px solid var(--line);margin:0 0 12px}table.stack td{border:0;border-bottom:1px solid var(--line);padding:8px 12px}table.stack td:last-child{border-bottom:0}table.stack td::before{content:attr(data-label);display:block;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}}
 footer{padding-top:24px;padding-bottom:40px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
 </style>
 </head>
@@ -47,7 +48,7 @@ footer{padding-top:24px;padding-bottom:40px;border-top:1px solid var(--line);col
 <ul>
 <li>When you send an enquiry, we collect the details you type into the contact form and use them only to respond to you.</li>
 <li>We do not sell your information or use it for advertising.</li>
-<li>The website uses Vercel Web Analytics and Speed Insights, which do not set cookies. Google Analytics, which does set cookies, runs only if you accept it in the cookie banner.</li>
+<li>The website uses Vercel Web Analytics and Speed Insights, which do not set cookies. Google Analytics sets cookies only if you accept them in the cookie banner. Otherwise it records visits without cookies.</li>
 <li>Files you open in the Vendor Payable Reconciliation tool are processed in your browser and are not uploaded to us.</li>
 <li>We do not currently use any AI service to process information from this website.</li>
 </ul>
@@ -94,10 +95,39 @@ footer{padding-top:24px;padding-bottom:40px;border-top:1px solid var(--line);col
 <h2 id="analytics">3. Analytics and cookies</h2>
 <h3>Vercel Web Analytics and Speed Insights</h3>
 <p>We use <strong>Vercel Web Analytics</strong> and <strong>Vercel Speed Insights</strong> to understand which pages are visited and how fast they load. These tools do not use cookies. They collect information such as the page visited, the referring site, browser and device type, operating system, approximate country, and page-load performance. We use this information only in aggregate.</p>
-<h3>Google Analytics (only if you accept)</h3>
-<p>When you first visit, a banner asks whether you accept analytics cookies. If you click <strong>Let’s do it</strong>, the website loads <strong>Google Tag Manager</strong>, which runs <strong>Google Analytics 4</strong>. If you click <strong>Not now</strong> or ignore the banner, neither is loaded.</p>
-<p>If you accept, Google Analytics sets first-party cookies (named <code>_ga</code> and <code>_ga_&lt;ID&gt;</code>) that let it recognise repeat visits from the same browser. Google receives information about your visit, such as the pages you view, how you arrived, your browser and device, and your approximate location derived from your IP address. We use the reports to understand how the website is used and to improve it.</p>
-<p>You can change your choice at any time with the <strong>Cookie settings</strong> link at the bottom of every page of the main website. If you withdraw consent, the Google Analytics cookies are deleted and the tag is no longer loaded. You can also block or delete cookies in your browser settings.</p>
+<h3>Google Analytics</h3>
+<p>The website loads <strong>Google Tag Manager</strong>, which runs <strong>Google Analytics 4</strong>, on every visit. It uses Google's Consent Mode, so how it works depends on your choice in the cookie banner.</p>
+<ul>
+<li><strong>If you click “Not now” or ignore the banner</strong>, Google Analytics sets no cookies. It still sends Google a basic, cookieless record of your visit, such as the page viewed, the time, your browser and device type, and your approximate location derived from your IP address. Without a cookie, it cannot recognise you on later visits. Google may use these records to estimate overall visitor numbers.</li>
+<li><strong>If you click “Let’s do it”</strong>, Google Analytics also sets first-party cookies (named <code>_ga</code> and <code>_ga_&lt;ID&gt;</code>) that let it recognise repeat visits from the same browser and see how visitors move between pages.</li>
+</ul>
+<p>Advertising and ad-personalisation settings are always off. We use the reports to understand how the website is used and to improve it.</p>
+<h3>Cookies and browser storage we use</h3>
+<div class="table-wrap"><table class="stack">
+<tr><th>Name</th><th>Type</th><th>Set by</th><th>Purpose</th><th>Lasts</th></tr>
+<tr><td data-label="Name"><code>_ga</code></td><td data-label="Type">Cookie</td><td data-label="Set by">Google Analytics</td><td data-label="Purpose">Distinguishes one browser from another, so repeat visits can be counted. Set only after “Let’s do it”.</td><td data-label="Lasts">Up to 2 years</td></tr>
+<tr><td data-label="Name"><code>_ga_&lt;ID&gt;</code></td><td data-label="Type">Cookie</td><td data-label="Set by">Google Analytics</td><td data-label="Purpose">Keeps track of the current visit (session). Set only after “Let’s do it”.</td><td data-label="Lasts">Up to 2 years</td></tr>
+<tr><td data-label="Name"><code>nxt-analytics-consent</code></td><td data-label="Type">Local storage</td><td data-label="Set by">This website</td><td data-label="Purpose">Remembers your choice in the cookie banner, so we don’t ask on every visit.</td><td data-label="Lasts">Until you clear it</td></tr>
+<tr><td data-label="Name"><code>nxt-tour-*</code>, <code>nxt-recon-collapsed-*</code></td><td data-label="Type">Local storage</td><td data-label="Set by">This website</td><td data-label="Purpose">Remember whether you have seen a tool’s guided tour and which panels you collapsed.</td><td data-label="Lasts">Until you clear it</td></tr>
+<tr><td data-label="Name"><code>nxt-interest</code></td><td data-label="Type">Session storage</td><td data-label="Set by">This website</td><td data-label="Purpose">Carries the products you picked on the Products page into the contact form. Removed once it is used.</td><td data-label="Lasts">Until the tab is closed</td></tr>
+</table></div>
+<p>Vercel Web Analytics and Speed Insights do not use cookies or browser storage.</p>
+
+<h3>How to control cookies</h3>
+<ul>
+<li><strong>On this website.</strong> Use the <strong>Cookie settings</strong> link at the bottom of every page of the main website to change your choice at any time. If you choose “Not now” after accepting, the Google Analytics cookies are deleted straight away.</li>
+<li><strong>In your browser.</strong> Every major browser lets you block or delete cookies, either for all websites or only for www.nxtfoundry.in:
+<ul>
+<li>Chrome: Settings → Privacy and security → Third-party cookies / Site settings → Cookies and site data</li>
+<li>Edge: Settings → Cookies and site permissions → Manage and delete cookies and site data</li>
+<li>Firefox: Settings → Privacy &amp; Security → Cookies and Site Data</li>
+<li>Safari (Mac): Settings → Privacy → Manage Website Data; Safari (iPhone/iPad): Settings → Safari → Advanced → Website Data</li>
+</ul>
+Clearing “site data” for www.nxtfoundry.in also removes the local storage items listed above, including your banner choice, so the banner will appear again.</li>
+<li><strong>Block Google Analytics completely.</strong> Google offers the <a href="https://tools.google.com/dlpage/gaoptout" rel="noopener">Google Analytics Opt-out Browser Add-on</a>, which stops Google Analytics on every website, including the cookieless visit records described above. Many content and tracking blockers do the same.</li>
+<li><strong>Private browsing.</strong> In a private or incognito window, cookies and browser storage are deleted when you close the window.</li>
+</ul>
+<p>Blocking cookies or browser storage does not stop the website or the contact form from working.</p>
 
 <h2>4. Other services and storage in your browser</h2>
 <ul>
@@ -107,7 +137,7 @@ footer{padding-top:24px;padding-bottom:40px;border-top:1px solid var(--line);col
 </ul>
 
 <h2>5. Who we share information with</h2>
-<p>We share information only with the service providers named above, and only so they can provide their services to us: Vercel (hosting and analytics) and Google (Google Workspace, Gmail, Google Fonts and, if you accept analytics cookies, Google Analytics). These providers may process data on servers outside India. We do not sell personal information. We may disclose information if the law requires us to.</p>
+<p>We share information only with the service providers named above, and only so they can provide their services to us: Vercel (hosting and analytics) and Google (Google Workspace, Gmail, Google Fonts and Google Analytics). These providers may process data on servers outside India. We do not sell personal information. We may disclose information if the law requires us to.</p>
 
 <h2>6. Your choices and contacting us</h2>
 <p>You can write to <a href="mailto:hello@nxtfoundry.in">hello@nxtfoundry.in</a> to:</p>

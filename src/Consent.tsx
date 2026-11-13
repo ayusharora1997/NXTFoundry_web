@@ -1,7 +1,9 @@
-// Google Tag Manager (GTM-NSXP47S9, GA4 inside) behind an opt-in banner.
-// Nothing from Google Tag Manager or Google Analytics loads until the visitor clicks Accept. The choice is kept in
-// localStorage; "Cookie settings" in the footer reopens the banner. Declining after accepting deletes the _ga cookies
-// and reloads, so the tag is gone. The privacy policy (public/privacy.html, section 3) describes this; keep them in step.
+// Google Tag Manager (GTM-NSXP47S9, GA4 inside) with Google Consent Mode v2.
+// GTM loads on every visit with analytics_storage DENIED by default, so GA4 counts the visit with cookieless pings
+// and sets no cookies. "Let's do it" updates analytics_storage to GRANTED, and GA4 then uses its _ga cookies.
+// "Not now" (or ignoring the banner) keeps it denied. Ad consent is always denied: there are no ad tags.
+// The choice is kept in localStorage; "Cookie settings" in the footer reopens the banner.
+// The privacy policy (public/privacy.html, section 3) describes this; keep them in step.
 import { useEffect, useState } from 'react';
 
 const GTM_ID = 'GTM-NSXP47S9';
@@ -13,13 +15,15 @@ const read = (): Choice => { try { const v = localStorage.getItem(KEY); return v
 const save = (v: 'granted' | 'denied') => { try { localStorage.setItem(KEY, v); } catch { /* the banner just shows again next visit */ } };
 
 declare global { interface Window { dataLayer?: unknown[] } }
+// gtag must push the Arguments object itself (not an array), as in Google's snippet.
+// eslint-disable-next-line prefer-rest-params, @typescript-eslint/no-unused-vars
+function gtag(..._args: unknown[]) { (window.dataLayer = window.dataLayer || []).push(arguments); }
+
 let loaded = false;
-/** The Google tag snippet from GTM, run from our bundle so the CSP needs no 'unsafe-inline'. */
-function loadGtm() {
+/** Google's tag snippet, run from our bundle so the CSP needs no 'unsafe-inline'. Consent defaults go first. */
+function loadGtm(granted: boolean) {
   if (loaded) return; loaded = true;
-  window.dataLayer = window.dataLayer || [];
-  // eslint-disable-next-line prefer-rest-params
-  function gtag(..._args: unknown[]) { window.dataLayer!.push(arguments); }
+  gtag('consent', 'default', { analytics_storage: granted ? 'granted' : 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' });
   gtag('js', new Date());
   const s = document.createElement('script');
   s.async = true; s.src = `https://www.googletagmanager.com/gtm.js?id=${GTM_ID}`;
@@ -38,15 +42,14 @@ function clearGaCookies() {
 export const openConsent = () => window.dispatchEvent(new Event(OPEN_EVENT));
 
 export default function Consent() {
-  const [choice, setChoice] = useState<Choice>(read);
   const [open, setOpen] = useState(() => read() === null);
-  // Declined: also sweep on every load, since the tag can rewrite a cookie in the moment before the reload.
-  useEffect(() => { if (choice === 'granted') loadGtm(); else if (choice === 'denied') clearGaCookies(); }, [choice]);
+  useEffect(() => { const c = read(); loadGtm(c === 'granted'); if (c !== 'granted') clearGaCookies(); }, []);
   useEffect(() => { const f = () => setOpen(true); window.addEventListener(OPEN_EVENT, f); return () => window.removeEventListener(OPEN_EVENT, f); }, []);
   if (!open) return null;
   const decide = (v: 'granted' | 'denied') => {
-    const wasOn = choice === 'granted'; save(v); setChoice(v); setOpen(false);
-    if (v === 'denied' && wasOn) { clearGaCookies(); location.reload(); }   // the loaded tag can't be unloaded
+    save(v); setOpen(false);
+    gtag('consent', 'update', { analytics_storage: v });
+    if (v === 'denied') clearGaCookies();
   };
   return <div className="consent" role="dialog" aria-live="polite" aria-labelledby="consent-title">
     <h2 className="consent-title" id="consent-title">Cookies aren’t just for snacking.</h2>
