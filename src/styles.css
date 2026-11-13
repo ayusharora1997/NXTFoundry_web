@@ -880,3 +880,8 @@ a.px-visual:hover .tp{transform:translateY(-4px);box-shadow:0 40px 70px -24px rg
 .consent .consent-yes{padding:10px 18px;min-height:0}
 .footer-cookie{background:none;border:0;padding:0;color:inherit;font:inherit;cursor:pointer}
 @media(max-width:520px){.consent{left:16px;right:16px;max-width:none}}
+
+/* Micro-copy under calls to action */
+.cta-note{margin:14px 0 0;font-size:13px;color:var(--muted)}
+.cta .cta-note{color:#2c3f0a;font-weight:600}
+.cta-action{flex-shrink:0}
