@@ -48,8 +48,10 @@ export default function Consent() {
     const wasOn = choice === 'granted'; save(v); setChoice(v); setOpen(false);
     if (v === 'denied' && wasOn) { clearGaCookies(); location.reload(); }   // the loaded tag can't be unloaded
   };
-  return <div className="consent" role="dialog" aria-live="polite" aria-label="Analytics cookies">
-    <p>We’d like to use Google Analytics cookies to understand how the site is used. They load only if you accept. <a href="/privacy.html#analytics">Privacy Policy</a></p>
-    <div className="consent-actions"><button type="button" className="consent-no" onClick={() => decide('denied')}>Decline</button><button type="button" className="button consent-yes" onClick={() => decide('granted')}>Accept</button></div>
+  return <div className="consent" role="dialog" aria-live="polite" aria-labelledby="consent-title">
+    <h2 className="consent-title" id="consent-title">Cookies aren’t just for snacking.</h2>
+    <p>We’d also like to know what makes your visit worthwhile. With your permission, we’ll use optional analytics cookies to understand how visitors explore NXT Foundry, which pages they find useful and where we can make things better.</p>
+    <p>No mind-reading, no unnecessary fuss. Just a little insight to help us build a better experience. The choice is entirely yours. You can learn more in our <a href="/privacy.html#analytics">Privacy Policy</a>.</p>
+    <div className="consent-actions"><button type="button" className="consent-no" onClick={() => decide('denied')}>Not now</button><button type="button" className="button consent-yes" onClick={() => decide('granted')}>Let’s do it</button></div>
   </div>;
 }
