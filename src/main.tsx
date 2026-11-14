@@ -176,8 +176,8 @@ function Stories(){const [sector,setSector]=useState('All');
   return <section className="page section stories-page" id="stories-page"><Label>STORIES</Label><h1>Every story starts <em>with a question.</em></h1>
     <p className="page-lede">Real problems, what we found and what changed.</p>
     <div className="sector-boxes" role="group" aria-label="Filter by industry">
-      <button type="button" className={sector==='All'?'on':''} aria-pressed={sector==='All'} onClick={()=>setSector('All')}>All industries<span>{stories.length}</span></button>
-      {sectors.map(x=><button type="button" key={x} className={sector===x?'on':''} aria-pressed={sector===x} onClick={()=>setSector(x)}>{x}<span>{stories.filter(s=>sectorOf(s)===x).length}</span></button>)}
+      <button type="button" className={sector==='All'?'on':''} aria-pressed={sector==='All'} onClick={()=>setSector('All')}>All industries</button>
+      {sectors.map(x=><button type="button" key={x} className={sector===x?'on':''} aria-pressed={sector===x} onClick={()=>setSector(x)}>{x}</button>)}
     </div>
     {stream?<div className="stream" key={sector}>{cols.map((c,ci)=><div className="stream-col" key={ci} style={{'--dur':`${(c.length*26)+ci*9}s`} as React.CSSProperties}>
         <div className="stream-track">{[0,1,2,3].map(k=><div className="stream-set" key={k}>{c.map(s=><Brick key={s.id+k} s={s} lead={s===list[0]} hidden={k>0}/>)}</div>)}</div></div>)}</div>
